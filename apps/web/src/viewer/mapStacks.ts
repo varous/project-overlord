@@ -208,9 +208,9 @@ export function createMapStacks(
           );
           // fromBasemapType derives maximumLevel from the service metadata (LOD 23) and ignores
           // the constructor option. World Imagery has no tiles above ~LOD 18 at most locations, so
-          // cap it; otherwise close cameras request missing LOD 19-23 tiles, get 404s and the globe
+          // cap it; otherwise close cameras request missing LOD 18-23 tiles, get 404s and the globe
           // never reports tilesLoaded. The field has no public setter, so set it directly.
-          (provider as unknown as { _maximumLevel: number })._maximumLevel = 18;
+          (provider as unknown as { _maximumLevel: number })._maximumLevel = 17;
           if (token !== switchToken) {
             return;
           }

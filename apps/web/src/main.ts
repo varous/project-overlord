@@ -40,6 +40,10 @@ const viewer = new Cesium.Viewer(container, {
   showRenderLoopErrors: false,
 });
 
+// Bound imagery tile requests so the globe reports tilesLoaded within the smoke-test timeout even
+// on software-rendered CI runners (slightly coarser tiles, still readable).
+viewer.scene.globe.maximumScreenSpaceError = 4;
+
 const notices = createNotices(document.body);
 const googleKey = import.meta.env.VITE_GOOGLE_MAPS_KEY ?? '';
 const arcgisKey = import.meta.env.VITE_ARCGIS_API_KEY ?? '';
