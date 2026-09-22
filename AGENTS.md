@@ -45,6 +45,8 @@ Every task ends by printing a report with exactly these headings, in this order:
 ```
 REPORT — TASK <id>
 Repo / Branch / HEAD: <repo url> / <branch> @ <short sha> — Pushed: yes|no
+CI: <run URL> — verify: pass|fail, deploy: pass|fail|skipped, snapshots: pass|fail|skipped
+Snapshots: https://github.com/varous/project-overlord/tree/snapshots/<branch-slug>/<short-sha> (or "none")
 Done: one line per thing built
 Files: output of `git diff --stat main...HEAD`
 Verify: last 30 lines of `make verify` output, verbatim
