@@ -1,0 +1,14 @@
+{
+  "sha": "cea7904d8137fcbb99d0b81596dd4dedc9a36b64",
+  "branch": "main",
+  "runUrl": "https://github.com/varous/project-overlord/actions/runs/35722584367",
+  "deployUrl": "https://0b971849.project-overlord-7xs.pages.dev",
+  "createdAt": "2026-09-22T11:43:33Z",
+  "onlineSmokeOutcome": "success",
+  "groundHeight": {
+    "heightM": 0,
+    "source": "ellipsoid 0",
+    "lat": 22.5579,
+    "lon": 88.3439
+  }
+}
