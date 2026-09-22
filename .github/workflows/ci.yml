@@ -111,21 +111,23 @@ jobs:
             --project-name project-overlord \
             --branch "${BRANCH_NAME}" \
             --commit-hash "${GITHUB_SHA}" 2>&1 | tee deploy.log
-          UNIQUE_URL="$(grep -oE 'https://[a-z0-9-]+\.project-overlord\.pages\.dev' deploy.log | tail -n 1 || true)"
+          UNIQUE_URL="$(grep -oE 'https://[a-z0-9]+\.project-overlord[0-9a-z-]*\.pages\.dev' deploy.log | head -n 1 || true)"
+          ALIAS_URL="$(grep -oE 'https://[a-z0-9-]+\.project-overlord[0-9a-z-]*\.pages\.dev' deploy.log | tail -n 1 || true)"
           echo "deployment_url=${UNIQUE_URL}" >> "$GITHUB_OUTPUT"
+          echo "alias_url=${ALIAS_URL}" >> "$GITHUB_OUTPUT"
 
       - name: Job summary
         if: always()
         run: |
           UNIQUE_URL="${{ steps.deploy.outputs.deployment_url }}"
-          BRANCH_ALIAS="https://${BRANCH_NAME//\//-}.project-overlord.pages.dev"
+          ALIAS_URL="${{ steps.deploy.outputs.alias_url }}"
           {
             echo "### Cloudflare Pages deployment"
             echo ""
             echo "- Branch: \`${BRANCH_NAME}\`"
             echo "- Commit: \`${GITHUB_SHA}\`"
             echo "- Unique deployment URL: ${UNIQUE_URL:-not found}"
-            echo "- Branch alias URL: ${BRANCH_ALIAS}"
+            echo "- Branch alias URL: ${ALIAS_URL:-not found}"
           } >> "$GITHUB_STEP_SUMMARY"
 
   snapshots:
