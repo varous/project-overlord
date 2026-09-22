@@ -17,11 +17,18 @@ function fail(message) {
   failed = true;
 }
 
-if (!existsSync(join(distDir, 'index.html'))) {
-  fail('apps/web/dist/index.html is missing');
-}
-if (!existsSync(join(distDir, 'cesium', 'Workers'))) {
-  fail('apps/web/dist/cesium/Workers is missing');
+const requiredPaths = [
+  'index.html',
+  'cesium/Workers/createTaskProcessorWorker.js',
+  'cesium/Assets/approximateTerrainHeights.json',
+  'cesium/Widgets/widgets.css',
+  'cesium/ThirdParty/Workers',
+];
+
+for (const relativePath of requiredPaths) {
+  if (!existsSync(join(distDir, relativePath))) {
+    fail(`apps/web/dist/${relativePath} is missing`);
+  }
 }
 
 function walk(dir) {

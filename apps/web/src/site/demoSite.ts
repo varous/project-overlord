@@ -32,12 +32,12 @@ export interface SiteElement {
 const ft = (value: string): Tmm => toTmm(value, 'ft', { allowNegative: true });
 
 /**
- * APPROXIMATE — verify visually.
- * Brigade Parade Ground, Kolkata. Height is ellipsoidal metres.
+ * Read off Esri imagery in Task 002 — open Maidan ground, still approximate.
+ * Brigade Parade Ground area, Kolkata. Height is ellipsoidal metres.
  */
 export const DEMO_ANCHOR: SiteAnchor = {
-  latDeg: 22.557,
-  lonDeg: 88.343,
+  latDeg: 22.5579,
+  lonDeg: 88.3439,
   heightM: 0,
   headingDeg: 0,
 };

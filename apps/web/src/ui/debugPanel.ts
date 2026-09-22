@@ -1,5 +1,6 @@
 /**
- * Bottom-left debug panel: anchor, heading, active height and its source, map stack, build info.
+ * Bottom-left debug panel: anchor, heading, active height and its source, map stack, tile errors,
+ * build info, and a Copy link button.
  */
 
 import type { SiteAnchor } from '@overlord/geo-core';
@@ -11,6 +12,11 @@ export interface DebugInfo {
   /** "ellipsoid 0" or "sampled from Google 3D". */
   heightSource: string;
   stack: MapStack;
+  tileErrors: number;
+}
+
+export interface DebugPanelOptions {
+  onCopyLink: () => void;
 }
 
 export interface DebugPanel {
@@ -29,10 +35,18 @@ function row(label: string, value: string): HTMLElement {
   return div;
 }
 
-export function createDebugPanel(container: HTMLElement): DebugPanel {
+export function createDebugPanel(container: HTMLElement, options: DebugPanelOptions): DebugPanel {
   const el = document.createElement('div');
   el.className = 'debug-panel';
   container.appendChild(el);
+
+  const copyButton = document.createElement('button');
+  copyButton.type = 'button';
+  copyButton.className = 'debug-panel__button';
+  copyButton.textContent = 'Copy link';
+  copyButton.addEventListener('click', () => {
+    options.onCopyLink();
+  });
 
   const commit = import.meta.env.VITE_COMMIT_SHA ?? 'local';
   const branch = import.meta.env.VITE_BRANCH ?? 'local';
@@ -44,7 +58,9 @@ export function createDebugPanel(container: HTMLElement): DebugPanel {
         row('Heading', `${info.anchor.headingDeg}°`),
         row('Anchor height', `${info.anchor.heightM.toFixed(2)} m (${info.heightSource})`),
         row('Map stack', info.stack),
+        row('Tile errors', String(info.tileErrors)),
         row('Build', `${commit} @ ${branch}`),
+        copyButton,
       );
     },
   };

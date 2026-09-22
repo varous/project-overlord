@@ -10,6 +10,7 @@ verify:
 	node scripts/check-zero-deps.mjs
 	npm run build -w @overlord/web
 	node scripts/check-web-build.mjs
+	npm run smoke
 
 typecheck:
 	npm run typecheck

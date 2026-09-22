@@ -15,9 +15,12 @@
     "typecheck": "tsc -b && tsc -p packages/geo-core/tsconfig.test.json && tsc -p apps/web/tsconfig.test.json",
     "lint": "eslint .",
     "test": "vitest run",
-    "build:web": "npm run build -w @overlord/web"
+    "build:web": "npm run build -w @overlord/web",
+    "smoke": "playwright test e2e/offline.spec.ts",
+    "smoke:online": "SMOKE_ONLINE=1 playwright test e2e/online.spec.ts"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/node": "^26.6.2",
     "eslint": "^9.39.5",
     "typescript": "^5.9.3",

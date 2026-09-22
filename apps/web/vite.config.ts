@@ -11,6 +11,12 @@ const require = createRequire(import.meta.url);
 const cesiumSource = resolve(dirname(require.resolve('cesium/package.json')), 'Build/Cesium');
 const cesiumBaseUrl = 'cesium';
 
+// vite-plugin-static-copy v4 always preserves the matched path relative to the Vite root, which
+// for this hoisted install is `node_modules/cesium/Build/Cesium/<dir>`. Stripping those four
+// leading segments lands files at /cesium/<dir>/... exactly where CESIUM_BASE_URL expects them.
+const STRIP_SEGMENTS = 4;
+const stripBase = { stripBase: STRIP_SEGMENTS } as const;
+
 export default defineConfig({
   base: '/',
   define: {
@@ -22,10 +28,10 @@ export default defineConfig({
   plugins: [
     viteStaticCopy({
       targets: [
-        { src: `${cesiumSource}/Workers/**/*`, dest: `${cesiumBaseUrl}/Workers` },
-        { src: `${cesiumSource}/Assets/**/*`, dest: `${cesiumBaseUrl}/Assets` },
-        { src: `${cesiumSource}/ThirdParty/**/*`, dest: `${cesiumBaseUrl}/ThirdParty` },
-        { src: `${cesiumSource}/Widgets/**/*`, dest: `${cesiumBaseUrl}/Widgets` },
+        { src: `${cesiumSource}/Workers/**/*`, dest: cesiumBaseUrl, rename: stripBase },
+        { src: `${cesiumSource}/Assets/**/*`, dest: cesiumBaseUrl, rename: stripBase },
+        { src: `${cesiumSource}/ThirdParty/**/*`, dest: cesiumBaseUrl, rename: stripBase },
+        { src: `${cesiumSource}/Widgets/**/*`, dest: cesiumBaseUrl, rename: stripBase },
       ],
     }),
   ],
