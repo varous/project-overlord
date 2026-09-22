@@ -74,6 +74,18 @@ jobs:
         with:
           node-version-file: .nvmrc
 
+      - name: Cloudflare token check
+        continue-on-error: true
+        run: |
+          npx --yes wrangler@4 whoami 2>&1 | tee whoami.log || true
+          {
+            echo "### Cloudflare token check"
+            echo ""
+            echo '```'
+            cat whoami.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Ensure Pages project
         run: npx --yes wrangler@4 pages project create project-overlord --production-branch main || true
 
