@@ -1,0 +1,14 @@
+{
+  "sha": "3c6785d27918aa09305fbd0dbaffeb2e8688fb62",
+  "branch": "task/004-site-placement",
+  "runUrl": "https://github.com/varous/project-overlord/actions/runs/35723595122",
+  "deployUrl": "https://24855a2f.project-overlord-7xs.pages.dev",
+  "createdAt": "2026-09-22T11:57:17Z",
+  "onlineSmokeOutcome": "failure",
+  "groundHeight": {
+    "heightM": 0,
+    "source": "ellipsoid 0",
+    "lat": 22.5579,
+    "lon": 88.3439
+  }
+}
