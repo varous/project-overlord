@@ -162,3 +162,64 @@ body {
   background: rgba(180, 83, 9, 0.95);
 }
 
+.site-tools {
+  position: fixed;
+  top: 56px;
+  right: 10px;
+  z-index: 10;
+  display: flex;
+  gap: 6px;
+}
+
+.site-tools button,
+.place-controls button {
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  background: rgba(20, 24, 33, 0.8);
+  color: #e8edf5;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.site-tools button.active {
+  background: #2563eb;
+  border-color: #93c5fd;
+}
+
+.place-controls {
+  position: fixed;
+  left: 50%;
+  bottom: 44px;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  background: rgba(20, 24, 33, 0.9);
+  color: #e8edf5;
+  font-size: 13px;
+}
+
+.place-controls[hidden] {
+  display: none;
+}
+
+.place-controls__input {
+  width: 72px;
+  padding: 4px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  background: rgba(10, 12, 16, 0.9);
+  color: #e8edf5;
+  font-size: 13px;
+}
+
+.place-controls__hint {
+  color: #9fb3c8;
+}
+
+

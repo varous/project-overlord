@@ -13,6 +13,10 @@ export interface DebugInfo {
   heightSource: string;
   stack: MapStack;
   tileErrors: number;
+  /** Google 3D status: "active", "not active" or a short failure reason. */
+  googleStatus: string;
+  /** "own key" or "Cesium default (dev only)". */
+  arcgisToken: string;
 }
 
 export interface DebugPanelOptions {
@@ -59,6 +63,8 @@ export function createDebugPanel(container: HTMLElement, options: DebugPanelOpti
         row('Anchor height', `${info.anchor.heightM.toFixed(2)} m (${info.heightSource})`),
         row('Map stack', info.stack),
         row('Tile errors', String(info.tileErrors)),
+        row('Google 3D', info.googleStatus),
+        row('Esri token', info.arcgisToken),
         row('Build', `${commit} @ ${branch}`),
         copyButton,
       );

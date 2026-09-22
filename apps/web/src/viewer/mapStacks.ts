@@ -24,14 +24,17 @@ export interface MapStackChange {
 
 export interface MapStacksOptions {
   googleKey: string;
+  arcgisKey: string;
   container: HTMLElement;
   notices: Notices;
   onStackChange: (change: MapStackChange) => void | Promise<void>;
   onTileError: () => void;
+  onGoogleStatus?: (status: string) => void;
 }
 
 export interface MapStacksController {
   getActive(): MapStack;
+  getTileset(): Cesium.Cesium3DTileset | null;
   setActive(stack: MapStack): Promise<void>;
   isEnabled(stack: MapStack): boolean;
 }
@@ -41,6 +44,23 @@ const STACK_LABELS: Record<MapStack, string> = {
   OSM: 'OSM',
   GOOGLE_3D: 'Google 3D',
 };
+
+const SECRET_PARAM = /([?&](?:key|token|access_token|apiKey)=)[^&\s"']+/gi;
+const GOOGLE_KEY = /AIza[0-9A-Za-z_-]{35}/g;
+
+/** Remove anything key-like. Never expose a key, even partially. */
+function redactSecrets(text: string): string {
+  return text.replace(SECRET_PARAM, '$1[REDACTED]').replace(GOOGLE_KEY, '[REDACTED]');
+}
+
+/** Short, key-free reason for a Google 3D failure, with an HTTP status when one is present. */
+function describeError(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error);
+  const safe = redactSecrets(raw).replace(/\s+/g, ' ').trim();
+  const status = /\b([45]\d\d)\b/.exec(safe);
+  const summary = safe.length > 140 ? `${safe.slice(0, 137)}...` : safe;
+  return status?.[1] !== undefined ? `${status[1]} — ${summary}` : summary;
+}
 
 // Public, keyless endpoints used only to decide whether a provider is reachable. Loading a tile
 // through an <img> avoids CORS requirements and mirrors how Cesium actually fetches imagery.
@@ -179,10 +199,18 @@ export function createMapStacks(
           return;
         }
         try {
+          if (options.arcgisKey.length > 0) {
+            Cesium.ArcGisMapService.defaultAccessToken = options.arcgisKey;
+          }
           const provider = await Cesium.ArcGisMapServerImageryProvider.fromBasemapType(
             Cesium.ArcGisBaseMapType.SATELLITE,
             { enablePickFeatures: false },
           );
+          // fromBasemapType derives maximumLevel from the service metadata (LOD 23) and ignores
+          // the constructor option. World Imagery has no tiles above ~LOD 19 at most locations,
+          // so cap it; otherwise close cameras request LOD 20-23, get 404s and the globe never
+          // settles. The field has no public setter, so set it directly.
+          (provider as unknown as { _maximumLevel: number })._maximumLevel = 19;
           if (token !== switchToken) {
             return;
           }
@@ -260,14 +288,19 @@ export function createMapStacks(
           return;
         }
         active = 'GOOGLE_3D';
+        options.onGoogleStatus?.('active');
         updateButtons();
         await options.onStackChange({ stack: 'GOOGLE_3D', tileset });
         return;
       } catch (error) {
         console.warn('Google 3D tileset failed to load', error);
-        options.notices.showBanner('google-fallback', 'Google 3D unavailable — showing ESRI imagery', {
-          tone: 'warn',
-        });
+        const reason = describeError(error);
+        options.onGoogleStatus?.(reason);
+        options.notices.showBanner(
+          'google-fallback',
+          `Google 3D unavailable — showing ESRI imagery (${reason})`,
+          { tone: 'warn' },
+        );
         viewer.scene.globe.show = true;
         clearTileset();
         await activateImagery('ESRI', token);
@@ -278,6 +311,7 @@ export function createMapStacks(
     viewer.scene.globe.show = true;
     clearTileset();
     clearImagery();
+    options.onGoogleStatus?.('not active');
     await activateImagery(stack, token);
   }
 
@@ -285,6 +319,7 @@ export function createMapStacks(
 
   return {
     getActive: () => active,
+    getTileset: () => tileset,
     setActive,
     isEnabled: (stack) => stack !== 'GOOGLE_3D' || googleEnabled,
   };
