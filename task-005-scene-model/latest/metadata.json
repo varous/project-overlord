@@ -1,0 +1,14 @@
+{
+  "sha": "e420302dcb4646f5073f9a606ccf3bfbe742180f",
+  "branch": "task/005-scene-model",
+  "runUrl": "https://github.com/varous/project-overlord/actions/runs/35731495947",
+  "deployUrl": "https://cc11764e.project-overlord-7xs.pages.dev",
+  "createdAt": "2026-09-22T13:17:40Z",
+  "onlineSmokeOutcome": "success",
+  "groundHeight": {
+    "heightM": 1.8392332033447558,
+    "source": "sampled from Google 3D",
+    "lat": 22.5579,
+    "lon": 88.3439
+  }
+}
