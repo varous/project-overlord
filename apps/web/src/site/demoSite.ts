@@ -65,7 +65,7 @@ export const DEMO_ELEMENTS: SiteElement[] = [
   {
     id: 'green_room_1',
     type: 'green_room',
-    label: 'Green room 1',
+    label: 'GR1',
     center: { x: ft('-36'), y: ft('-70'), z: ft('5') },
     size: { x: ft('16'), y: ft('16'), z: ft('10') },
     rotationDeg: 0,
@@ -74,7 +74,7 @@ export const DEMO_ELEMENTS: SiteElement[] = [
   {
     id: 'green_room_2',
     type: 'green_room',
-    label: 'Green room 2',
+    label: 'GR2',
     center: { x: ft('-12'), y: ft('-70'), z: ft('5') },
     size: { x: ft('16'), y: ft('16'), z: ft('10') },
     rotationDeg: 0,
@@ -83,7 +83,7 @@ export const DEMO_ELEMENTS: SiteElement[] = [
   {
     id: 'green_room_3',
     type: 'green_room',
-    label: 'Green room 3',
+    label: 'GR3',
     center: { x: ft('12'), y: ft('-70'), z: ft('5') },
     size: { x: ft('16'), y: ft('16'), z: ft('10') },
     rotationDeg: 0,
@@ -92,7 +92,7 @@ export const DEMO_ELEMENTS: SiteElement[] = [
   {
     id: 'green_room_4',
     type: 'green_room',
-    label: 'Green room 4',
+    label: 'GR4',
     center: { x: ft('36'), y: ft('-70'), z: ft('5') },
     size: { x: ft('16'), y: ft('16'), z: ft('10') },
     rotationDeg: 0,

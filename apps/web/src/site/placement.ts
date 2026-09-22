@@ -28,23 +28,25 @@ export function elementCornersLocal(element: SiteElement): LocalPoint[] {
   });
 
   if (element.size.z === 0) {
+    // Closed ring in counter-clockwise order viewed from +Z (first point not repeated).
     return [
       corner(-halfX, -halfY, 0),
       corner(halfX, -halfY, 0),
-      corner(-halfX, halfY, 0),
       corner(halfX, halfY, 0),
+      corner(-halfX, halfY, 0),
     ];
   }
 
+  // Bottom ring (CCW) then top ring (CCW), same vertex order in both rings.
   return [
     corner(-halfX, -halfY, -halfZ),
     corner(halfX, -halfY, -halfZ),
-    corner(-halfX, halfY, -halfZ),
     corner(halfX, halfY, -halfZ),
+    corner(-halfX, halfY, -halfZ),
     corner(-halfX, -halfY, halfZ),
     corner(halfX, -halfY, halfZ),
-    corner(-halfX, halfY, halfZ),
     corner(halfX, halfY, halfZ),
+    corner(-halfX, halfY, halfZ),
   ];
 }
 

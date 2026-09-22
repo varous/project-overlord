@@ -29,6 +29,8 @@ function labelOptions(text: string): Cesium.LabelGraphics.ConstructorOptions {
     style: Cesium.LabelStyle.FILL_AND_OUTLINE,
     verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
     pixelOffset: new Cesium.Cartesian2(0, -12),
+    distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 600),
+    scaleByDistance: new Cesium.NearFarScalar(100, 1.0, 600, 0.35),
     disableDepthTestDistance: Number.POSITIVE_INFINITY,
   };
 }
@@ -38,9 +40,9 @@ export function renderAxes(viewer: Cesium.Viewer, anchor: SiteAnchor): Cesium.En
   const origin = localCartesian(anchor, 0, 0, 0);
 
   const axes = [
-    { end: localCartesian(anchor, 20, 0, 0), color: Cesium.Color.RED, label: '+X stage right' },
-    { end: localCartesian(anchor, 0, 20, 0), color: Cesium.Color.LIME, label: '+Y audience' },
-    { end: localCartesian(anchor, 0, 0, 10), color: Cesium.Color.BLUE, label: '+Z up' },
+    { end: localCartesian(anchor, 20, 0, 0), color: Cesium.Color.RED, label: '+X SR' },
+    { end: localCartesian(anchor, 0, 20, 0), color: Cesium.Color.LIME, label: '+Y AUD' },
+    { end: localCartesian(anchor, 0, 0, 10), color: Cesium.Color.BLUE, label: '+Z' },
   ] as const;
 
   const entities: Cesium.Entity[] = [];

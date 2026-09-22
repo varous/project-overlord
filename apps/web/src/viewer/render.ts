@@ -10,6 +10,7 @@ import * as Cesium from 'cesium';
 
 import {
   geodeticToEcef,
+  isSimpleRing,
   localToEcefMatrix,
   localToGeodetic,
   type Geodetic,
@@ -21,6 +22,7 @@ import type { ElementType, SiteElement } from '../site/demoSite.js';
 import { elementCornersLocal } from '../site/placement.js';
 
 const TMM_PER_M = 10000;
+const LABEL_FAR_M = 600;
 
 const TYPE_COLORS: Record<ElementType, Cesium.Color> = {
   stage: Cesium.Color.fromCssColorString('#d64545'),
@@ -28,6 +30,11 @@ const TYPE_COLORS: Record<ElementType, Cesium.Color> = {
   green_room: Cesium.Color.fromCssColorString('#22c55e'),
   audience_zone: Cesium.Color.fromCssColorString('#facc15'),
 };
+
+export interface RenderOptions {
+  /** Called when an element is skipped because its footprint ring is not simple. */
+  onWarning?: (message: string) => void;
+}
 
 function toCartesian(g: Geodetic): Cesium.Cartesian3 {
   const [x, y, z] = geodeticToEcef(g);
@@ -59,14 +66,26 @@ function labelFor(element: SiteElement): Cesium.LabelGraphics.ConstructorOptions
     style: Cesium.LabelStyle.FILL_AND_OUTLINE,
     verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
     pixelOffset: new Cesium.Cartesian2(0, -12),
+    // Labels only within 600 m and shrinking with distance; never depth-tested away.
+    distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, LABEL_FAR_M),
+    scaleByDistance: new Cesium.NearFarScalar(100, 1.0, LABEL_FAR_M, 0.35),
     disableDepthTestDistance: Number.POSITIVE_INFINITY,
   };
 }
 
-function renderFlatZone(viewer: Cesium.Viewer, anchor: SiteAnchor, element: SiteElement): Cesium.Entity {
-  const positions = elementCornersLocal(element).map((corner) =>
-    toCartesian(localToGeodetic(anchor, corner)),
-  );
+function renderFlatZone(
+  viewer: Cesium.Viewer,
+  anchor: SiteAnchor,
+  element: SiteElement,
+  options: RenderOptions,
+): Cesium.Entity | null {
+  const corners = elementCornersLocal(element);
+  if (!isSimpleRing(corners)) {
+    options.onWarning?.(`Skipped ${element.id}: footprint ring is not simple`);
+    return null;
+  }
+
+  const positions = corners.map((corner) => toCartesian(localToGeodetic(anchor, corner)));
 
   return viewer.entities.add({
     id: element.id,
@@ -120,11 +139,19 @@ export function renderElements(
   viewer: Cesium.Viewer,
   anchor: SiteAnchor,
   elements: SiteElement[],
+  options: RenderOptions = {},
 ): Cesium.Entity[] {
   const baseRotation = matrix3FromMat4(localToEcefMatrix(anchor));
-  return elements.map((element) =>
-    element.size.z === 0
-      ? renderFlatZone(viewer, anchor, element)
-      : renderBox(viewer, anchor, element, baseRotation),
-  );
+  const entities: Cesium.Entity[] = [];
+  for (const element of elements) {
+    if (element.size.z === 0) {
+      const entity = renderFlatZone(viewer, anchor, element, options);
+      if (entity !== null) {
+        entities.push(entity);
+      }
+    } else {
+      entities.push(renderBox(viewer, anchor, element, baseRotation));
+    }
+  }
+  return entities;
 }

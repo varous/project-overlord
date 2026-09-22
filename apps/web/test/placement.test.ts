@@ -17,14 +17,16 @@ describe('elementCornersLocal', () => {
   it('matches expected tmm corners for main_stage at 0 degrees', () => {
     const stage = byId('main_stage');
     expect(elementCornersLocal(stage)).toEqual([
+      // Bottom ring, counter-clockwise viewed from +Z.
       { x: -91440, y: -121920, z: 0 },
       { x: 91440, y: -121920, z: 0 },
-      { x: -91440, y: 0, z: 0 },
       { x: 91440, y: 0, z: 0 },
+      { x: -91440, y: 0, z: 0 },
+      // Top ring, same order.
       { x: -91440, y: -121920, z: 18288 },
       { x: 91440, y: -121920, z: 18288 },
-      { x: -91440, y: 0, z: 18288 },
       { x: 91440, y: 0, z: 18288 },
+      { x: -91440, y: 0, z: 18288 },
     ]);
   });
 
