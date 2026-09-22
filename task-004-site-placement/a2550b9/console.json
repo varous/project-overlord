@@ -1,0 +1,28 @@
+{
+  "errors": [
+    "Blocked script execution in 'about:blank' because the document's frame is sandboxed and the 'allow-scripts' permission is not set.",
+    "Blocked script execution in 'about:blank' because the document's frame is sandboxed and the 'allow-scripts' permission is not set.",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Blocked script execution in 'about:blank' because the document's frame is sandboxed and the 'allow-scripts' permission is not set.",
+    "Blocked script execution in 'about:blank' because the document's frame is sandboxed and the 'allow-scripts' permission is not set.",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 403 ()",
+    "Failed to load resource: the server responded with a status of 404 ()"
+  ],
+  "warnings": [
+    "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder.",
+    "Google 3D tileset failed to load Nn"
+  ],
+  "failedRequests": [],
+  "tilesLoaded": {
+    "online-esri-initial": true,
+    "online-esri-aerial.png": true,
+    "online-esri-foh.png": false,
+    "online-esri-stage.png": false,
+    "online-esri-placed-aerial.png": true,
+    "online-google-initial": true,
+    "online-google-aerial.png": true,
+    "online-google-foh.png": false,
+    "online-google-stage.png": false
+  }
+}
