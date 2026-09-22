@@ -77,14 +77,25 @@ jobs:
       - name: Cloudflare token check
         continue-on-error: true
         run: |
-          npx --yes wrangler@4 whoami 2>&1 | tee whoami.log || true
           {
             echo "### Cloudflare token check"
             echo ""
+            echo "token verify:"
             echo '```'
-            cat whoami.log
+            curl -s -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+              https://api.cloudflare.com/client/v4/user/tokens/verify || true
             echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+            echo "accounts:"
+            echo '```'
+            curl -s -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+              https://api.cloudflare.com/client/v4/accounts || true
+            echo '```'
+            echo "pages project:"
+            echo '```'
+            curl -s -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+              "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects" || true
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Ensure Pages project
         run: npx --yes wrangler@4 pages project create project-overlord --production-branch main || true
