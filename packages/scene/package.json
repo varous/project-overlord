@@ -1,0 +1,22 @@
+{
+  "name": "@overlord/scene",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Zero-dependency scene document model, validation, versioning and element-type registry.",
+  "type": "module",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@overlord/geo-core": "*"
+  }
+}

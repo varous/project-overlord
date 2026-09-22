@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "id": "scn_0k3m9pl2q7r5t8v1w4x6",
+  "name": "Brigade Parade Ground demo",
+  "site": {
+    "anchor": {
+      "value": { "latDeg": 22.5579, "lonDeg": 88.3439, "heightM": 0, "headingDeg": 0 },
+      "provenance": "ARCHETYPE",
+      "note": "demo — replace with a user-placed anchor"
+    },
+    "boundary": null,
+    "imagery": { "provider": "ESRI", "captureDate": null }
+  },
+  "elements": [
+    {
+      "id": "main_stage",
+      "typeCode": "MAIN_STAGE",
+      "label": "Main stage",
+      "placement": {
+        "value": { "center": { "x": 0, "y": -60960, "z": 9144 }, "rotationDeg": 0 },
+        "provenance": "ARCHETYPE"
+      },
+      "size": { "value": { "x": 182880, "y": 121920, "z": 18288 }, "provenance": "ARCHETYPE" },
+      "params": {}
+    },
+    {
+      "id": "foh_console",
+      "typeCode": "CONSOLE_RISER",
+      "label": "FOH console",
+      "placement": {
+        "value": { "center": { "x": 0, "y": 365760, "z": 3048 }, "rotationDeg": 0 },
+        "provenance": "ARCHETYPE"
+      },
+      "size": { "value": { "x": 60960, "y": 48768, "z": 6096 }, "provenance": "ARCHETYPE" },
+      "params": {}
+    },
+    {
+      "id": "green_room_1",
+      "typeCode": "GREEN_ROOM",
+      "label": "GR1",
+      "placement": {
+        "value": { "center": { "x": -109728, "y": -213360, "z": 15240 }, "rotationDeg": 0 },
+        "provenance": "ARCHETYPE"
+      },
+      "size": { "value": { "x": 48768, "y": 48768, "z": 30480 }, "provenance": "ARCHETYPE" },
+      "params": {}
+    },
+    {
+      "id": "green_room_2",
+      "typeCode": "GREEN_ROOM",
+      "label": "GR2",
+      "placement": {
+        "value": { "center": { "x": -36576, "y": -213360, "z": 15240 }, "rotationDeg": 0 },
+        "provenance": "ARCHETYPE"
+      },
+      "size": { "value": { "x": 48768, "y": 48768, "z": 30480 }, "provenance": "ARCHETYPE" },
+      "params": {}
+    },
+    {
+      "id": "green_room_3",
+      "typeCode": "GREEN_ROOM",
+      "label": "GR3",
+      "placement": {
+        "value": { "center": { "x": 36576, "y": -213360, "z": 15240 }, "rotationDeg": 0 },
+        "provenance": "ARCHETYPE"
+      },
+      "size": { "value": { "x": 48768, "y": 48768, "z": 30480 }, "provenance": "ARCHETYPE" },
+      "params": {}
+    },
+    {
+      "id": "green_room_4",
+      "typeCode": "GREEN_ROOM",
+      "label": "GR4",
+      "placement": {
+        "value": { "center": { "x": 109728, "y": -213360, "z": 15240 }, "rotationDeg": 0 },
+        "provenance": "ARCHETYPE"
+      },
+      "size": { "value": { "x": 48768, "y": 48768, "z": 30480 }, "provenance": "ARCHETYPE" },
+      "params": {}
+    }
+  ],
+  "zones": [
+    {
+      "id": "audience_zone",
+      "kind": "AUDIENCE",
+      "label": "Audience zone",
+      "ring": {
+        "value": [
+          { "x": -304800, "y": 30480 },
+          { "x": 304800, "y": 30480 },
+          { "x": 304800, "y": 792480 },
+          { "x": -304800, "y": 792480 }
+        ],
+        "provenance": "ARCHETYPE"
+      }
+    }
+  ],
+  "viewpoints": [
+    {
+      "id": "vp_aerial",
+      "label": "Aerial",
+      "eye": { "x": 0, "y": 300000, "z": 2500000 },
+      "target": { "x": 0, "y": 0, "z": 0 }
+    },
+    {
+      "id": "vp_foh",
+      "label": "FOH",
+      "eye": { "x": 0, "y": 365760, "z": 17000 },
+      "target": { "x": 0, "y": -60960, "z": 9144 }
+    },
+    {
+      "id": "vp_stage",
+      "label": "Stage",
+      "eye": { "x": 0, "y": 0, "z": 30000 },
+      "target": { "x": 0, "y": 121920, "z": 0 }
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 {
   "files": [],
   "references": [
-    { "path": "packages/geo-core" }
+    { "path": "packages/geo-core" },
+    { "path": "packages/scene" }
   ]
 }
