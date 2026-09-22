@@ -4,8 +4,8 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { createDiagnostics } from './diagnostics.js';
 
-// Expected entity count: 7 demo elements (main stage, FOH riser, 4 green rooms, audience zone)
-// plus 6 axis entities (3 arrows + 3 labels) = 13.
+// Expected entity count: 6 scene elements (main stage, FOH riser, 4 green rooms)
+// + 1 zone (the audience area polygon) + 6 axis entities (3 arrows + 3 labels) = 13.
 const EXPECTED_ENTITY_COUNT = 13;
 
 mkdirSync('e2e-output', { recursive: true });
@@ -139,6 +139,8 @@ test('offline: placeSite applies a placement and Escape restores the previous an
   expect(placed.url).toContain('heading=30.00');
   expect(placed.entityCount).toBe(EXPECTED_ENTITY_COUNT);
   expect(placed.renderErrors).toBe(0);
+  await expect(page.locator('.debug-panel')).toContainText('unsaved changes');
+  await expect(page.locator('.debug-panel')).toContainText('Brigade Parade Ground demo');
 
   const beforeMode = placed.anchor;
   await page.getByRole('button', { name: 'Place site' }).click();

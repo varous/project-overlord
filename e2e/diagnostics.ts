@@ -5,7 +5,10 @@ import type { Page } from '@playwright/test';
 
 export interface FailedRequest {
   url: string;
-  failure: string;
+  /** HTTP status for an error response, or null for a network failure. */
+  status: number | null;
+  /** Playwright failure text for a network failure, or null for an HTTP error response. */
+  failure: string | null;
 }
 
 export interface ConsoleReport {
@@ -58,8 +61,18 @@ export function createDiagnostics(): Diagnostics {
       page.on('requestfailed', (request) => {
         report.failedRequests.push({
           url: stripQuery(request.url()),
+          status: null,
           failure: redact(request.failure()?.errorText ?? ''),
         });
+      });
+      page.on('response', (response) => {
+        if (response.status() >= 400) {
+          report.failedRequests.push({
+            url: stripQuery(response.url()),
+            status: response.status(),
+            failure: null,
+          });
+        }
       });
     },
     recordTiles(name: string, loaded: boolean): void {

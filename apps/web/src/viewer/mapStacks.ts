@@ -25,6 +25,8 @@ export interface MapStackChange {
 export interface MapStacksOptions {
   googleKey: string;
   arcgisKey: string;
+  /** Esri maximum tile level; null keeps the service metadata (full LOD). */
+  maximumLevel: number | null;
   container: HTMLElement;
   notices: Notices;
   onStackChange: (change: MapStackChange) => void | Promise<void>;
@@ -206,11 +208,13 @@ export function createMapStacks(
             Cesium.ArcGisBaseMapType.SATELLITE,
             { enablePickFeatures: false },
           );
-          // fromBasemapType derives maximumLevel from the service metadata (LOD 23) and ignores
-          // the constructor option. World Imagery has no tiles above ~LOD 18 at most locations, so
-          // cap it; otherwise close cameras request missing LOD 18-23 tiles, get 404s and the globe
-          // never reports tilesLoaded. The field has no public setter, so set it directly.
-          (provider as unknown as { _maximumLevel: number })._maximumLevel = 17;
+          // fromBasemapType derives maximumLevel from the service metadata and ignores the
+          // constructor option. Test mode caps it so the smoke tests can reach tilesLoaded on
+          // software-rendered runners; normal use keeps the full service LOD. The field has no
+          // public setter, so set it directly.
+          if (options.maximumLevel !== null) {
+            (provider as unknown as { _maximumLevel: number })._maximumLevel = options.maximumLevel;
+          }
           if (token !== switchToken) {
             return;
           }
@@ -277,7 +281,12 @@ export function createMapStacks(
       options.notices.clearBanner('google-fallback');
       viewer.scene.globe.show = false;
       try {
-        const created = await Cesium.createGooglePhotorealistic3DTileset({ key: options.googleKey });
+        // Google's terms forbid pairing Photorealistic 3D Tiles with a non-Google geocoder.
+        // This viewer has no geocoder at all, so acknowledge that with this flag.
+        const created = await Cesium.createGooglePhotorealistic3DTileset({
+          key: options.googleKey,
+          onlyUsingWithGoogleGeocoder: true,
+        });
         if (token !== switchToken) {
           return;
         }

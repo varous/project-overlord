@@ -1,5 +1,5 @@
 /**
- * Cesium rendering of site elements.
+ * Cesium rendering of a scene document.
  *
  * Orientation rule: the box orientation is built from geo-core's `localToEcefMatrix(anchor)`
  * (its 3x3 rotation part), then the element's `rotationDeg` about local +Z is applied. We never
@@ -16,23 +16,18 @@ import {
   type Geodetic,
   type Mat4,
   type SiteAnchor,
+  type Tmm,
 } from '@overlord/geo-core';
+import type { ElementTypeRegistry, SceneDoc, SceneElement } from '@overlord/scene';
 
-import type { ElementType, SiteElement } from '../site/demoSite.js';
-import { elementCornersLocal } from '../site/placement.js';
+import { elementCornersLocal, type Placeable } from '../site/placement.js';
 
 const TMM_PER_M = 10000;
 const LABEL_FAR_M = 600;
-
-const TYPE_COLORS: Record<ElementType, Cesium.Color> = {
-  stage: Cesium.Color.fromCssColorString('#d64545'),
-  riser: Cesium.Color.fromCssColorString('#3b82f6'),
-  green_room: Cesium.Color.fromCssColorString('#22c55e'),
-  audience_zone: Cesium.Color.fromCssColorString('#facc15'),
-};
+const ZONE_COLOR = Cesium.Color.fromCssColorString('#facc15');
 
 export interface RenderOptions {
-  /** Called when an element is skipped because its footprint ring is not simple. */
+  /** Called when an element or zone is skipped because its ring is not simple. */
   onWarning?: (message: string) => void;
 }
 
@@ -56,9 +51,9 @@ function matrix3FromMat4(m: Mat4): Cesium.Matrix3 {
   ]);
 }
 
-function labelFor(element: SiteElement): Cesium.LabelGraphics.ConstructorOptions {
+function labelFor(text: string): Cesium.LabelGraphics.ConstructorOptions {
   return {
-    text: element.label,
+    text,
     font: '14px sans-serif',
     fillColor: Cesium.Color.WHITE,
     outlineColor: Cesium.Color.BLACK,
@@ -73,45 +68,52 @@ function labelFor(element: SiteElement): Cesium.LabelGraphics.ConstructorOptions
   };
 }
 
-function renderFlatZone(
+function renderPolygon(
   viewer: Cesium.Viewer,
   anchor: SiteAnchor,
-  element: SiteElement,
-  options: RenderOptions,
-): Cesium.Entity | null {
-  const corners = elementCornersLocal(element);
-  if (!isSimpleRing(corners)) {
-    options.onWarning?.(`Skipped ${element.id}: footprint ring is not simple`);
-    return null;
-  }
-
-  const positions = corners.map((corner) => toCartesian(localToGeodetic(anchor, corner)));
-
+  id: string,
+  label: string,
+  ring: { x: Tmm; y: Tmm }[],
+  color: Cesium.Color,
+): Cesium.Entity {
+  const positions = ring.map((point) =>
+    toCartesian(localToGeodetic(anchor, { x: point.x, y: point.y, z: 0 as Tmm })),
+  );
   return viewer.entities.add({
-    id: element.id,
-    name: element.label,
-    position: toCartesian(localToGeodetic(anchor, element.center)),
+    id,
+    name: label,
+    position: toCartesian(
+      localToGeodetic(anchor, {
+        x: Math.round(ring.reduce((sum, point) => sum + (point.x as number), 0) / ring.length) as Tmm,
+        y: Math.round(ring.reduce((sum, point) => sum + (point.y as number), 0) / ring.length) as Tmm,
+        z: 0 as Tmm,
+      }),
+    ),
     polygon: {
       hierarchy: new Cesium.PolygonHierarchy(positions),
-      material: TYPE_COLORS.audience_zone.withAlpha(0.25),
+      material: color.withAlpha(0.25),
       outline: true,
-      outlineColor: TYPE_COLORS.audience_zone.withAlpha(0.9),
+      outlineColor: color.withAlpha(0.9),
       perPositionHeight: true,
     },
-    label: labelFor(element),
+    label: labelFor(label),
   });
 }
 
 function renderBox(
   viewer: Cesium.Viewer,
   anchor: SiteAnchor,
-  element: SiteElement,
+  element: SceneElement,
+  placeable: Placeable,
   baseRotation: Cesium.Matrix3,
+  color: Cesium.Color,
 ): Cesium.Entity {
-  const position = toCartesian(localToGeodetic(anchor, element.center));
+  const position = toCartesian(localToGeodetic(anchor, placeable.center));
 
   // rotationDeg is clockwise positive about local +Z; Cesium's fromRotationZ is CCW positive.
-  const elementRotation = Cesium.Matrix3.fromRotationZ(-Cesium.Math.toRadians(element.rotationDeg));
+  const elementRotation = Cesium.Matrix3.fromRotationZ(
+    -Cesium.Math.toRadians(placeable.rotationDeg),
+  );
   const orientationMatrix = Cesium.Matrix3.multiply(baseRotation, elementRotation, new Cesium.Matrix3());
   const orientation = Cesium.Quaternion.fromRotationMatrix(orientationMatrix);
 
@@ -122,36 +124,58 @@ function renderBox(
     orientation,
     box: {
       dimensions: new Cesium.Cartesian3(
-        (element.size.x as number) / TMM_PER_M,
-        (element.size.y as number) / TMM_PER_M,
-        (element.size.z as number) / TMM_PER_M,
+        (placeable.size.x as number) / TMM_PER_M,
+        (placeable.size.y as number) / TMM_PER_M,
+        (placeable.size.z as number) / TMM_PER_M,
       ),
-      material: TYPE_COLORS[element.type].withAlpha(0.85),
+      material: color.withAlpha(0.85),
       outline: true,
       outlineColor: Cesium.Color.WHITE,
     },
-    label: labelFor(element),
+    label: labelFor(element.label),
   });
 }
 
-/** Render all elements for an anchor and return the created entities. */
-export function renderElements(
+/** Render a scene document for an anchor and return the created entities. */
+export function renderScene(
   viewer: Cesium.Viewer,
   anchor: SiteAnchor,
-  elements: SiteElement[],
+  scene: SceneDoc,
+  registry: ElementTypeRegistry,
   options: RenderOptions = {},
 ): Cesium.Entity[] {
   const baseRotation = matrix3FromMat4(localToEcefMatrix(anchor));
   const entities: Cesium.Entity[] = [];
-  for (const element of elements) {
-    if (element.size.z === 0) {
-      const entity = renderFlatZone(viewer, anchor, element, options);
-      if (entity !== null) {
-        entities.push(entity);
+
+  for (const element of scene.elements) {
+    const type = registry.get(element.typeCode);
+    const color = type === undefined ? Cesium.Color.LIGHTGRAY : Cesium.Color.fromCssColorString(type.color);
+    const placeable: Placeable = {
+      center: element.placement.value.center,
+      size: element.size.value,
+      rotationDeg: element.placement.value.rotationDeg,
+    };
+
+    if (type?.geometry === 'FLAT' || element.size.value.z === 0) {
+      const ring = elementCornersLocal(placeable);
+      if (!isSimpleRing(ring)) {
+        options.onWarning?.(`Skipped ${element.id}: footprint ring is not simple`);
+        continue;
       }
+      entities.push(renderPolygon(viewer, anchor, element.id, element.label, ring, color));
     } else {
-      entities.push(renderBox(viewer, anchor, element, baseRotation));
+      entities.push(renderBox(viewer, anchor, element, placeable, baseRotation, color));
     }
   }
+
+  for (const zone of scene.zones) {
+    const ring = zone.ring.value;
+    if (!isSimpleRing(ring)) {
+      options.onWarning?.(`Skipped zone ${zone.id}: ring is not simple`);
+      continue;
+    }
+    entities.push(renderPolygon(viewer, anchor, zone.id, zone.label, ring, ZONE_COLOR));
+  }
+
   return entities;
 }

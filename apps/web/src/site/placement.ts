@@ -7,12 +7,19 @@
 
 import { localToGeodetic, type Geodetic, type LocalPoint, type SiteAnchor, type Tmm } from '@overlord/geo-core';
 
-import type { SiteElement } from './demoSite.js';
+/** The minimal geometric shape needed to place a box or flat element. */
+export interface Placeable {
+  center: LocalPoint;
+  size: { x: Tmm; y: Tmm; z: Tmm };
+  rotationDeg: number;
+}
 
 /**
- * Local corners of an element: 8 for a box, 4 for a flat zone (`size.z === 0`).
+ * Local corners of an element: 8 for a box, 4 for a flat element (`size.z === 0`). Flat elements
+ * return a counter-clockwise closed ring viewed from +Z; boxes return the bottom ring (CCW)
+ * followed by the top ring (CCW, same order).
  */
-export function elementCornersLocal(element: SiteElement): LocalPoint[] {
+export function elementCornersLocal(element: Placeable): LocalPoint[] {
   const halfX = (element.size.x as number) / 2;
   const halfY = (element.size.y as number) / 2;
   const halfZ = (element.size.z as number) / 2;
@@ -51,6 +58,6 @@ export function elementCornersLocal(element: SiteElement): LocalPoint[] {
 }
 
 /** Geographic corners of an element for the given anchor. */
-export function elementCornersGeodetic(anchor: SiteAnchor, element: SiteElement): Geodetic[] {
+export function elementCornersGeodetic(anchor: SiteAnchor, element: Placeable): Geodetic[] {
   return elementCornersLocal(element).map((corner) => localToGeodetic(anchor, corner));
 }

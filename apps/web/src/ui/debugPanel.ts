@@ -17,6 +17,8 @@ export interface DebugInfo {
   googleStatus: string;
   /** "own key" or "Cesium default (dev only)". */
   arcgisToken: string;
+  /** "Scene: <name>" plus " · unsaved changes" when the in-memory doc differs. */
+  scene: string;
 }
 
 export interface DebugPanelOptions {
@@ -65,6 +67,7 @@ export function createDebugPanel(container: HTMLElement, options: DebugPanelOpti
         row('Tile errors', String(info.tileErrors)),
         row('Google 3D', info.googleStatus),
         row('Esri token', info.arcgisToken),
+        row('Scene', info.scene),
         row('Build', `${commit} @ ${branch}`),
         copyButton,
       );

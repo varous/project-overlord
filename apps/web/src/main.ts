@@ -2,14 +2,16 @@ import 'cesium/Build/Cesium/Widgets/widgets.css';
 
 import * as Cesium from 'cesium';
 
-import type { SiteAnchor } from '@overlord/geo-core';
+import type { SiteAnchor, Sourced } from '@overlord/geo-core';
+import { canonicalJson, elementTypeRegistry, validateScene, type SceneDoc } from '@overlord/scene';
 
-import { DEMO_ANCHOR, DEMO_ELEMENTS } from './site/demoSite.js';
+import { DEMO_ANCHOR, demoScene } from './site/demoSite.js';
 import { normalizeHeading, parseUrlState, serializeUrlState } from './site/urlState.js';
 import { renderAxes } from './viewer/axes.js';
 import { sampleGroundHeight } from './viewer/groundHeight.js';
 import { createMapStacks, type MapStack, type MapStackChange } from './viewer/mapStacks.js';
-import { renderElements } from './viewer/render.js';
+import { renderScene } from './viewer/render.js';
+import { renderQualityFor } from './viewer/renderQuality.js';
 import { createViewpointButtons, flyToViewpoint, type ViewpointName } from './viewer/viewpoints.js';
 import { createDebugPanel } from './ui/debugPanel.js';
 import { createNotices } from './ui/notices.js';
@@ -40,20 +42,26 @@ const viewer = new Cesium.Viewer(container, {
   showRenderLoopErrors: false,
 });
 
-// Bound imagery tile requests so the globe reports tilesLoaded within the smoke-test timeout even
-// on software-rendered CI runners (slightly coarser tiles, still readable).
-viewer.scene.globe.maximumScreenSpaceError = 4;
-
 const notices = createNotices(document.body);
 const googleKey = import.meta.env.VITE_GOOGLE_MAPS_KEY ?? '';
 const arcgisKey = import.meta.env.VITE_ARCGIS_API_KEY ?? '';
 const arcgisTokenStatus = arcgisKey.length > 0 ? 'own key' : 'Cesium default (dev only)';
 
 const urlState = parseUrlState(window.location.search);
+const testEnabled = urlState.test;
+const quality = renderQualityFor(testEnabled);
+if (quality.globeMaximumScreenSpaceError !== null) {
+  viewer.scene.globe.maximumScreenSpaceError = quality.globeMaximumScreenSpaceError;
+}
+
+// The in-memory scene document. Placement mode edits this; there is no persistence yet.
+let currentDoc: SceneDoc = structuredClone(demoScene);
+const loadedCanonical = canonicalJson(demoScene);
+let sceneDirty = false;
 
 let anchor: SiteAnchor =
   urlState.anchorOverride === undefined
-    ? { ...DEMO_ANCHOR }
+    ? { ...currentDoc.site.anchor.value }
     : { ...DEMO_ANCHOR, ...urlState.anchorOverride };
 let heightSource = 'ellipsoid 0';
 let activeStack: MapStack = urlState.stack ?? 'ESRI';
@@ -62,11 +70,35 @@ let renderErrors = 0;
 let tileErrors = 0;
 let googleStatus = 'not active';
 let ready = false;
-let placementSnapshot: { anchor: SiteAnchor; heightSource: string } | null = null;
-const testEnabled = urlState.test;
+let placementSnapshot: {
+  anchor: SiteAnchor;
+  heightSource: string;
+  docAnchor: Sourced<SiteAnchor>;
+} | null = null;
 
 for (const [index, warning] of urlState.warnings.entries()) {
   notices.showBanner(`url-warning-${index}`, warning, { tone: 'warn', kind: 'warning' });
+}
+
+const validation = validateScene(demoScene, elementTypeRegistry);
+if (!validation.ok) {
+  const shown = validation.issues.slice(0, 5);
+  shown.forEach((issue, index) => {
+    notices.showBanner(`scene-issue-${index}`, `${issue.code} at ${issue.path}: ${issue.message}`, {
+      tone: 'warn',
+      kind: 'warning',
+    });
+  });
+  if (validation.issues.length > shown.length) {
+    notices.showBanner('scene-issue-more', `+${validation.issues.length - shown.length} more scene issues`, {
+      tone: 'warn',
+      kind: 'warning',
+    });
+  }
+}
+
+function sceneStatus(): string {
+  return `${currentDoc.name}${sceneDirty ? ' · unsaved changes' : ''}`;
 }
 
 function updateUrl(): void {
@@ -102,17 +134,23 @@ function refreshDebugPanel(): void {
     tileErrors,
     googleStatus,
     arcgisToken: arcgisTokenStatus,
+    scene: sceneStatus(),
   });
+}
+
+function refreshSceneDirty(): void {
+  sceneDirty = canonicalJson(currentDoc) !== loadedCanonical;
 }
 
 function rebuildScene(): void {
   viewer.entities.removeAll();
-  renderElements(viewer, anchor, DEMO_ELEMENTS, {
+  renderScene(viewer, anchor, currentDoc, elementTypeRegistry, {
     onWarning: (message) => {
       notices.showBanner('ring-warning', message, { tone: 'warn' });
     },
   });
   renderAxes(viewer, anchor);
+  refreshSceneDirty();
   refreshDebugPanel();
 }
 
@@ -142,6 +180,7 @@ function handleStackChange(change: MapStackChange): void {
 const mapStacks = createMapStacks(viewer, {
   googleKey,
   arcgisKey,
+  maximumLevel: quality.maximumLevel,
   container: document.body,
   notices,
   onStackChange: handleStackChange,
@@ -155,8 +194,19 @@ const mapStacks = createMapStacks(viewer, {
   },
 });
 
+function setPlacementDocAnchor(next: SiteAnchor): void {
+  currentDoc = {
+    ...currentDoc,
+    site: {
+      ...currentDoc.site,
+      anchor: { value: { ...next }, provenance: 'STATED' },
+    },
+  };
+}
+
 function setHeading(headingDeg: number): void {
   anchor = { ...anchor, headingDeg: normalizeHeading(headingDeg) };
+  setPlacementDocAnchor(anchor);
   rebuildScene();
   updateUrl();
 }
@@ -176,6 +226,7 @@ async function applyPlacement(latDeg: number, lonDeg: number, headingDeg: number
     }
   }
 
+  setPlacementDocAnchor(anchor);
   rebuildScene();
   updateUrl();
   placement.refresh();
@@ -191,7 +242,11 @@ const placement = createSitePlacement({
   getAnchor: () => anchor,
   isGoogleActive: () => mapStacks.getActive() === 'GOOGLE_3D',
   onStart: () => {
-    placementSnapshot = { anchor: { ...anchor }, heightSource };
+    placementSnapshot = {
+      anchor: { ...anchor },
+      heightSource,
+      docAnchor: currentDoc.site.anchor,
+    };
   },
   onPick: (latDeg, lonDeg) => {
     void applyPlacement(latDeg, lonDeg, anchor.headingDeg);
@@ -203,6 +258,10 @@ const placement = createSitePlacement({
     if (placementSnapshot !== null) {
       anchor = { ...placementSnapshot.anchor };
       heightSource = placementSnapshot.heightSource;
+      currentDoc = {
+        ...currentDoc,
+        site: { ...currentDoc.site, anchor: placementSnapshot.docAnchor },
+      };
       placementSnapshot = null;
       rebuildScene();
       updateUrl();
