@@ -1,0 +1,20 @@
+{
+  "name": "@overlord/geo-core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Zero-dependency geospatial primitives: canonical units and the WGS84-anchored site frame.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {}
+}
