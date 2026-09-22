@@ -1,0 +1,74 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+#cesium-container {
+  position: absolute;
+  inset: 0;
+}
+
+.map-stacks,
+.viewpoints {
+  position: fixed;
+  top: 10px;
+  display: flex;
+  gap: 6px;
+  z-index: 10;
+}
+
+.map-stacks {
+  left: 10px;
+}
+
+.viewpoints {
+  right: 10px;
+}
+
+.map-stacks button,
+.viewpoints button {
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  background: rgba(20, 24, 33, 0.8);
+  color: #e8edf5;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.map-stacks button:hover:not(:disabled),
+.viewpoints button:hover {
+  background: rgba(45, 55, 72, 0.9);
+}
+
+.map-stacks button.active {
+  background: #2563eb;
+  border-color: #93c5fd;
+}
+
+.map-stacks button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.debug-panel {
+  position: fixed;
+  left: 10px;
+  bottom: 40px;
+  z-index: 10;
+  min-width: 260px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  background: rgba(20, 24, 33, 0.82);
+  color: #e8edf5;
+  font-size: 12px;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.debug-panel__label {
+  color: #9fb3c8;
+}
