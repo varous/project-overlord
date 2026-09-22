@@ -44,14 +44,14 @@ function viewpoint(anchor: SiteAnchor, name: ViewpointName): Viewpoint {
       return {
         destination: localCartesian(anchor, 0, 120 * FT_TO_M, 1.7),
         headingOffsetDeg: 180,
-        pitchDeg: -5,
+        pitchDeg: -15,
       };
     case 'Stage':
       // From the stage downstage edge at 3 m, looking out toward the audience (+Y).
       return {
         destination: localCartesian(anchor, 0, 0, 3),
         headingOffsetDeg: 0,
-        pitchDeg: -5,
+        pitchDeg: -15,
       };
   }
 }
