@@ -1,0 +1,14 @@
+{
+  "sha": "e1a0a1132b1dd374c409962fd9d1ec03b05d2c19",
+  "branch": "task/003-resilience-smoke",
+  "runUrl": "https://github.com/varous/project-overlord/actions/runs/35715650689",
+  "deployUrl": null,
+  "createdAt": "2026-09-22T10:28:03Z",
+  "onlineSmokeOutcome": "success",
+  "groundHeight": {
+    "heightM": 0,
+    "source": "ellipsoid 0",
+    "lat": 22.5579,
+    "lon": 88.3439
+  }
+}
