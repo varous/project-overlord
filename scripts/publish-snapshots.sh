@@ -42,10 +42,15 @@ mkdir -p "$OUT_SRC"
 if [ ! -f "$OUT_SRC/ground-height.json" ]; then
   printf '{"skipped":"online smoke did not produce a height"}\n' > "$OUT_SRC/ground-height.json"
 fi
+if [ ! -f "$OUT_SRC/console.json" ]; then
+  printf '{"errors":[],"warnings":[],"failedRequests":[],"tilesLoaded":{}}\n' > "$OUT_SRC/console.json"
+fi
 
 copy_artifacts() {
   local dest_dir="$1"
-  find "$OUT_SRC" -maxdepth 1 -type f \( -name '*.png' -o -name 'ground-height.json' \) -exec cp {} "$dest_dir/" \;
+  find "$OUT_SRC" -maxdepth 1 -type f \
+    \( -name '*.png' -o -name 'ground-height.json' -o -name 'console.json' \) \
+    -exec cp {} "$dest_dir/" \;
 }
 
 copy_artifacts "$BRANCH_SLUG/$SHORT_SHA"

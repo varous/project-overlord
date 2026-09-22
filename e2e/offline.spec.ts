@@ -2,11 +2,21 @@ import { mkdirSync } from 'node:fs';
 
 import { expect, test, type Page } from '@playwright/test';
 
+import { createDiagnostics } from './diagnostics.js';
+
 // Expected entity count: 7 demo elements (main stage, FOH riser, 4 green rooms, audience zone)
 // plus 6 axis entities (3 arrows + 3 labels) = 13.
 const EXPECTED_ENTITY_COUNT = 13;
 
 mkdirSync('e2e-output', { recursive: true });
+
+const diag = createDiagnostics();
+test.beforeEach(async ({ page }) => {
+  diag.attach(page);
+});
+test.afterAll(() => {
+  diag.write('console.json');
+});
 
 async function blockExternalRequests(page: Page): Promise<void> {
   await page.route('**/*', (route) => {
@@ -22,6 +32,14 @@ async function waitForReady(page: Page): Promise<void> {
   await page.waitForFunction(() => window.__overlord?.ready === true, undefined, { timeout: 45_000 });
 }
 
+async function waitForTiles(page: Page, name: string): Promise<boolean> {
+  const loaded = await page.evaluate(async (timeout) => {
+    return (await window.__overlord?.waitForTilesLoaded(timeout)) ?? false;
+  }, 30_000);
+  diag.recordTiles(name, loaded);
+  return loaded;
+}
+
 async function flyAndScreenshot(
   page: Page,
   view: 'Aerial' | 'FOH' | 'Stage',
@@ -30,6 +48,7 @@ async function flyAndScreenshot(
   await page.evaluate(async (name) => {
     await window.__overlord?.flyTo(name);
   }, view);
+  await waitForTiles(page, file);
   await page.screenshot({ path: `e2e-output/${file}` });
 }
 
@@ -92,4 +111,41 @@ test('offline: invalid lat/lon shows one warning and keeps the default anchor', 
   const anchor = await page.evaluate(() => window.__overlord?.anchor ?? null);
   expect(anchor?.latDeg).toBeCloseTo(22.5579, 6);
   expect(anchor?.lonDeg).toBeCloseTo(88.3439, 6);
+});
+
+test('offline: placeSite applies a placement and Escape restores the previous anchor', async ({
+  page,
+}) => {
+  await blockExternalRequests(page);
+  await page.goto('/?test=1');
+  await waitForReady(page);
+
+  await page.evaluate(async () => {
+    await window.__overlord?.placeSite(22.5601, 88.3452, 30);
+  });
+
+  const placed = await page.evaluate(() => ({
+    anchor: window.__overlord?.anchor ?? null,
+    url: window.location.href,
+    entityCount: window.__overlord?.entityCount ?? -1,
+    renderErrors: window.__overlord?.renderErrors ?? -1,
+  }));
+
+  expect(placed.anchor?.latDeg).toBeCloseTo(22.5601, 6);
+  expect(placed.anchor?.lonDeg).toBeCloseTo(88.3452, 6);
+  expect(placed.anchor?.headingDeg).toBeCloseTo(30, 6);
+  expect(placed.url).toContain('lat=22.5601000');
+  expect(placed.url).toContain('lon=88.3452000');
+  expect(placed.url).toContain('heading=30.00');
+  expect(placed.entityCount).toBe(EXPECTED_ENTITY_COUNT);
+  expect(placed.renderErrors).toBe(0);
+
+  const beforeMode = placed.anchor;
+  await page.getByRole('button', { name: 'Place site' }).click();
+  await page.keyboard.press('Escape');
+
+  const restored = await page.evaluate(() => window.__overlord?.anchor ?? null);
+  expect(restored?.latDeg).toBeCloseTo(beforeMode?.latDeg ?? 0, 6);
+  expect(restored?.lonDeg).toBeCloseTo(beforeMode?.lonDeg ?? 0, 6);
+  expect(restored?.headingDeg).toBeCloseTo(beforeMode?.headingDeg ?? 0, 6);
 });
