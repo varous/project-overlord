@@ -9,6 +9,9 @@ const OUT_DIR = 'e2e-output';
 
 test.skip(process.env.SMOKE_ONLINE !== '1', 'set SMOKE_ONLINE=1 to run the online smoke tests');
 
+// Each screenshot waits up to 30 s for tiles, so allow well over that for the whole test.
+test.describe.configure({ timeout: 300_000 });
+
 mkdirSync(OUT_DIR, { recursive: true });
 
 const diag = createDiagnostics();
