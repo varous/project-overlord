@@ -67,9 +67,10 @@ interface Modal {
   close: () => void;
 }
 
-function createModal(title: string): Modal {
+function createModal(title: string, name: string): Modal {
   const overlay = document.createElement('div');
   overlay.className = 'modal';
+  overlay.dataset.modal = name;
   overlay.hidden = true;
 
   const panel = document.createElement('div');
@@ -144,7 +145,7 @@ export function createPersistenceUi(options: PersistenceUiOptions): PersistenceU
   const topBar = document.createElement('div');
   topBar.className = 'top-bar';
 
-  const connectButton = actionButton('Connect', 'connect', () => openConnect());
+  const connectButton = actionButton('Account', 'connect', () => openConnect());
   const saveButton = actionButton('Save', 'save', () => {
     void options.onSave();
   });
@@ -163,7 +164,7 @@ export function createPersistenceUi(options: PersistenceUiOptions): PersistenceU
   document.body.appendChild(topBar);
 
   // --- Connect panel ------------------------------------------------------------------------
-  const connectModal = createModal('Connect to the API');
+  const connectModal = createModal('Account', 'account');
   const keyInput = document.createElement('input');
   keyInput.type = 'password';
   keyInput.autocomplete = 'off';
@@ -205,7 +206,7 @@ export function createPersistenceUi(options: PersistenceUiOptions): PersistenceU
   }
 
   // --- Open dialog --------------------------------------------------------------------------
-  const scenesModal = createModal('Open scene');
+  const scenesModal = createModal('Open scene', 'scenes');
   async function openScenes(): Promise<void> {
     scenesModal.open();
     scenesModal.body.replaceChildren(messageRow('Loading…'));
@@ -241,7 +242,7 @@ export function createPersistenceUi(options: PersistenceUiOptions): PersistenceU
   }
 
   // --- Versions panel -----------------------------------------------------------------------
-  const versionsModal = createModal('Version history');
+  const versionsModal = createModal('Version history', 'versions');
   async function openVersions(): Promise<void> {
     versionsModal.open();
     versionsModal.body.replaceChildren(messageRow('Loading…'));
@@ -277,7 +278,7 @@ export function createPersistenceUi(options: PersistenceUiOptions): PersistenceU
   }
 
   // --- Save as new --------------------------------------------------------------------------
-  const saveAsModal = createModal('Save as new scene');
+  const saveAsModal = createModal('Save as new scene', 'save-as-new');
   const newNameInput = document.createElement('input');
   newNameInput.type = 'text';
   newNameInput.setAttribute('aria-label', 'New scene name');
@@ -295,7 +296,7 @@ export function createPersistenceUi(options: PersistenceUiOptions): PersistenceU
   }
 
   // --- Share panel --------------------------------------------------------------------------
-  const shareModal = createModal('Share scene');
+  const shareModal = createModal('Share scene', 'share');
   async function openShare(): Promise<void> {
     shareModal.open();
     shareModal.body.replaceChildren(messageRow('Creating link…'));
@@ -336,8 +337,6 @@ export function createPersistenceUi(options: PersistenceUiOptions): PersistenceU
     openButton.disabled = !canEditRemotely;
     versionsButton.disabled = !canEditRemotely || !options.hasScene();
     shareButton.disabled = !canEditRemotely || !options.hasScene();
-
-    connectButton.textContent = connected ? 'Account' : 'Connect';
 
     const tip = !connected ? 'Connect to the API to save' : readOnly ? 'Shared view — read only' : '';
     for (const el of [saveButton, saveAsNewButton, openButton, versionsButton, shareButton]) {

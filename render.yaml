@@ -39,3 +39,6 @@ databases:
   - name: project-overlord-db
     plan: basic-256mb
     region: singapore
+
+# Render requires this file at the repository root.
+# The Dockerfile and compose file stay in infra/.

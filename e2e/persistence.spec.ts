@@ -246,7 +246,7 @@ test('persistence: Open dialog lists scenes and loads one into the URL; Versions
   await connect(page);
 
   await page.locator('[data-action="open"]').click();
-  const dialog = page.locator('.modal', { hasText: 'Open scene' });
+  const dialog = page.locator('.modal[data-modal="scenes"]');
   await expect(dialog.locator('.modal__row')).toHaveCount(2);
   await expect(dialog).toContainText('Stubbed night show');
   await page.screenshot({ path: 'e2e-output/persistence-open-dialog.png' });
@@ -256,7 +256,7 @@ test('persistence: Open dialog lists scenes and loads one into the URL; Versions
   await expect(page).toHaveURL(/v=3/);
 
   await page.locator('[data-action="versions"]').click();
-  const versionsPanel = page.locator('.modal', { hasText: 'Version history' });
+  const versionsPanel = page.locator('.modal[data-modal="versions"]');
   await expect(versionsPanel.locator('.modal__row')).toHaveCount(3);
   await page.screenshot({ path: 'e2e-output/persistence-versions-panel.png' });
 
@@ -273,7 +273,9 @@ test('persistence: ?share=<token> renders read-only with no Save button', async 
   const state = makeState();
   await setUp(page, state, '&share=tok_stub');
 
-  await expect(page.locator('.notice-banner', { hasText: 'Shared view — read only' })).toBeVisible();
+  await expect(
+    page.locator('.notice-banner', { hasText: 'Shared view — Brigade Parade Ground demo, v1 (read-only)' }),
+  ).toBeVisible();
   await expect(page.locator('[data-action="save"]')).toBeHidden();
   await expect(page.locator('[data-action="save-as-new"]')).toBeHidden();
   expect(await page.evaluate(() => window.__overlord?.readOnly)).toBe(true);
@@ -305,7 +307,7 @@ test('persistence: connecting while the API is down reports the error without a 
   await page.getByLabel('Author name').fill('Ada');
   await page.locator('[data-action="connect-save"]').click();
 
-  const panel = page.locator('.modal', { hasText: 'Connect to the API' });
+  const panel = page.locator('.modal[data-modal="account"]');
   await expect(panel.locator('.modal__message')).toContainText('HTTP_ERROR');
   await expect(page.locator('.debug-panel')).toContainText('API: down');
   await expect(page.locator('.debug-panel')).toContainText('Access: connected as Ada');

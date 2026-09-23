@@ -28,6 +28,11 @@ async function blockExternalRequests(page: Page): Promise<void> {
   });
 }
 
+// The offline suite must never depend on build-time configuration. Every page load uses an
+// explicit empty `?api=` override so the app reports "API: not configured" even when CI builds with
+// VITE_API_BASE_URL set from the API_BASE_URL repository variable.
+const OFFLINE = '/?test=1&api=';
+
 async function waitForReady(page: Page): Promise<void> {
   await page.waitForFunction(() => window.__overlord?.ready === true, undefined, { timeout: 45_000 });
 }
@@ -56,7 +61,7 @@ test('offline: viewer keeps rendering, shows fallback banner and controls stay u
   page,
 }) => {
   await blockExternalRequests(page);
-  await page.goto('/?test=1');
+  await page.goto(OFFLINE);
   await waitForReady(page);
 
   await expect(page.locator('.cesium-widget-errorPanel')).toBeHidden();
@@ -93,7 +98,7 @@ test('offline: viewer keeps rendering, shows fallback banner and controls stay u
 
 test('offline: URL anchor override and viewpoint are applied without warnings', async ({ page }) => {
   await blockExternalRequests(page);
-  await page.goto('/?test=1&lat=22.55&lon=88.34&heading=90&view=FOH');
+  await page.goto('/?test=1&api=&lat=22.55&lon=88.34&heading=90&view=FOH');
   await waitForReady(page);
 
   const anchor = await page.evaluate(() => window.__overlord?.anchor ?? null);
@@ -107,7 +112,7 @@ test('offline: URL anchor override and viewpoint are applied without warnings', 
 
 test('offline: invalid lat/lon shows one warning and keeps the default anchor', async ({ page }) => {
   await blockExternalRequests(page);
-  await page.goto('/?test=1&lat=999&lon=88');
+  await page.goto('/?test=1&api=&lat=999&lon=88');
   await waitForReady(page);
 
   await expect(page.locator('.notice-banner--warning')).toHaveCount(1);
@@ -121,7 +126,7 @@ test('offline: placeSite applies a placement and Escape restores the previous an
   page,
 }) => {
   await blockExternalRequests(page);
-  await page.goto('/?test=1');
+  await page.goto(OFFLINE);
   await waitForReady(page);
 
   await page.evaluate(async () => {

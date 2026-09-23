@@ -129,15 +129,21 @@ export function parseUrlState(search: string): UrlState {
   const apiRaw = params.get('api');
   let api: string | undefined;
   if (apiRaw !== null) {
-    try {
-      const parsed = new URL(apiRaw);
-      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-        api = parsed.origin;
-      } else {
+    // `?api=` (empty) is an explicit "no API configured" override. The offline smoke uses it so
+    // the suite never depends on build-time configuration (e.g. the API_BASE_URL repo variable).
+    if (apiRaw === '') {
+      api = '';
+    } else {
+      try {
+        const parsed = new URL(apiRaw);
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+          api = parsed.origin;
+        } else {
+          warnings.push('Ignoring invalid api origin — using the configured API.');
+        }
+      } catch {
         warnings.push('Ignoring invalid api origin — using the configured API.');
       }
-    } catch {
-      warnings.push('Ignoring invalid api origin — using the configured API.');
     }
   }
 

@@ -1,6 +1,8 @@
 /// <reference types="vite/client" />
 
 import type { SiteAnchor } from '@overlord/geo-core';
+import type { Command } from '@overlord/commands';
+import type { SceneDoc, SceneElement } from '@overlord/scene';
 
 import type { MapStack } from './viewer/mapStacks.js';
 import type { ViewpointName } from './viewer/viewpoints.js';
@@ -9,6 +11,8 @@ export interface GroundHeight {
   heightM: number;
   source: string;
 }
+
+export type TestSelection = { kind: 'element' | 'zone'; id: string } | null;
 
 /**
  * Test hook exposed on `window.__overlord` only when the URL has `?test=1`.
@@ -35,6 +39,19 @@ export interface OverlordTestHook {
   waitForTilesLoaded(timeoutMs: number): Promise<boolean>;
   /** Programmatically apply a placement through the same code path as the UI. */
   placeSite(latDeg: number, lonDeg: number, headingDeg: number): Promise<void>;
+  /** Apply an edit command through @overlord/commands (the only mutation path). */
+  runCommand(command: Command): { ok: true } | { ok: false; message: string };
+  undo(): boolean;
+  redo(): boolean;
+  selection(): TestSelection;
+  docHash(): string;
+  doc(): SceneDoc;
+  elementCount(): number;
+  element(id: string): SceneElement | null;
+  /** Finish a pending palette add at a local tmm point (same path as a ground click). */
+  placePending(x: number, y: number): void;
+  select(kind: 'element' | 'zone', id: string): void;
+  clearSelection(): void;
 }
 
 declare global {

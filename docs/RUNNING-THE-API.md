@@ -33,7 +33,8 @@ before it begins listening.
 
 ## Deploying on Render
 
-The blueprint is `infra/render.yaml`. Link the repo, then apply it:
+The blueprint is `render.yaml` at the repository root (Render only reads a root-level blueprint).
+Link the repo, then apply it:
 
 ```bash
 render blueprint apply

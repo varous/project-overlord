@@ -25,10 +25,13 @@ import { elementCornersLocal, type Placeable } from '../site/placement.js';
 const TMM_PER_M = 10000;
 const LABEL_FAR_M = 600;
 const ZONE_COLOR = Cesium.Color.fromCssColorString('#facc15');
+const SELECTION_COLOR = Cesium.Color.fromCssColorString('#22d3ee');
 
 export interface RenderOptions {
   /** Called when an element or zone is skipped because its ring is not simple. */
   onWarning?: (message: string) => void;
+  /** Id of the selected element or zone; it is outlined in the selection colour. */
+  selected?: string | null;
 }
 
 function toCartesian(g: Geodetic): Cesium.Cartesian3 {
@@ -75,6 +78,7 @@ function renderPolygon(
   label: string,
   ring: { x: Tmm; y: Tmm }[],
   color: Cesium.Color,
+  selected: boolean,
 ): Cesium.Entity {
   const positions = ring.map((point) =>
     toCartesian(localToGeodetic(anchor, { x: point.x, y: point.y, z: 0 as Tmm })),
@@ -91,9 +95,9 @@ function renderPolygon(
     ),
     polygon: {
       hierarchy: new Cesium.PolygonHierarchy(positions),
-      material: color.withAlpha(0.25),
+      material: color.withAlpha(selected ? 0.45 : 0.25),
       outline: true,
-      outlineColor: color.withAlpha(0.9),
+      outlineColor: selected ? SELECTION_COLOR : color.withAlpha(0.9),
       perPositionHeight: true,
     },
     label: labelFor(label),
@@ -107,6 +111,7 @@ function renderBox(
   placeable: Placeable,
   baseRotation: Cesium.Matrix3,
   color: Cesium.Color,
+  selected: boolean,
 ): Cesium.Entity {
   const position = toCartesian(localToGeodetic(anchor, placeable.center));
 
@@ -128,9 +133,9 @@ function renderBox(
         (placeable.size.y as number) / TMM_PER_M,
         (placeable.size.z as number) / TMM_PER_M,
       ),
-      material: color.withAlpha(0.85),
+      material: color.withAlpha(selected ? 0.95 : 0.85),
       outline: true,
-      outlineColor: Cesium.Color.WHITE,
+      outlineColor: selected ? SELECTION_COLOR : Cesium.Color.WHITE,
     },
     label: labelFor(element.label),
   });
@@ -146,6 +151,7 @@ export function renderScene(
 ): Cesium.Entity[] {
   const baseRotation = matrix3FromMat4(localToEcefMatrix(anchor));
   const entities: Cesium.Entity[] = [];
+  const selected = options.selected ?? null;
 
   for (const element of scene.elements) {
     const type = registry.get(element.typeCode);
@@ -155,6 +161,7 @@ export function renderScene(
       size: element.size.value,
       rotationDeg: element.placement.value.rotationDeg,
     };
+    const isSelected = selected === element.id;
 
     if (type?.geometry === 'FLAT' || element.size.value.z === 0) {
       const ring = elementCornersLocal(placeable);
@@ -162,9 +169,9 @@ export function renderScene(
         options.onWarning?.(`Skipped ${element.id}: footprint ring is not simple`);
         continue;
       }
-      entities.push(renderPolygon(viewer, anchor, element.id, element.label, ring, color));
+      entities.push(renderPolygon(viewer, anchor, element.id, element.label, ring, color, isSelected));
     } else {
-      entities.push(renderBox(viewer, anchor, element, placeable, baseRotation, color));
+      entities.push(renderBox(viewer, anchor, element, placeable, baseRotation, color, isSelected));
     }
   }
 
@@ -174,7 +181,7 @@ export function renderScene(
       options.onWarning?.(`Skipped zone ${zone.id}: ring is not simple`);
       continue;
     }
-    entities.push(renderPolygon(viewer, anchor, zone.id, zone.label, ring, ZONE_COLOR));
+    entities.push(renderPolygon(viewer, anchor, zone.id, zone.label, ring, ZONE_COLOR, selected === zone.id));
   }
 
   return entities;

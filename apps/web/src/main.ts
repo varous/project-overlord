@@ -16,6 +16,7 @@ import { createApiClient, type ApiClient, type ApiError, type VersionDetail } fr
 import { createSessionStore, type Session } from './api/session.js';
 import { demoScene } from './site/demoSite.js';
 import { normalizeHeading, parseUrlState, serializeUrlState } from './site/urlState.js';
+import { createHistory, SNAP_MODULE_10FT, snapLengthTmm, type Command } from '@overlord/commands';
 import { renderAxes } from './viewer/axes.js';
 import { sampleGroundHeight } from './viewer/groundHeight.js';
 import { createMapStacks, type MapStack, type MapStackChange } from './viewer/mapStacks.js';
@@ -23,9 +24,15 @@ import { renderScene } from './viewer/render.js';
 import { renderQualityFor } from './viewer/renderQuality.js';
 import { createViewpointButtons, flyToViewpoint, type ViewpointName } from './viewer/viewpoints.js';
 import { createDebugPanel } from './ui/debugPanel.js';
+import { createDirectManipulation, pickedEntityId } from './ui/directManipulation.js';
+import { createInspector, type Selection } from './ui/inspector.js';
 import { createNotices } from './ui/notices.js';
+import { createPalette } from './ui/palette.js';
 import { createPersistenceUi, type SceneListItem, type VersionListItem } from './ui/persistence.js';
+import type { DisplayUnit } from './ui/units.js';
 import { createSitePlacement, type SitePlacementController } from './ui/placeSite.js';
+import { pickGroundGeodetic } from './viewer/sitePicker.js';
+import { geodeticToLocal, type LocalPoint } from '@overlord/geo-core';
 import './style.css';
 
 // Cesium ion, Bing and Cesium World Terrain are deliberately not used in this task.
@@ -108,6 +115,28 @@ let placementSnapshot: {
   heightSource: string;
   docAnchor: SceneDoc['site']['anchor'];
 } | null = null;
+
+// --- Editing state (Task 008). Every change goes through @overlord/commands. ---
+const history = createHistory(currentDoc);
+let selected: Selection | null = null;
+let displayUnit: DisplayUnit = 'ft';
+let pendingType: string | null = null;
+let idCounter = 0;
+
+function newId(): string {
+  idCounter += 1;
+  let candidate = `el_${idCounter}`;
+  while (
+    currentDoc.elements.some((element) => element.id === candidate) ||
+    currentDoc.zones.some((zone) => zone.id === candidate)
+  ) {
+    idCounter += 1;
+    candidate = `el_${idCounter}`;
+  }
+  return candidate;
+}
+
+const applyCtx = { registry: elementTypeRegistry, newId };
 
 for (const [index, warning] of urlState.warnings.entries()) {
   notices.showBanner(`url-warning-${index}`, warning, { tone: 'warn', kind: 'warning' });
@@ -334,6 +363,8 @@ function applyDoc(detail: VersionDetail, opts: { readOnly: boolean; latest: numb
   latestVersion = opts.latest;
   viewingVersion = opts.viewing;
   readOnly = opts.readOnly;
+  history.clear(currentDoc);
+  selected = null;
   rebuildScene();
   updateUrl();
 }
@@ -488,7 +519,11 @@ async function loadShared(token: string): Promise<void> {
   latestVersion = null;
   viewingVersion = null;
   readOnly = true;
-  notices.showBanner('shared-readonly', 'Shared view — read only', { tone: 'info' });
+  history.clear(currentDoc);
+  selected = null;
+  notices.showBanner('shared-readonly', `Shared view — ${result.data.name}, v${result.data.version} (read-only)`, {
+    tone: 'info',
+  });
 }
 
 // --- Rendering ------------------------------------------------------------------------------
@@ -499,8 +534,11 @@ function rebuildScene(): void {
     onWarning: (message) => {
       notices.showBanner('ring-warning', message, { tone: 'warn' });
     },
+    selected: selected?.id ?? null,
   });
   renderAxes(viewer, anchor);
+  inspector.refresh();
+  manipulation.refresh();
   refreshPersistence();
 }
 
@@ -643,8 +681,240 @@ let placementRef: SitePlacementController | null = placement;
 function refreshPersistence(): void {
   persistenceUi.refresh();
   placementRef?.setDisabled(readOnly);
+  refreshEditControls();
   refreshDebugPanel();
 }
+
+// --- Editing (Task 008). Every document change goes through @overlord/commands. ---
+
+function selectionExists(): boolean {
+  if (selected === null) {
+    return false;
+  }
+  const id = selected.id;
+  return selected.kind === 'element'
+    ? currentDoc.elements.some((element) => element.id === id)
+    : currentDoc.zones.some((zone) => zone.id === id);
+}
+
+function runCommand(command: Command): { ok: true } | { ok: false; message: string } {
+  const result = history.run(command, applyCtx);
+  if (!result.ok) {
+    return { ok: false, message: `${result.error.code}: ${result.error.message}` };
+  }
+  currentDoc = history.current();
+  if (!selectionExists()) {
+    selected = null;
+  }
+  rebuildScene();
+  return { ok: true };
+}
+
+function select(kind: 'element' | 'zone', id: string): void {
+  selected = { kind, id };
+  rebuildScene();
+}
+
+function clearSelection(): void {
+  if (selected === null) {
+    return;
+  }
+  selected = null;
+  rebuildScene();
+}
+
+function deleteSelection(): void {
+  if (selected === null) {
+    return;
+  }
+  const command: Command =
+    selected.kind === 'element'
+      ? { type: 'DELETE_ELEMENT', id: selected.id }
+      : { type: 'DELETE_ZONE', id: selected.id };
+  const outcome = runCommand(command);
+  if (!outcome.ok) {
+    notices.showBanner('edit-error', outcome.message, { tone: 'error' });
+  }
+}
+
+function undo(): void {
+  if (!history.undo()) {
+    return;
+  }
+  currentDoc = history.current();
+  if (!selectionExists()) {
+    selected = null;
+  }
+  rebuildScene();
+}
+
+function redo(): void {
+  if (!history.redo()) {
+    return;
+  }
+  currentDoc = history.current();
+  if (!selectionExists()) {
+    selected = null;
+  }
+  rebuildScene();
+}
+
+function setPending(typeCode: string | null): void {
+  pendingType = typeCode;
+  if (typeCode === null) {
+    notices.clearBanner('add-hint');
+    document.body.classList.remove('adding');
+    return;
+  }
+  const definition = elementTypeRegistry.get(typeCode);
+  document.body.classList.add('adding');
+  notices.showBanner(
+    'add-hint',
+    `Click the ground to place ${definition?.name ?? typeCode} (Escape cancels)`,
+    { tone: 'info' },
+  );
+}
+
+function finishPendingAdd(local: LocalPoint): void {
+  const typeCode = pendingType;
+  if (typeCode === null) {
+    return;
+  }
+  const before = new Set(currentDoc.elements.map((element) => element.id));
+  const outcome = runCommand({
+    type: 'ADD_ELEMENT',
+    typeCode,
+    center: {
+      x: snapLengthTmm(local.x, SNAP_MODULE_10FT),
+      y: snapLengthTmm(local.y, SNAP_MODULE_10FT),
+      z: 0,
+    } as never,
+    provenance: 'STATED',
+  });
+  setPending(null);
+  if (!outcome.ok) {
+    notices.showBanner('edit-error', outcome.message, { tone: 'error' });
+    return;
+  }
+  const added = currentDoc.elements.find((element) => !before.has(element.id));
+  if (added !== undefined) {
+    select('element', added.id);
+  }
+}
+
+const inspector = createInspector({
+  registry: elementTypeRegistry,
+  getDoc: () => currentDoc,
+  getSelection: () => selected,
+  getUnit: () => displayUnit,
+  onUnitChange: (unit) => {
+    displayUnit = unit;
+    inspector.refresh();
+  },
+  onCommand: (command) => runCommand(command),
+  onDelete: () => deleteSelection(),
+  onClose: () => clearSelection(),
+});
+
+const palette = createPalette({
+  registry: elementTypeRegistry,
+  onChoose: (typeCode) => setPending(typeCode),
+});
+
+const manipulation = createDirectManipulation({
+  viewer,
+  getAnchor: () => anchor,
+  getSelection: () => selected,
+  getElement: (id) => currentDoc.elements.find((element) => element.id === id) ?? null,
+  onCommand: (command) => {
+    const outcome = runCommand(command);
+    if (!outcome.ok) {
+      notices.showBanner('edit-error', outcome.message, { tone: 'error' });
+    }
+    return outcome;
+  },
+  isEnabled: () => !readOnly,
+});
+
+function barButton(label: string, action: string, onClick: () => void): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'ui-button';
+  button.dataset.action = action;
+  button.textContent = label;
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+const editBar = document.createElement('div');
+editBar.className = 'edit-bar';
+const addButton = barButton('Add', 'add', () => palette.open());
+const undoButton = barButton('Undo', 'undo', undo);
+const redoButton = barButton('Redo', 'redo', redo);
+editBar.append(addButton, undoButton, redoButton);
+persistenceUi.element.prepend(editBar);
+
+function refreshEditControls(): void {
+  undoButton.disabled = !history.canUndo();
+  redoButton.disabled = !history.canRedo();
+  addButton.disabled = readOnly;
+}
+
+// Ground clicks: place a pending add, select an entity, or clear the selection.
+const clickHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+clickHandler.setInputAction((event: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
+  if (pendingType !== null) {
+    const ground = pickGroundGeodetic(viewer, event.position, mapStacks.getActive() === 'GOOGLE_3D');
+    if (ground === null) {
+      return;
+    }
+    finishPendingAdd(geodeticToLocal(anchor, ground));
+    return;
+  }
+  const pickedId = pickedEntityId(viewer.scene.pick(event.position));
+  if (pickedId === null) {
+    clearSelection();
+    return;
+  }
+  if (currentDoc.elements.some((element) => element.id === pickedId)) {
+    select('element', pickedId);
+    return;
+  }
+  if (currentDoc.zones.some((zone) => zone.id === pickedId)) {
+    select('zone', pickedId);
+    return;
+  }
+  clearSelection();
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+window.addEventListener('keydown', (event) => {
+  const target = event.target as HTMLElement | null;
+  const typing = target !== null && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
+  if (event.key === 'Escape') {
+    if (pendingType !== null) {
+      setPending(null);
+    } else {
+      clearSelection();
+    }
+    return;
+  }
+  if (typing) {
+    return;
+  }
+  if (event.key === 'Delete' || event.key === 'Backspace') {
+    event.preventDefault();
+    deleteSelection();
+    return;
+  }
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
+    event.preventDefault();
+    if (event.shiftKey) {
+      redo();
+    } else {
+      undo();
+    }
+  }
+});
 
 createViewpointButtons(document.body, (name) => {
   currentView = name;
@@ -771,6 +1041,23 @@ if (testEnabled) {
     setStack: (stack) => mapStacks.setActive(stack),
     waitForTilesLoaded: (timeoutMs) => waitForTilesLoaded(timeoutMs),
     placeSite: (latDeg, lonDeg, headingDeg) => placeSite(latDeg, lonDeg, headingDeg),
+    runCommand: (command) => runCommand(command),
+    undo: () => {
+      undo();
+      return history.canUndo();
+    },
+    redo: () => {
+      redo();
+      return history.canRedo();
+    },
+    selection: () => selected,
+    docHash: () => canonicalJson(currentDoc),
+    doc: () => currentDoc,
+    elementCount: () => currentDoc.elements.length,
+    element: (id) => currentDoc.elements.find((item) => item.id === id) ?? null,
+    placePending: (x, y) => finishPendingAdd({ x, y, z: 0 } as never),
+    select: (kind, id) => select(kind, id),
+    clearSelection: () => clearSelection(),
   };
 }
 
