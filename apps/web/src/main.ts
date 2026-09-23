@@ -208,6 +208,7 @@ async function connect(input: Session): Promise<{ ok: boolean; message: string }
   session = { accessKey: input.accessKey, author: input.author };
   sessionStore.save(session);
   connected = session.accessKey !== '';
+  accessLabel = connected ? `connected as ${session.author === '' ? 'unknown' : session.author}` : 'not connected';
 
   const result = await apiClient.health();
   if (!result.ok) {
@@ -216,7 +217,6 @@ async function connect(input: Session): Promise<{ ok: boolean; message: string }
     return { ok: false, message: `${result.error.code}: ${result.error.message}` };
   }
   apiStatus = result.data.commit ? `up (commit ${result.data.commit.slice(0, 7)})` : 'up';
-  accessLabel = connected ? `connected as ${session.author === '' ? 'unknown' : session.author}` : 'not connected';
   refreshPersistence();
   return { ok: true, message: 'Connected' };
 }

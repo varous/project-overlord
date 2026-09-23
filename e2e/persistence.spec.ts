@@ -34,12 +34,13 @@ const demoDoc = JSON.parse(
 interface StubState {
   conflict: boolean;
   unauthorized: boolean;
+  healthDown: boolean;
   createBodies: Array<{ name?: string; message?: string; doc?: SceneDoc }>;
   commitBodies: Array<{ parentVersion: number; message: string }>;
 }
 
 function makeState(): StubState {
-  return { conflict: false, unauthorized: false, createBodies: [], commitBodies: [] };
+  return { conflict: false, unauthorized: false, healthDown: false, createBodies: [], commitBodies: [] };
 }
 
 async function blockExternalRequests(page: Page): Promise<void> {
@@ -70,6 +71,9 @@ async function stubApi(page: Page, state: StubState): Promise<void> {
       route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
 
     if (method === 'GET' && path === '/health') {
+      if (state.healthDown) {
+        return json(503, { status: 'down' });
+      }
       return json(200, { status: 'ok', db: 'up', commit: 'abcdef1234567890', startedAt: 't0' });
     }
     if (method === 'GET' && path === '/scenes') {
@@ -288,5 +292,22 @@ test('persistence: a 401 shows not connected rather than crashing', async ({ pag
   await page.locator('[data-action="save"]').click();
 
   await expect(page.locator('.debug-panel')).toContainText('Access: not connected');
+  await expect(page.locator('.cesium-widget-errorPanel')).toBeHidden();
+});
+
+test('persistence: connecting while the API is down reports the error without a crash', async ({ page }) => {
+  const state = makeState();
+  state.healthDown = true;
+  await setUp(page, state);
+
+  await page.locator('[data-action="connect"]').click();
+  await page.getByLabel('Access key').fill('test-access-key');
+  await page.getByLabel('Author name').fill('Ada');
+  await page.locator('[data-action="connect-save"]').click();
+
+  const panel = page.locator('.modal', { hasText: 'Connect to the API' });
+  await expect(panel.locator('.modal__message')).toContainText('HTTP_ERROR');
+  await expect(page.locator('.debug-panel')).toContainText('API: down');
+  await expect(page.locator('.debug-panel')).toContainText('Access: connected as Ada');
   await expect(page.locator('.cesium-widget-errorPanel')).toBeHidden();
 });
