@@ -21,6 +21,8 @@ export interface DebugInfo {
   scene: string;
   /** "up (commit abcdef1)", "down", or "not configured". */
   api: string;
+  /** "connected as <author>" or "not connected". */
+  access: string;
 }
 
 export interface DebugPanelOptions {
@@ -71,6 +73,7 @@ export function createDebugPanel(container: HTMLElement, options: DebugPanelOpti
         row('Esri token', info.arcgisToken),
         row('Scene', info.scene),
         row('API', info.api),
+        row('Access', info.access),
         row('Build', `${commit} @ ${branch}`),
         copyButton,
       );

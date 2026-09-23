@@ -100,4 +100,30 @@ describe.runIf(databaseAvailable)('scene versions', () => {
     expect(body.doc.name).toBe('Version 3');
     expect(body.parentVersion).toBe(2);
   });
+
+  it('lets exactly one of two concurrent commits with the same parentVersion win (5 runs)', async () => {
+    const app = await buildServer({ config: testConfig(), pool: db.pool, logger: false });
+
+    for (let run = 1; run <= 5; run += 1) {
+      const scene = await createScene(app);
+      const [first, second] = await Promise.all([
+        postVersion(app, scene.sceneId, { ...demoDoc(), name: `Run ${run} A` }, 1),
+        postVersion(app, scene.sceneId, { ...demoDoc(), name: `Run ${run} B` }, 1),
+      ]);
+
+      const statuses = [first.statusCode, second.statusCode].sort((a, b) => a - b);
+      expect(statuses, `run ${run}: exactly one 201 and one 409`).toEqual([201, 409]);
+
+      const loser = first.statusCode === 409 ? first : second;
+      expect(loser.json().error, `run ${run}`).toBe('VERSION_CONFLICT');
+      expect(loser.json().details.latestVersion, `run ${run}`).toBe(2);
+
+      const list = await app.inject({
+        method: 'GET',
+        url: `/scenes/${scene.sceneId}/versions`,
+        headers: authHeaders,
+      });
+      expect((list.json() as unknown[]).length, `run ${run}: only the winner was stored`).toBe(2);
+    }
+  });
 });

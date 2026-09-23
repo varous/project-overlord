@@ -23,6 +23,12 @@ export interface OverlordTestHook {
   readonly renderErrors: number;
   readonly tileErrors: number;
   readonly groundHeight: GroundHeight;
+  /** True when viewing a shared link or a non-latest version (no editing). */
+  readonly readOnly: boolean;
+  /** True when an access key is stored. */
+  readonly connected: boolean;
+  /** The { sceneId, version } currently loaded, or null for the unsaved demo scene. */
+  readonly loadedFrom: { sceneId: string; version: number } | null;
   flyTo(name: ViewpointName): Promise<void>;
   setStack(stack: MapStack): Promise<void>;
   /** Resolves true once tiles are loaded for 3 consecutive frames, or false on timeout. */

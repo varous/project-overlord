@@ -86,6 +86,20 @@ describe.runIf(databaseAvailable)('share links', () => {
     expect(expired.json().error).toBe('SHARE_NOT_FOUND');
   });
 
+  it('rejects a share for a version beyond the latest with 404', async () => {
+    const app = await buildServer({ config: testConfig(), pool: db.pool, logger: false });
+    const scene = await createScene(app);
+
+    const created = await app.inject({
+      method: 'POST',
+      url: `/scenes/${scene.sceneId}/shares`,
+      headers: authHeaders,
+      payload: { version: 5 },
+    });
+    expect(created.statusCode).toBe(404);
+    expect(created.json().error).toBe('VERSION_NOT_FOUND');
+  });
+
   it('treats expiresInDays 0 as never expiring', async () => {
     const app = await buildServer({ config: testConfig(), pool: db.pool, logger: false });
     const scene = await createScene(app);
