@@ -1,0 +1,2038 @@
+{
+  "archetypes": [
+    {
+      "id": "archetype_concert",
+      "name": "Concert",
+      "eventType": "CONCERT",
+      "stageDefault": {
+        "x": [
+          "60",
+          "ft"
+        ],
+        "y": [
+          "40",
+          "ft"
+        ],
+        "z": [
+          "6",
+          "ft"
+        ]
+      },
+      "rules": [
+        {
+          "typeCode": "MAIN_STAGE",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "STAGE_LINE",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "0",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "stage anchors the site frame: downstage-centre edge at the origin — corpus depth order"
+        },
+        {
+          "typeCode": "GREEN_ROOM",
+          "count": {
+            "from": "brief.greenRooms"
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "-60",
+              "ft"
+            ],
+            "alongY": [
+              "-70",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "24",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "corpus: green rooms sit behind the stage in 27 of 27 drawings"
+        },
+        {
+          "typeCode": "AMBULANCE_BAY",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "-80",
+              "ft"
+            ],
+            "alongY": [
+              "-110",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "ambulance bay behind the stage, stage-left"
+        },
+        {
+          "typeCode": "STORE_ROOM",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "80",
+              "ft"
+            ],
+            "alongY": [
+              "-110",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "store behind the stage, stage-right"
+        },
+        {
+          "typeCode": "PRODUCTION_ROOM",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "80",
+              "ft"
+            ],
+            "alongY": [
+              "-30",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "production sits stage-right"
+        },
+        {
+          "typeCode": "GENERATOR",
+          "count": {
+            "from": "brief.generators"
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "130",
+              "ft"
+            ],
+            "alongY": [
+              "-30",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "20",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "generators sit with production"
+        },
+        {
+          "typeCode": "LED_WALL",
+          "count": {
+            "from": "brief.ledWalls"
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "-80",
+              "ft"
+            ],
+            "alongY": [
+              "-14",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "32",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "LED wall closes the upstage edge"
+        },
+        {
+          "typeCode": "PYRO_PIT",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "AUDIENCE_AXIS",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "8",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "pyro pit at the stage line, on the audience axis"
+        },
+        {
+          "typeCode": "CONSOLE_RISER",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "AUDIENCE_AXIS",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "100",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "console on the audience axis; no camera element type in the registry yet"
+        },
+        {
+          "typeCode": "VVIP_PLATFORM",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "AUDIENCE_AXIS",
+          "offset": {
+            "alongX": [
+              "60",
+              "ft"
+            ],
+            "alongY": [
+              "160",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "VVIP platform in the audience, stage-right",
+          "condition": "hasVvip"
+        },
+        {
+          "typeCode": "TOILET_BLOCK",
+          "count": {
+            "from": "brief.toiletBlocks"
+          },
+          "anchorTo": "AUDIENCE_FLANK_LEFT",
+          "offset": {
+            "alongX": [
+              "-40",
+              "ft"
+            ],
+            "alongY": [
+              "60",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "40",
+            "ft"
+          ],
+          "arrangement": "ROW_Y",
+          "rotationDeg": 0,
+          "note": "toilets on the audience flank"
+        },
+        {
+          "typeCode": "BAR_COUNTER",
+          "count": {
+            "from": "brief.bars"
+          },
+          "anchorTo": "AUDIENCE_FLANK_RIGHT",
+          "offset": {
+            "alongX": [
+              "40",
+              "ft"
+            ],
+            "alongY": [
+              "140",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "40",
+            "ft"
+          ],
+          "arrangement": "ROW_Y",
+          "rotationDeg": 0,
+          "note": "bars on the audience flank"
+        },
+        {
+          "typeCode": "FOOD_STALL",
+          "count": {
+            "from": "brief.foodStalls"
+          },
+          "anchorTo": "AUDIENCE_FLANK_LEFT",
+          "offset": {
+            "alongX": [
+              "-70",
+              "ft"
+            ],
+            "alongY": [
+              "170",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "30",
+            "ft"
+          ],
+          "arrangement": "ROW_Y",
+          "rotationDeg": 0,
+          "note": "food on the audience flank"
+        },
+        {
+          "typeCode": "MERCH_STALL",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "AUDIENCE_FLANK_RIGHT",
+          "offset": {
+            "alongX": [
+              "70",
+              "ft"
+            ],
+            "alongY": [
+              "190",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "merch on the flank"
+        },
+        {
+          "typeCode": "DELAY_TOWER",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "AUDIENCE_AXIS",
+          "offset": {
+            "alongX": [
+              "-60",
+              "ft"
+            ],
+            "alongY": [
+              "200",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "delay tower inside the audience"
+        },
+        {
+          "typeCode": "FRISKING_BOOTH",
+          "count": {
+            "from": "brief.friskingBooths"
+          },
+          "anchorTo": "GATE_LINE",
+          "offset": {
+            "alongX": [
+              "-20",
+              "ft"
+            ],
+            "alongY": [
+              "30",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "20",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "frisking at the gate line"
+        },
+        {
+          "typeCode": "BOX_OFFICE",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "GATE_LINE",
+          "offset": {
+            "alongX": [
+              "-60",
+              "ft"
+            ],
+            "alongY": [
+              "0",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "box office at the gate line"
+        },
+        {
+          "typeCode": "ENTRY_GATE",
+          "count": {
+            "from": "brief.entryGates"
+          },
+          "anchorTo": "GATE_LINE",
+          "offset": {
+            "alongX": [
+              "-20",
+              "ft"
+            ],
+            "alongY": [
+              "60",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "40",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "entry gates on the gate line"
+        },
+        {
+          "typeCode": "PARKING_AREA",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "PERIMETER",
+          "offset": {
+            "alongX": [
+              "160",
+              "ft"
+            ],
+            "alongY": [
+              "0",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "parking on the perimeter",
+          "condition": "hasParking"
+        }
+      ],
+      "zones": [
+        {
+          "kind": "BACKSTAGE",
+          "label": "Backstage",
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "-60",
+              "ft"
+            ]
+          },
+          "size": {
+            "x": [
+              "180",
+              "ft"
+            ],
+            "y": [
+              "140",
+              "ft"
+            ]
+          },
+          "note": "backstage compound behind the stage"
+        },
+        {
+          "kind": "CIRCULATION",
+          "label": "Circulation",
+          "anchorTo": "GATE_LINE",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "50",
+              "ft"
+            ]
+          },
+          "size": {
+            "x": [
+              "260",
+              "ft"
+            ],
+            "y": [
+              "70",
+              "ft"
+            ]
+          },
+          "note": "circulation in front of the gate line"
+        }
+      ]
+    },
+    {
+      "id": "archetype_festival",
+      "name": "Festival",
+      "eventType": "FESTIVAL",
+      "stageDefault": {
+        "x": [
+          "80",
+          "ft"
+        ],
+        "y": [
+          "48",
+          "ft"
+        ],
+        "z": [
+          "8",
+          "ft"
+        ]
+      },
+      "rules": [
+        {
+          "typeCode": "MAIN_STAGE",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "STAGE_LINE",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "0",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "festival main stage; downstage-centre edge at the origin"
+        },
+        {
+          "typeCode": "GREEN_ROOM",
+          "count": {
+            "from": "brief.greenRooms"
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "-100",
+              "ft"
+            ],
+            "alongY": [
+              "-80",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "28",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "CAV practice, provisional — confirm — green room row behind the stage"
+        },
+        {
+          "typeCode": "AMBULANCE_BAY",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "-120",
+              "ft"
+            ],
+            "alongY": [
+              "-120",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "CAV practice, provisional — confirm — ambulance bay behind the stage"
+        },
+        {
+          "typeCode": "STORE_ROOM",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "120",
+              "ft"
+            ],
+            "alongY": [
+              "-120",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "CAV practice, provisional — confirm — store behind the stage"
+        },
+        {
+          "typeCode": "PRODUCTION_ROOM",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "120",
+              "ft"
+            ],
+            "alongY": [
+              "-40",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "production sits stage-right"
+        },
+        {
+          "typeCode": "GENERATOR",
+          "count": {
+            "from": "brief.generators"
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "180",
+              "ft"
+            ],
+            "alongY": [
+              "-40",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "20",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "generators sit with production"
+        },
+        {
+          "typeCode": "LED_WALL",
+          "count": {
+            "from": "brief.ledWalls"
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "-120",
+              "ft"
+            ],
+            "alongY": [
+              "-16",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "36",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "LED wall closes the upstage edge"
+        },
+        {
+          "typeCode": "PYRO_PIT",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "AUDIENCE_AXIS",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "10",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "pyro pit at the stage line"
+        },
+        {
+          "typeCode": "CONSOLE_RISER",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "AUDIENCE_AXIS",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "120",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "console on the audience axis"
+        },
+        {
+          "typeCode": "VVIP_PLATFORM",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "AUDIENCE_AXIS",
+          "offset": {
+            "alongX": [
+              "80",
+              "ft"
+            ],
+            "alongY": [
+              "180",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "VVIP platform in the audience",
+          "condition": "hasVvip"
+        },
+        {
+          "typeCode": "TOILET_BLOCK",
+          "count": {
+            "from": "brief.toiletBlocks"
+          },
+          "anchorTo": "AUDIENCE_FLANK_LEFT",
+          "offset": {
+            "alongX": [
+              "-50",
+              "ft"
+            ],
+            "alongY": [
+              "80",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "40",
+            "ft"
+          ],
+          "arrangement": "ROW_Y",
+          "rotationDeg": 0,
+          "note": "toilets on the audience flank"
+        },
+        {
+          "typeCode": "BAR_COUNTER",
+          "count": {
+            "from": "brief.bars"
+          },
+          "anchorTo": "AUDIENCE_FLANK_RIGHT",
+          "offset": {
+            "alongX": [
+              "50",
+              "ft"
+            ],
+            "alongY": [
+              "160",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "40",
+            "ft"
+          ],
+          "arrangement": "ROW_Y",
+          "rotationDeg": 0,
+          "note": "bars on the audience flank"
+        },
+        {
+          "typeCode": "FOOD_STALL",
+          "count": {
+            "from": "brief.foodStalls"
+          },
+          "anchorTo": "AUDIENCE_FLANK_LEFT",
+          "offset": {
+            "alongX": [
+              "-90",
+              "ft"
+            ],
+            "alongY": [
+              "190",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "30",
+            "ft"
+          ],
+          "arrangement": "ROW_Y",
+          "rotationDeg": 0,
+          "note": "food on the audience flank"
+        },
+        {
+          "typeCode": "MERCH_STALL",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "AUDIENCE_FLANK_RIGHT",
+          "offset": {
+            "alongX": [
+              "90",
+              "ft"
+            ],
+            "alongY": [
+              "210",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "merch on the flank"
+        },
+        {
+          "typeCode": "DELAY_TOWER",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "AUDIENCE_AXIS",
+          "offset": {
+            "alongX": [
+              "-80",
+              "ft"
+            ],
+            "alongY": [
+              "230",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "delay tower inside the audience"
+        },
+        {
+          "typeCode": "FRISKING_BOOTH",
+          "count": {
+            "from": "brief.friskingBooths"
+          },
+          "anchorTo": "GATE_LINE",
+          "offset": {
+            "alongX": [
+              "-120",
+              "ft"
+            ],
+            "alongY": [
+              "-20",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "20",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "frisking at the gate line"
+        },
+        {
+          "typeCode": "BOX_OFFICE",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "GATE_LINE",
+          "offset": {
+            "alongX": [
+              "-50",
+              "ft"
+            ],
+            "alongY": [
+              "-45",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "box office at the gate line"
+        },
+        {
+          "typeCode": "ENTRY_GATE",
+          "count": {
+            "from": "brief.entryGates"
+          },
+          "anchorTo": "GATE_LINE",
+          "offset": {
+            "alongX": [
+              "-180",
+              "ft"
+            ],
+            "alongY": [
+              "20",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "40",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "entry gates on the gate line"
+        },
+        {
+          "typeCode": "PARKING_AREA",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "PERIMETER",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "0",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "parking on the perimeter",
+          "condition": "hasParking"
+        }
+      ],
+      "zones": [
+        {
+          "kind": "BACKSTAGE",
+          "label": "Backstage",
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "-70",
+              "ft"
+            ]
+          },
+          "size": {
+            "x": [
+              "240",
+              "ft"
+            ],
+            "y": [
+              "160",
+              "ft"
+            ]
+          },
+          "note": "festival backstage compound"
+        },
+        {
+          "kind": "CIRCULATION",
+          "label": "Circulation",
+          "anchorTo": "GATE_LINE",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "60",
+              "ft"
+            ]
+          },
+          "size": {
+            "x": [
+              "320",
+              "ft"
+            ],
+            "y": [
+              "80",
+              "ft"
+            ]
+          },
+          "note": "circulation in front of the gate line"
+        }
+      ]
+    },
+    {
+      "id": "archetype_corporate",
+      "name": "Corporate",
+      "eventType": "CORPORATE",
+      "stageDefault": {
+        "x": [
+          "40",
+          "ft"
+        ],
+        "y": [
+          "30",
+          "ft"
+        ],
+        "z": [
+          "4",
+          "ft"
+        ]
+      },
+      "rules": [
+        {
+          "typeCode": "MAIN_STAGE",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "STAGE_LINE",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "0",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "corporate stage; downstage-centre edge at the origin"
+        },
+        {
+          "typeCode": "GREEN_ROOM",
+          "count": {
+            "from": "brief.greenRooms"
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "-40",
+              "ft"
+            ],
+            "alongY": [
+              "-50",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "24",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "green rooms behind the stage"
+        },
+        {
+          "typeCode": "STORE_ROOM",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "60",
+              "ft"
+            ],
+            "alongY": [
+              "-50",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "store behind the stage"
+        },
+        {
+          "typeCode": "PRODUCTION_ROOM",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "60",
+              "ft"
+            ],
+            "alongY": [
+              "-20",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "production sits stage-right"
+        },
+        {
+          "typeCode": "LED_WALL",
+          "count": {
+            "from": "brief.ledWalls"
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "-40",
+              "ft"
+            ],
+            "alongY": [
+              "-12",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "28",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "LED wall closes the upstage edge"
+        },
+        {
+          "typeCode": "CONSOLE_RISER",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "AUDIENCE_AXIS",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "90",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "console on the audience axis"
+        },
+        {
+          "typeCode": "VVIP_PLATFORM",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "AUDIENCE_AXIS",
+          "offset": {
+            "alongX": [
+              "50",
+              "ft"
+            ],
+            "alongY": [
+              "140",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "VVIP platform in the audience",
+          "condition": "hasVvip"
+        },
+        {
+          "typeCode": "TOILET_BLOCK",
+          "count": {
+            "from": "brief.toiletBlocks"
+          },
+          "anchorTo": "AUDIENCE_FLANK_LEFT",
+          "offset": {
+            "alongX": [
+              "-30",
+              "ft"
+            ],
+            "alongY": [
+              "60",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "40",
+            "ft"
+          ],
+          "arrangement": "ROW_Y",
+          "rotationDeg": 0,
+          "note": "toilets on the audience flank"
+        },
+        {
+          "typeCode": "BAR_COUNTER",
+          "count": {
+            "from": "brief.bars"
+          },
+          "anchorTo": "AUDIENCE_FLANK_RIGHT",
+          "offset": {
+            "alongX": [
+              "30",
+              "ft"
+            ],
+            "alongY": [
+              "120",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "40",
+            "ft"
+          ],
+          "arrangement": "ROW_Y",
+          "rotationDeg": 0,
+          "note": "bars on the audience flank"
+        },
+        {
+          "typeCode": "FOOD_STALL",
+          "count": {
+            "from": "brief.foodStalls"
+          },
+          "anchorTo": "AUDIENCE_FLANK_LEFT",
+          "offset": {
+            "alongX": [
+              "-60",
+              "ft"
+            ],
+            "alongY": [
+              "150",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "30",
+            "ft"
+          ],
+          "arrangement": "ROW_Y",
+          "rotationDeg": 0,
+          "note": "food on the audience flank"
+        },
+        {
+          "typeCode": "FRISKING_BOOTH",
+          "count": {
+            "from": "brief.friskingBooths"
+          },
+          "anchorTo": "GATE_LINE",
+          "offset": {
+            "alongX": [
+              "-70",
+              "ft"
+            ],
+            "alongY": [
+              "-20",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "20",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "frisking at the gate line"
+        },
+        {
+          "typeCode": "ENTRY_GATE",
+          "count": {
+            "from": "brief.entryGates"
+          },
+          "anchorTo": "GATE_LINE",
+          "offset": {
+            "alongX": [
+              "-100",
+              "ft"
+            ],
+            "alongY": [
+              "20",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "40",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "entry gates on the gate line"
+        },
+        {
+          "typeCode": "PARKING_AREA",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "PERIMETER",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "0",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "parking on the perimeter",
+          "condition": "hasParking"
+        }
+      ],
+      "zones": [
+        {
+          "kind": "BACKSTAGE",
+          "label": "Backstage",
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "-45",
+              "ft"
+            ]
+          },
+          "size": {
+            "x": [
+              "120",
+              "ft"
+            ],
+            "y": [
+              "90",
+              "ft"
+            ]
+          },
+          "note": "backstage area behind the stage"
+        }
+      ]
+    },
+    {
+      "id": "archetype_wedding",
+      "name": "Wedding",
+      "eventType": "WEDDING",
+      "stageDefault": {
+        "x": [
+          "32",
+          "ft"
+        ],
+        "y": [
+          "24",
+          "ft"
+        ],
+        "z": [
+          "4",
+          "ft"
+        ]
+      },
+      "rules": [
+        {
+          "typeCode": "MAIN_STAGE",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "STAGE_LINE",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "0",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "wedding stage; downstage-centre edge at the origin"
+        },
+        {
+          "typeCode": "GREEN_ROOM",
+          "count": {
+            "from": "brief.greenRooms"
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "-30",
+              "ft"
+            ],
+            "alongY": [
+              "-45",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "24",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "green room behind the stage"
+        },
+        {
+          "typeCode": "CONSOLE_RISER",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "AUDIENCE_AXIS",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "80",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "console on the audience axis"
+        },
+        {
+          "typeCode": "VVIP_PLATFORM",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "AUDIENCE_AXIS",
+          "offset": {
+            "alongX": [
+              "40",
+              "ft"
+            ],
+            "alongY": [
+              "130",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "VVIP platform in the audience",
+          "condition": "hasVvip"
+        },
+        {
+          "typeCode": "TOILET_BLOCK",
+          "count": {
+            "from": "brief.toiletBlocks"
+          },
+          "anchorTo": "AUDIENCE_FLANK_LEFT",
+          "offset": {
+            "alongX": [
+              "-25",
+              "ft"
+            ],
+            "alongY": [
+              "50",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "40",
+            "ft"
+          ],
+          "arrangement": "ROW_Y",
+          "rotationDeg": 0,
+          "note": "toilets on the audience flank"
+        },
+        {
+          "typeCode": "BAR_COUNTER",
+          "count": {
+            "from": "brief.bars"
+          },
+          "anchorTo": "AUDIENCE_FLANK_RIGHT",
+          "offset": {
+            "alongX": [
+              "25",
+              "ft"
+            ],
+            "alongY": [
+              "100",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "40",
+            "ft"
+          ],
+          "arrangement": "ROW_Y",
+          "rotationDeg": 0,
+          "note": "bar on the audience flank"
+        },
+        {
+          "typeCode": "FOOD_STALL",
+          "count": {
+            "from": "brief.foodStalls"
+          },
+          "anchorTo": "AUDIENCE_FLANK_LEFT",
+          "offset": {
+            "alongX": [
+              "-50",
+              "ft"
+            ],
+            "alongY": [
+              "130",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "30",
+            "ft"
+          ],
+          "arrangement": "ROW_Y",
+          "rotationDeg": 0,
+          "note": "food on the audience flank"
+        },
+        {
+          "typeCode": "MERCH_STALL",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "AUDIENCE_FLANK_RIGHT",
+          "offset": {
+            "alongX": [
+              "50",
+              "ft"
+            ],
+            "alongY": [
+              "150",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "gift stall on the flank"
+        },
+        {
+          "typeCode": "ENTRY_GATE",
+          "count": {
+            "from": "brief.entryGates"
+          },
+          "anchorTo": "GATE_LINE",
+          "offset": {
+            "alongX": [
+              "-80",
+              "ft"
+            ],
+            "alongY": [
+              "20",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "40",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "entry gates on the gate line"
+        },
+        {
+          "typeCode": "PARKING_AREA",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "PERIMETER",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "0",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "parking on the perimeter",
+          "condition": "hasParking"
+        }
+      ],
+      "zones": [
+        {
+          "kind": "BACKSTAGE",
+          "label": "Backstage",
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "-40",
+              "ft"
+            ]
+          },
+          "size": {
+            "x": [
+              "90",
+              "ft"
+            ],
+            "y": [
+              "70",
+              "ft"
+            ]
+          },
+          "note": "small backstage area"
+        }
+      ]
+    },
+    {
+      "id": "archetype_exhibition",
+      "name": "Exhibition",
+      "eventType": "EXHIBITION",
+      "stageDefault": {
+        "x": [
+          "24",
+          "ft"
+        ],
+        "y": [
+          "24",
+          "ft"
+        ],
+        "z": [
+          "4",
+          "ft"
+        ]
+      },
+      "rules": [
+        {
+          "typeCode": "MAIN_STAGE",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "STAGE_LINE",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "0",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "exhibition focal wall; downstage-centre edge at the origin"
+        },
+        {
+          "typeCode": "CONSOLE_RISER",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "AUDIENCE_AXIS",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "100",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "AV console on the audience axis"
+        },
+        {
+          "typeCode": "STORE_ROOM",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "60",
+              "ft"
+            ],
+            "alongY": [
+              "-45",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "store behind the focal wall"
+        },
+        {
+          "typeCode": "GENERATOR",
+          "count": {
+            "from": "brief.generators"
+          },
+          "anchorTo": "STAGE_BACK",
+          "offset": {
+            "alongX": [
+              "110",
+              "ft"
+            ],
+            "alongY": [
+              "-30",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "20",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "generators behind the focal wall"
+        },
+        {
+          "typeCode": "TOILET_BLOCK",
+          "count": {
+            "from": "brief.toiletBlocks"
+          },
+          "anchorTo": "AUDIENCE_FLANK_LEFT",
+          "offset": {
+            "alongX": [
+              "-30",
+              "ft"
+            ],
+            "alongY": [
+              "60",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "40",
+            "ft"
+          ],
+          "arrangement": "ROW_Y",
+          "rotationDeg": 0,
+          "note": "toilets on the flank"
+        },
+        {
+          "typeCode": "FOOD_STALL",
+          "count": {
+            "from": "brief.foodStalls"
+          },
+          "anchorTo": "AUDIENCE_FLANK_LEFT",
+          "offset": {
+            "alongX": [
+              "-60",
+              "ft"
+            ],
+            "alongY": [
+              "150",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "30",
+            "ft"
+          ],
+          "arrangement": "ROW_Y",
+          "rotationDeg": 0,
+          "note": "food on the flank"
+        },
+        {
+          "typeCode": "MERCH_STALL",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "AUDIENCE_FLANK_RIGHT",
+          "offset": {
+            "alongX": [
+              "30",
+              "ft"
+            ],
+            "alongY": [
+              "120",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "merch on the flank"
+        },
+        {
+          "typeCode": "BAR_COUNTER",
+          "count": {
+            "from": "brief.bars"
+          },
+          "anchorTo": "AUDIENCE_FLANK_RIGHT",
+          "offset": {
+            "alongX": [
+              "60",
+              "ft"
+            ],
+            "alongY": [
+              "170",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "40",
+            "ft"
+          ],
+          "arrangement": "ROW_Y",
+          "rotationDeg": 0,
+          "note": "bar on the flank"
+        },
+        {
+          "typeCode": "FRISKING_BOOTH",
+          "count": {
+            "from": "brief.friskingBooths"
+          },
+          "anchorTo": "GATE_LINE",
+          "offset": {
+            "alongX": [
+              "-70",
+              "ft"
+            ],
+            "alongY": [
+              "-20",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "20",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "frisking at the gate line"
+        },
+        {
+          "typeCode": "ENTRY_GATE",
+          "count": {
+            "from": "brief.entryGates"
+          },
+          "anchorTo": "GATE_LINE",
+          "offset": {
+            "alongX": [
+              "-100",
+              "ft"
+            ],
+            "alongY": [
+              "20",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "40",
+            "ft"
+          ],
+          "arrangement": "ROW_X",
+          "rotationDeg": 0,
+          "note": "entry gates on the gate line"
+        },
+        {
+          "typeCode": "PARKING_AREA",
+          "count": {
+            "fixed": 1
+          },
+          "anchorTo": "PERIMETER",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "0",
+              "ft"
+            ]
+          },
+          "spacing": [
+            "1",
+            "ft"
+          ],
+          "arrangement": "SINGLE",
+          "rotationDeg": 0,
+          "note": "parking on the perimeter",
+          "condition": "hasParking"
+        }
+      ],
+      "zones": [
+        {
+          "kind": "CIRCULATION",
+          "label": "Circulation",
+          "anchorTo": "GATE_LINE",
+          "offset": {
+            "alongX": [
+              "0",
+              "ft"
+            ],
+            "alongY": [
+              "50",
+              "ft"
+            ]
+          },
+          "size": {
+            "x": [
+              "240",
+              "ft"
+            ],
+            "y": [
+              "60",
+              "ft"
+            ]
+          },
+          "note": "circulation in front of the gate line"
+        }
+      ]
+    }
+  ]
+}

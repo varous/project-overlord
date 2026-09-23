@@ -452,6 +452,20 @@ export function applyCommand(doc: SceneDoc, command: Command, ctx: ApplyContext)
       next.name = command.name;
       return finish(next, { type: 'SET_SCENE_NAME', name: previous }, ctx.registry);
     }
+
+    case 'REPLACE_CONTENT': {
+      const previousElements = doc.elements;
+      const previousZones = doc.zones;
+      const next = cloneDoc(doc);
+      next.elements = structuredClone(command.elements);
+      next.zones = structuredClone(command.zones);
+      const inverse: Command = {
+        type: 'REPLACE_CONTENT',
+        elements: previousElements,
+        zones: previousZones,
+      };
+      return finish(next, inverse, ctx.registry);
+    }
   }
 }
 
