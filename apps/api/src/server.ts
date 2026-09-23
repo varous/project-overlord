@@ -19,13 +19,13 @@ import { createPool, databaseUp, runMigrations, type PgPool } from './db.js';
 import { errorBody } from './errors.js';
 import { newSceneId, newShareToken } from './ids.js';
 import {
+  commitVersionGuarded,
   createScene,
-  createShare,
+  createShareGuarded,
   getLatestVersion,
   getScene,
   getShare,
   getVersion,
-  insertVersion,
   listScenes,
   listVersions,
   revokeShare,
@@ -285,28 +285,15 @@ export async function buildServer(options: BuildServerOptions): Promise<FastifyI
     const { id } = request.params as { id: string };
     const body = (request.body ?? {}) as CreateVersionBody;
 
-    const scene = await getScene(pool, id);
-    if (scene === null) {
-      return reply.code(404).send(errorBody('SCENE_NOT_FOUND', `No scene with id "${id}"`));
-    }
-
-    const latest = await getLatestVersion(pool, id);
-    if (latest === null) {
-      return reply.code(409).send(errorBody('VERSION_CONFLICT', 'Scene has no existing version', { latestVersion: 0 }));
+    const sceneDoc = coerceSceneDoc(body.doc);
+    if (sceneDoc === null) {
+      return reply.code(422).send(errorBody('SCENE_INVALID', 'doc must be a scene object with site, elements, zones and viewpoints'));
     }
 
     if (!Number.isInteger(body.parentVersion)) {
       return reply.code(400).send(errorBody('INVALID_PARENT_VERSION', 'parentVersion must be an integer'));
     }
     const parentVersion = body.parentVersion as number;
-    if (parentVersion !== latest) {
-      return reply.code(409).send(errorBody('VERSION_CONFLICT', 'parentVersion does not match the latest version', { latestVersion: latest }));
-    }
-
-    const sceneDoc = coerceSceneDoc(body.doc);
-    if (sceneDoc === null) {
-      return reply.code(422).send(errorBody('SCENE_INVALID', 'doc must be a scene object with site, elements, zones and viewpoints'));
-    }
 
     const result = validateScene(sceneDoc, elementTypeRegistry);
     if (!result.ok) {
@@ -315,18 +302,12 @@ export async function buildServer(options: BuildServerOptions): Promise<FastifyI
 
     const stored: SceneDoc = { ...sceneDoc, id };
     const hash = await contentHash(stored);
-
-    const parent = await getVersion(pool, id, parentVersion);
-    if (parent !== null && parent.contentHash === hash) {
-      return reply.code(409).send(errorBody('NO_CHANGE', 'The new scene content is identical to the parent version'));
-    }
-
     const author = typeof request.headers['x-overlord-author'] === 'string' ? request.headers['x-overlord-author'] : 'unknown';
     const message = typeof body.message === 'string' ? body.message : '';
 
-    await insertVersion(pool, {
+    // The lock + latest-version re-read + parentVersion re-check all happen inside this transaction.
+    const committed = await commitVersionGuarded(pool, {
       sceneId: id,
-      version: latest + 1,
       parentVersion,
       author,
       message,
@@ -335,32 +316,31 @@ export async function buildServer(options: BuildServerOptions): Promise<FastifyI
       sceneName: sceneDoc.name,
     });
 
-    return reply.code(201).send({ version: latest + 1, contentHash: hash });
+    if (!committed.ok) {
+      if (committed.reason === 'NOT_FOUND') {
+        return reply.code(404).send(errorBody('SCENE_NOT_FOUND', `No scene with id "${id}"`));
+      }
+      if (committed.reason === 'CONFLICT') {
+        return reply
+          .code(409)
+          .send(errorBody('VERSION_CONFLICT', 'parentVersion does not match the latest version', { latestVersion: committed.latestVersion }));
+      }
+      return reply.code(409).send(errorBody('NO_CHANGE', 'The new scene content is identical to the parent version'));
+    }
+
+    return reply.code(201).send({ version: committed.version, contentHash: hash });
   });
 
   app.post('/scenes/:id/shares', async (request, reply) => {
     const { id } = request.params as { id: string };
     const body = (request.body ?? {}) as CreateShareBody;
 
-    const scene = await getScene(pool, id);
-    if (scene === null) {
-      return reply.code(404).send(errorBody('SCENE_NOT_FOUND', `No scene with id "${id}"`));
-    }
-
-    const latest = await getLatestVersion(pool, id);
-    if (latest === null) {
-      return reply.code(404).send(errorBody('VERSION_NOT_FOUND', `Scene "${id}" has no versions`));
-    }
-
-    let version = latest;
+    let requestedVersion: number | null = null;
     if (body.version !== undefined) {
       if (!Number.isInteger(body.version)) {
         return reply.code(400).send(errorBody('INVALID_VERSION', 'version must be an integer'));
       }
-      version = body.version as number;
-      if (version < 1 || version > latest) {
-        return reply.code(404).send(errorBody('VERSION_NOT_FOUND', `Scene "${id}" has no version ${version}`));
-      }
+      requestedVersion = body.version as number;
     }
 
     const expiresInDays: unknown = body.expiresInDays === undefined ? 30 : body.expiresInDays;
@@ -371,7 +351,15 @@ export async function buildServer(options: BuildServerOptions): Promise<FastifyI
       expiresInDays === 0 ? null : new Date(Date.now() + (expiresInDays as number) * 86_400_000);
 
     const token = newShareToken();
-    await createShare(pool, { token, sceneId: id, version, expiresAt });
+    // Latest version is resolved inside this transaction, under the same scene row lock as commits.
+    const created = await createShareGuarded(pool, { token, sceneId: id, requestedVersion, expiresAt });
+
+    if (!created.ok) {
+      if (created.reason === 'NOT_FOUND') {
+        return reply.code(404).send(errorBody('SCENE_NOT_FOUND', `No scene with id "${id}"`));
+      }
+      return reply.code(404).send(errorBody('VERSION_NOT_FOUND', `Scene "${id}" has no such version`));
+    }
 
     return reply.code(201).send({ token, url: `${config.publicWebUrl}/?share=${token}` });
   });

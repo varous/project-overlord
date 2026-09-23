@@ -162,3 +162,39 @@ export function diffScenes(before: SceneDoc, after: SceneDoc): SceneDiff {
     siteChanged,
   };
 }
+
+/**
+ * One-line human summary of a scene diff, e.g.
+ * "3 elements added, 1 removed, 2 changed, site anchor changed".
+ */
+export function summariseDiff(diff: SceneDiff): string {
+  const parts: string[] = [];
+
+  const { added: elementsAdded, removed: elementsRemoved, changed: elementsChanged } = diff.elements;
+  if (elementsAdded.length > 0) {
+    parts.push(`${elementsAdded.length} element${elementsAdded.length === 1 ? '' : 's'} added`);
+  }
+  if (elementsRemoved.length > 0) {
+    parts.push(`${elementsRemoved.length} removed`);
+  }
+  if (elementsChanged.length > 0) {
+    parts.push(`${elementsChanged.length} changed`);
+  }
+
+  const { added: zonesAdded, removed: zonesRemoved, changed: zonesChanged } = diff.zones;
+  if (zonesAdded.length > 0) {
+    parts.push(`${zonesAdded.length} zone${zonesAdded.length === 1 ? '' : 's'} added`);
+  }
+  if (zonesRemoved.length > 0) {
+    parts.push(`${zonesRemoved.length} zone${zonesRemoved.length === 1 ? '' : 's'} removed`);
+  }
+  if (zonesChanged.length > 0) {
+    parts.push(`${zonesChanged.length} zone${zonesChanged.length === 1 ? '' : 's'} changed`);
+  }
+
+  for (const key of diff.siteChanged) {
+    parts.push(`site ${key} changed`);
+  }
+
+  return parts.length === 0 ? 'no changes' : parts.join(', ');
+}

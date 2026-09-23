@@ -202,11 +202,28 @@ export async function getVersion(
   return row === undefined ? null : mapVersion(row);
 }
 
-export async function insertVersion(
+export type CommitVersionResult =
+  | { ok: true; version: number }
+  | { ok: false; reason: 'NOT_FOUND' }
+  | { ok: false; reason: 'CONFLICT'; latestVersion: number }
+  | { ok: false; reason: 'NO_CHANGE' };
+
+/** Postgres unique-violation code. */
+function isUniqueViolation(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && (error as { code?: string }).code === '23505';
+}
+
+/**
+ * Commit a new version with row-level locking. The scene row is locked FOR UPDATE first, then the
+ * latest version is read and parentVersion re-checked INSIDE the same transaction, so two
+ * simultaneous commits with the same parentVersion cannot both succeed — the second blocks on the
+ * lock, then sees the new latest and returns CONFLICT. A 23505 on the insert is also converted to
+ * CONFLICT as a belt-and-braces guard.
+ */
+export async function commitVersionGuarded(
   pool: PgPool,
   args: {
     sceneId: string;
-    version: number;
     parentVersion: number;
     author: string;
     message: string;
@@ -214,27 +231,97 @@ export async function insertVersion(
     doc: SceneDoc;
     sceneName: string;
   },
-): Promise<void> {
-  await withTransaction(pool, async (client) => {
-    await client.query(
-      'INSERT INTO scene_version (scene_id, version, parent_version, author, message, content_hash, doc) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [args.sceneId, args.version, args.parentVersion, args.author, args.message, args.hash, args.doc],
+): Promise<CommitVersionResult> {
+  return withTransaction(pool, async (client) => {
+    const lock = await client.query('SELECT id FROM scene WHERE id = $1 FOR UPDATE', [args.sceneId]);
+    if (lock.rowCount === 0) {
+      return { ok: false, reason: 'NOT_FOUND' } as const;
+    }
+
+    const latestResult = await client.query<{ v: number | null }>(
+      'SELECT MAX(version) AS v FROM scene_version WHERE scene_id = $1',
+      [args.sceneId],
     );
+    const latestValue = latestResult.rows[0]?.v;
+    const latest = latestValue === null || latestValue === undefined ? null : Number(latestValue);
+    if (latest === null) {
+      return { ok: false, reason: 'CONFLICT', latestVersion: 0 } as const;
+    }
+    if (args.parentVersion !== latest) {
+      return { ok: false, reason: 'CONFLICT', latestVersion: latest } as const;
+    }
+
+    const parent = await client.query<{ content_hash: string }>(
+      'SELECT content_hash FROM scene_version WHERE scene_id = $1 AND version = $2',
+      [args.sceneId, latest],
+    );
+    if (parent.rows[0]?.content_hash === args.hash) {
+      return { ok: false, reason: 'NO_CHANGE' } as const;
+    }
+
+    try {
+      await client.query(
+        'INSERT INTO scene_version (scene_id, version, parent_version, author, message, content_hash, doc) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+        [args.sceneId, latest + 1, latest, args.author, args.message, args.hash, args.doc],
+      );
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        return { ok: false, reason: 'CONFLICT', latestVersion: latest } as const;
+      }
+      throw error;
+    }
+
     await client.query('UPDATE scene SET name = $1, updated_at = now() WHERE id = $2', [
       args.sceneName,
       args.sceneId,
     ]);
+    return { ok: true, version: latest + 1 } as const;
   });
 }
 
-export async function createShare(
+export type CreateShareResult =
+  | { ok: true; version: number }
+  | { ok: false; reason: 'NOT_FOUND' }
+  | { ok: false; reason: 'VERSION_NOT_FOUND' };
+
+/**
+ * Create a share link with the latest version resolved INSIDE the transaction (scene row locked),
+ * so a share created while a commit lands always points at an existing version.
+ */
+export async function createShareGuarded(
   pool: PgPool,
-  args: { token: string; sceneId: string; version: number; expiresAt: Date | null },
-): Promise<void> {
-  await pool.query(
-    'INSERT INTO share_link (token, scene_id, version, expires_at) VALUES ($1, $2, $3, $4)',
-    [args.token, args.sceneId, args.version, args.expiresAt],
-  );
+  args: { token: string; sceneId: string; requestedVersion: number | null; expiresAt: Date | null },
+): Promise<CreateShareResult> {
+  return withTransaction(pool, async (client) => {
+    const lock = await client.query('SELECT id FROM scene WHERE id = $1 FOR UPDATE', [args.sceneId]);
+    if (lock.rowCount === 0) {
+      return { ok: false, reason: 'NOT_FOUND' } as const;
+    }
+
+    const latestResult = await client.query<{ v: number | null }>(
+      'SELECT MAX(version) AS v FROM scene_version WHERE scene_id = $1',
+      [args.sceneId],
+    );
+    const latestValue = latestResult.rows[0]?.v;
+    const latest = latestValue === null || latestValue === undefined ? null : Number(latestValue);
+    if (latest === null) {
+      return { ok: false, reason: 'VERSION_NOT_FOUND' } as const;
+    }
+
+    let version = latest;
+    if (args.requestedVersion !== null) {
+      if (args.requestedVersion < 1 || args.requestedVersion > latest) {
+        return { ok: false, reason: 'VERSION_NOT_FOUND' } as const;
+      }
+      version = args.requestedVersion;
+    }
+
+    await client.query(
+      'INSERT INTO share_link (token, scene_id, version, expires_at) VALUES ($1, $2, $3, $4)',
+      [args.token, args.sceneId, version, args.expiresAt],
+    );
+    return { ok: true, version } as const;
+  });
 }
 
 export async function getShare(pool: PgPool, token: string): Promise<ShareRow | null> {

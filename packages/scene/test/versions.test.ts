@@ -7,7 +7,9 @@ import {
   diffScenes,
   elementTypeRegistry,
   SceneError,
+  summariseDiff,
   type Ring2,
+  type SceneDiff,
   type VersionOptions,
 } from '../src/index.js';
 import { makeScene } from './fixtures.js';
@@ -153,5 +155,56 @@ describe('diffScenes', () => {
     }
     const diff = diffScenes(before, after);
     expect(diff.zones.changed).toEqual([{ id: 'audience_zone', fields: ['ring'] }]);
+  });
+});
+
+describe('summariseDiff', () => {
+  it('summarises adds, removes, changes and site changes', () => {
+    const diff: SceneDiff = {
+      elements: {
+        added: ['a', 'b', 'c'],
+        removed: ['d'],
+        changed: [
+          { id: 'e', fields: ['size'] },
+          { id: 'f', fields: ['label'] },
+        ],
+      },
+      zones: { added: [], removed: [], changed: [] },
+      siteChanged: ['anchor'],
+    };
+    expect(summariseDiff(diff)).toBe('3 elements added, 1 removed, 2 changed, site anchor changed');
+  });
+
+  it('handles singulars and zones', () => {
+    const diff: SceneDiff = {
+      elements: { added: ['a'], removed: [], changed: [] },
+      zones: { added: ['z'], removed: ['y'], changed: [{ id: 'x', fields: ['ring'] }] },
+      siteChanged: [],
+    };
+    expect(summariseDiff(diff)).toBe('1 element added, 1 zone added, 1 zone removed, 1 zone changed');
+  });
+
+  it('reports no changes for an empty diff', () => {
+    const diff: SceneDiff = {
+      elements: { added: [], removed: [], changed: [] },
+      zones: { added: [], removed: [], changed: [] },
+      siteChanged: [],
+    };
+    expect(summariseDiff(diff)).toBe('no changes');
+  });
+
+  it('summarises a real diffScenes result', () => {
+    const before = makeScene();
+    const after = makeScene();
+    const removed = after.elements.pop();
+    if (removed !== undefined) {
+      after.elements.push({ ...removed, id: 'extra_element', label: 'Extra' });
+    }
+    (after.site.anchor.value as { headingDeg: number }).headingDeg = 90;
+
+    const summary = summariseDiff(diffScenes(before, after));
+    expect(summary).toContain('1 element added');
+    expect(summary).toContain('1 removed');
+    expect(summary).toContain('site anchor changed');
   });
 });
