@@ -28,6 +28,8 @@ export interface SitePlacementController {
   isActive(): boolean;
   start(): void;
   stop(): void;
+  /** Hide and disable placement entirely (e.g. shared read-only view). */
+  setDisabled(disabled: boolean): void;
   /** Re-sync the controls and handle after the anchor changed. */
   refresh(): void;
 }
@@ -262,6 +264,13 @@ export function createSitePlacement(options: SitePlacementOptions): SitePlacemen
     isActive: () => active,
     start,
     stop,
+    setDisabled: (disabled: boolean) => {
+      if (disabled) {
+        stop();
+      }
+      tools.hidden = disabled;
+      toggleButton.disabled = disabled;
+    },
     refresh: () => {
       syncInput();
       if (active) {

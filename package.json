@@ -16,7 +16,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "build:web": "npm run build -w @overlord/web",
-    "smoke": "playwright test e2e/offline.spec.ts",
+    "smoke": "playwright test e2e/offline.spec.ts e2e/persistence.spec.ts",
     "smoke:online": "SMOKE_ONLINE=1 playwright test e2e/online.spec.ts"
   },
   "devDependencies": {

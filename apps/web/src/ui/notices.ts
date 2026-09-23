@@ -8,17 +8,26 @@
 
 export type NoticeTone = 'info' | 'warn' | 'error';
 
+export interface BannerAction {
+  label: string;
+  onClick: () => void;
+}
+
 export interface BannerOptions {
   tone?: NoticeTone;
   /** Extra class applied to the banner, e.g. "warning" for URL warnings. */
   kind?: string;
+  /** Single-action shorthand. */
   actionLabel?: string;
   onAction?: () => void;
+  /** Multiple actions (e.g. the version-conflict banner's Reload / Save as new). */
+  actions?: BannerAction[];
 }
 
 export interface Notices {
   showBanner(id: string, message: string, options?: BannerOptions): void;
   clearBanner(id: string): void;
+  clearBannersByPrefix(prefix: string): void;
   toast(message: string, tone?: NoticeTone): void;
 }
 
@@ -44,11 +53,9 @@ export function createNotices(container: HTMLElement): Notices {
       text.className = 'notice-banner__message';
       banner.appendChild(text);
 
-      const action = document.createElement('button');
-      action.type = 'button';
-      action.className = 'notice-banner__action';
-      action.hidden = true;
-      banner.appendChild(action);
+      const actions = document.createElement('span');
+      actions.className = 'notice-banner__actions';
+      banner.appendChild(actions);
 
       bannerHost.appendChild(banner);
       banners.set(id, banner);
@@ -61,16 +68,21 @@ export function createNotices(container: HTMLElement): Notices {
     banner.dataset.tone = options.tone ?? 'info';
     banner.classList.toggle('notice-banner--warning', options.kind === 'warning');
 
-    const actionEl = banner.querySelector('button');
-    if (actionEl !== null) {
-      if (options.actionLabel !== undefined && options.onAction !== undefined) {
-        actionEl.textContent = options.actionLabel;
-        actionEl.hidden = false;
-        actionEl.onclick = options.onAction;
-      } else {
-        actionEl.hidden = true;
-        actionEl.onclick = null;
-        actionEl.textContent = '';
+    const actionsEl = banner.querySelector('.notice-banner__actions');
+    if (actionsEl !== null) {
+      actionsEl.replaceChildren();
+      const list: BannerAction[] =
+        options.actions ??
+        (options.actionLabel !== undefined && options.onAction !== undefined
+          ? [{ label: options.actionLabel, onClick: options.onAction }]
+          : []);
+      for (const item of list) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'notice-banner__action';
+        button.textContent = item.label;
+        button.addEventListener('click', item.onClick);
+        actionsEl.appendChild(button);
       }
     }
   }
@@ -80,6 +92,14 @@ export function createNotices(container: HTMLElement): Notices {
     if (banner !== undefined) {
       banner.remove();
       banners.delete(id);
+    }
+  }
+
+  function clearBannersByPrefix(prefix: string): void {
+    for (const id of [...banners.keys()]) {
+      if (id.startsWith(prefix)) {
+        clearBanner(id);
+      }
     }
   }
 
@@ -94,5 +114,5 @@ export function createNotices(container: HTMLElement): Notices {
     }, TOAST_TTL_MS);
   }
 
-  return { showBanner, clearBanner, toast };
+  return { showBanner, clearBanner, clearBannersByPrefix, toast };
 }
