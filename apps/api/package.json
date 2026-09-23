@@ -1,0 +1,26 @@
+{
+  "name": "@overlord/api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Fastify scene API: Postgres persistence, versions and share links.",
+  "type": "module",
+  "main": "./dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -b",
+    "start": "node dist/server.js",
+    "typecheck": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.3.0",
+    "@overlord/geo-core": "*",
+    "@overlord/scene": "*",
+    "fastify": "^5.12.5",
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.15"
+  }
+}
