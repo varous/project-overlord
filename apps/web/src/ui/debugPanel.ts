@@ -19,6 +19,8 @@ export interface DebugInfo {
   arcgisToken: string;
   /** "Scene: <name>" plus " · unsaved changes" when the in-memory doc differs. */
   scene: string;
+  /** "up (commit abcdef1)", "down", or "not configured". */
+  api: string;
 }
 
 export interface DebugPanelOptions {
@@ -68,6 +70,7 @@ export function createDebugPanel(container: HTMLElement, options: DebugPanelOpti
         row('Google 3D', info.googleStatus),
         row('Esri token', info.arcgisToken),
         row('Scene', info.scene),
+        row('API', info.api),
         row('Build', `${commit} @ ${branch}`),
         copyButton,
       );

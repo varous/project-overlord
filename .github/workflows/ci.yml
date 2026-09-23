@@ -11,6 +11,19 @@ jobs:
   verify:
     name: Verify
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     outputs:
       has_cloudflare_token: ${{ steps.detect.outputs.has_cloudflare_token }}
     steps:
@@ -47,6 +60,15 @@ jobs:
           VITE_ARCGIS_API_KEY: ${{ secrets.ARCGIS_API_KEY }}
           VITE_COMMIT_SHA: ${{ github.sha }}
           VITE_BRANCH: ${{ github.head_ref || github.ref_name }}
+          VITE_API_BASE_URL: ${{ vars.API_BASE_URL || '' }}
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5433/postgres
+
+      - name: API integration test count
+        run: |
+          npx vitest run apps/api --reporter=json --outputFile=api-tests.json
+          node -e "const r=require('./api-tests.json'); const total=r.numTotalTests||0; const passed=r.numPassedTests||0; console.log('API tests ran in CI: '+passed+'/'+total+' passed'); if (total===0) process.exit(1);"
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5433/postgres
 
       - name: Upload web dist
         uses: actions/upload-artifact@v4
@@ -166,6 +188,7 @@ jobs:
           VITE_ARCGIS_API_KEY: ${{ secrets.ARCGIS_API_KEY }}
           VITE_COMMIT_SHA: ${{ github.sha }}
           VITE_BRANCH: ${{ github.ref_name }}
+          VITE_API_BASE_URL: ${{ vars.API_BASE_URL || '' }}
 
       - name: Online smoke
         id: online
@@ -176,3 +199,17 @@ jobs:
         env:
           ONLINE_OUTCOME: ${{ steps.online.outcome }}
         run: bash scripts/publish-snapshots.sh
+
+  api-image:
+    name: api-image
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build API image
+        run: docker build -f infra/Dockerfile .
+
+      - name: Image size
+        run: docker images --format '{{.Repository}}:{{.Tag}} {{.Size}}' | head -n 5

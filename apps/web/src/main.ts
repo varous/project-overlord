@@ -46,6 +46,8 @@ const notices = createNotices(document.body);
 const googleKey = import.meta.env.VITE_GOOGLE_MAPS_KEY ?? '';
 const arcgisKey = import.meta.env.VITE_ARCGIS_API_KEY ?? '';
 const arcgisTokenStatus = arcgisKey.length > 0 ? 'own key' : 'Cesium default (dev only)';
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '');
+let apiStatus = 'not configured';
 
 const urlState = parseUrlState(window.location.search);
 const testEnabled = urlState.test;
@@ -135,7 +137,33 @@ function refreshDebugPanel(): void {
     googleStatus,
     arcgisToken: arcgisTokenStatus,
     scene: sceneStatus(),
+    api: apiStatus,
   });
+}
+
+/**
+ * Status-only API probe. When VITE_API_BASE_URL is set, fetch /health once at boot and report
+ * "up (commit <short-sha>)" or "down". No token is ever sent — saving comes in Task 007.
+ */
+async function probeApi(): Promise<void> {
+  if (apiBaseUrl === '') {
+    apiStatus = 'not configured';
+    refreshDebugPanel();
+    return;
+  }
+  try {
+    const response = await fetch(`${apiBaseUrl}/health`, { signal: AbortSignal.timeout(5000) });
+    if (!response.ok) {
+      apiStatus = 'down';
+      refreshDebugPanel();
+      return;
+    }
+    const body = (await response.json()) as { commit?: string | null };
+    apiStatus = body.commit ? `up (commit ${body.commit.slice(0, 7)})` : 'up';
+  } catch {
+    apiStatus = 'down';
+  }
+  refreshDebugPanel();
 }
 
 function refreshSceneDirty(): void {
@@ -389,6 +417,7 @@ if (testEnabled) {
 }
 
 async function boot(): Promise<void> {
+  void probeApi();
   await mapStacks.setActive(urlState.stack ?? 'ESRI');
   updateUrl();
   await flyToViewpoint(viewer, anchor, currentView);

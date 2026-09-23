@@ -1,0 +1,41 @@
+# Render Blueprint for project-overlord's scene API.
+#
+# Costs (approximate, USD/month, subject to Render pricing):
+#   - Web service: Starter plan ~ $7/month.
+#   - Postgres:    basic-256mb plan ~ $7/month.
+# The web service and the database MUST be in the same region (singapore / sin1).
+#
+# Apply with:  render blueprint apply  (from the repo root, once Render is linked).
+
+services:
+  - type: web
+    name: project-overlord-api
+    runtime: docker
+    dockerfilePath: infra/Dockerfile
+    region: singapore
+    plan: starter
+    healthCheckPath: /health
+    branch: main
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: project-overlord-db
+          property: connectionString
+      - key: OVERLORD_API_TOKEN
+        sync: false
+        # Set in the Render dashboard; never in the repo. Rotate by generating a new value here.
+      - key: CORS_ORIGINS
+        value: https://project-overlord-7xs.pages.dev,https://*.project-overlord-7xs.pages.dev
+      - key: PUBLIC_WEB_URL
+        value: https://project-overlord-7xs.pages.dev
+      # COMMIT_SHA is served at runtime from Render's RENDER_GIT_COMMIT (see apps/api/src/config.ts).
+
+databases:
+  - name: project-overlord-db
+    plan: basic-256mb
+    region: singapore

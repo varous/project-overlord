@@ -61,6 +61,10 @@ test('offline: viewer keeps rendering, shows fallback banner and controls stay u
 
   await expect(page.locator('.cesium-widget-errorPanel')).toBeHidden();
 
+  // No VITE_API_BASE_URL is configured in the smoke build, so the panel must say so without
+  // waiting on any API call.
+  await expect(page.locator('.debug-panel')).toContainText('API: not configured');
+
   const state = await page.evaluate(() => ({
     renderErrors: window.__overlord?.renderErrors ?? -1,
     entityCount: window.__overlord?.entityCount ?? -1,
