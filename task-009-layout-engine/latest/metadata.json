@@ -1,0 +1,14 @@
+{
+  "sha": "339b4ad6f40f49fefb1681bb5c8a2e13a68a1db7",
+  "branch": "task/009-layout-engine",
+  "runUrl": "https://github.com/varous/project-overlord/actions/runs/35895524308",
+  "deployUrl": "https://c7f8704d.project-overlord-7xs.pages.dev",
+  "createdAt": "2026-09-23T17:40:05Z",
+  "onlineSmokeOutcome": "success",
+  "groundHeight": {
+    "heightM": 1.8392332033447558,
+    "source": "sampled from Google 3D",
+    "lat": 22.5579,
+    "lon": 88.3439
+  }
+}
