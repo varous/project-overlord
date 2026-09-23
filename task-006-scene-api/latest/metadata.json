@@ -1,0 +1,14 @@
+{
+  "sha": "e04b7c599ef2927f0f0c657b5563ab3fd676d2d1",
+  "branch": "task/006-scene-api",
+  "runUrl": "https://github.com/varous/project-overlord/actions/runs/35823008898",
+  "deployUrl": "https://fefa440a.project-overlord-7xs.pages.dev",
+  "createdAt": "2026-09-23T05:44:15Z",
+  "onlineSmokeOutcome": "success",
+  "groundHeight": {
+    "heightM": 1.8392332033447558,
+    "source": "sampled from Google 3D",
+    "lat": 22.5579,
+    "lon": 88.3439
+  }
+}
