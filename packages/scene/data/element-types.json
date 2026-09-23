@@ -5,9 +5,48 @@
       "name": "Main stage",
       "category": "STAGE",
       "geometry": "BOX",
-      "defaultSize": { "x": ["60", "ft"], "y": ["40", "ft"], "z": ["6", "ft"] },
-      "minSize": { "x": ["8", "ft"], "y": ["8", "ft"], "z": ["1", "ft"] },
-      "maxSize": { "x": ["200", "ft"], "y": ["120", "ft"], "z": ["12", "ft"] },
+      "defaultSize": {
+        "x": [
+          "60",
+          "ft"
+        ],
+        "y": [
+          "40",
+          "ft"
+        ],
+        "z": [
+          "6",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "8",
+          "ft"
+        ],
+        "y": [
+          "8",
+          "ft"
+        ],
+        "z": [
+          "1",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "200",
+          "ft"
+        ],
+        "y": [
+          "120",
+          "ft"
+        ],
+        "z": [
+          "12",
+          "ft"
+        ]
+      },
       "defaultCount": 1,
       "color": "#d64545",
       "source": "CAV layout corpus 2022–2026, 171 drawings: dominant size, 67% of observations (alt 40x32x6 noted)",
@@ -18,9 +57,48 @@
       "name": "FOH console riser",
       "category": "FOH",
       "geometry": "BOX",
-      "defaultSize": { "x": ["20", "ft"], "y": ["16", "ft"], "z": ["2", "ft"] },
-      "minSize": { "x": ["4", "ft"], "y": ["4", "ft"], "z": ["1", "ft"] },
-      "maxSize": { "x": ["40", "ft"], "y": ["32", "ft"], "z": ["4", "ft"] },
+      "defaultSize": {
+        "x": [
+          "20",
+          "ft"
+        ],
+        "y": [
+          "16",
+          "ft"
+        ],
+        "z": [
+          "2",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "4",
+          "ft"
+        ],
+        "y": [
+          "4",
+          "ft"
+        ],
+        "z": [
+          "1",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "40",
+          "ft"
+        ],
+        "y": [
+          "32",
+          "ft"
+        ],
+        "z": [
+          "4",
+          "ft"
+        ]
+      },
       "defaultCount": 1,
       "color": "#3b82f6",
       "source": "CAV layout corpus 2022–2026, 171 drawings: dominant size, 82% of observations",
@@ -31,9 +109,48 @@
       "name": "Green room",
       "category": "BACKSTAGE",
       "geometry": "BOX",
-      "defaultSize": { "x": ["16", "ft"], "y": ["16", "ft"], "z": ["10", "ft"] },
-      "minSize": { "x": ["8", "ft"], "y": ["8", "ft"], "z": ["8", "ft"] },
-      "maxSize": { "x": ["32", "ft"], "y": ["32", "ft"], "z": ["14", "ft"] },
+      "defaultSize": {
+        "x": [
+          "16",
+          "ft"
+        ],
+        "y": [
+          "16",
+          "ft"
+        ],
+        "z": [
+          "10",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "8",
+          "ft"
+        ],
+        "y": [
+          "8",
+          "ft"
+        ],
+        "z": [
+          "8",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "32",
+          "ft"
+        ],
+        "y": [
+          "32",
+          "ft"
+        ],
+        "z": [
+          "14",
+          "ft"
+        ]
+      },
       "defaultCount": 4,
       "color": "#22c55e",
       "source": "CAV layout corpus 2022–2026, 171 drawings: 100% of observations",
@@ -44,9 +161,48 @@
       "name": "Stock room",
       "category": "BACKSTAGE",
       "geometry": "BOX",
-      "defaultSize": { "x": ["16", "ft"], "y": ["16", "ft"], "z": ["10", "ft"] },
-      "minSize": { "x": ["8", "ft"], "y": ["8", "ft"], "z": ["8", "ft"] },
-      "maxSize": { "x": ["32", "ft"], "y": ["32", "ft"], "z": ["14", "ft"] },
+      "defaultSize": {
+        "x": [
+          "16",
+          "ft"
+        ],
+        "y": [
+          "16",
+          "ft"
+        ],
+        "z": [
+          "10",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "8",
+          "ft"
+        ],
+        "y": [
+          "8",
+          "ft"
+        ],
+        "z": [
+          "8",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "32",
+          "ft"
+        ],
+        "y": [
+          "32",
+          "ft"
+        ],
+        "z": [
+          "14",
+          "ft"
+        ]
+      },
       "defaultCount": 1,
       "color": "#14b8a6",
       "source": "CAV layout corpus 2022–2026, 171 drawings: 100% of observations",
@@ -57,9 +213,48 @@
       "name": "Production room",
       "category": "PRODUCTION",
       "geometry": "BOX",
-      "defaultSize": { "x": ["16", "ft"], "y": ["16", "ft"], "z": ["10", "ft"] },
-      "minSize": { "x": ["8", "ft"], "y": ["8", "ft"], "z": ["8", "ft"] },
-      "maxSize": { "x": ["32", "ft"], "y": ["32", "ft"], "z": ["14", "ft"] },
+      "defaultSize": {
+        "x": [
+          "16",
+          "ft"
+        ],
+        "y": [
+          "16",
+          "ft"
+        ],
+        "z": [
+          "10",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "8",
+          "ft"
+        ],
+        "y": [
+          "8",
+          "ft"
+        ],
+        "z": [
+          "8",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "32",
+          "ft"
+        ],
+        "y": [
+          "32",
+          "ft"
+        ],
+        "z": [
+          "14",
+          "ft"
+        ]
+      },
       "defaultCount": 1,
       "color": "#8b5cf6",
       "source": "CAV layout corpus 2022–2026, 171 drawings: 100% of observations",
@@ -70,9 +265,48 @@
       "name": "CCTV room",
       "category": "SUPPORT",
       "geometry": "BOX",
-      "defaultSize": { "x": ["10", "ft"], "y": ["10", "ft"], "z": ["10", "ft"] },
-      "minSize": { "x": ["4", "ft"], "y": ["4", "ft"], "z": ["6", "ft"] },
-      "maxSize": { "x": ["20", "ft"], "y": ["20", "ft"], "z": ["14", "ft"] },
+      "defaultSize": {
+        "x": [
+          "10",
+          "ft"
+        ],
+        "y": [
+          "10",
+          "ft"
+        ],
+        "z": [
+          "10",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "4",
+          "ft"
+        ],
+        "y": [
+          "4",
+          "ft"
+        ],
+        "z": [
+          "6",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "20",
+          "ft"
+        ],
+        "y": [
+          "20",
+          "ft"
+        ],
+        "z": [
+          "14",
+          "ft"
+        ]
+      },
       "defaultCount": 1,
       "color": "#64748b",
       "source": "CAV layout corpus 2022–2026, 171 drawings: 100% of observations",
@@ -83,9 +317,48 @@
       "name": "Food stall",
       "category": "PUBLIC",
       "geometry": "BOX",
-      "defaultSize": { "x": ["10", "ft"], "y": ["10", "ft"], "z": ["10", "ft"] },
-      "minSize": { "x": ["4", "ft"], "y": ["4", "ft"], "z": ["6", "ft"] },
-      "maxSize": { "x": ["20", "ft"], "y": ["20", "ft"], "z": ["12", "ft"] },
+      "defaultSize": {
+        "x": [
+          "10",
+          "ft"
+        ],
+        "y": [
+          "10",
+          "ft"
+        ],
+        "z": [
+          "10",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "4",
+          "ft"
+        ],
+        "y": [
+          "4",
+          "ft"
+        ],
+        "z": [
+          "6",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "20",
+          "ft"
+        ],
+        "y": [
+          "20",
+          "ft"
+        ],
+        "z": [
+          "12",
+          "ft"
+        ]
+      },
       "defaultCount": 1,
       "color": "#f97316",
       "source": "CAV layout corpus 2022–2026, 171 drawings: 100% of observations",
@@ -96,9 +369,48 @@
       "name": "Coupon counter",
       "category": "PUBLIC",
       "geometry": "BOX",
-      "defaultSize": { "x": ["10", "ft"], "y": ["10", "ft"], "z": ["8", "ft"] },
-      "minSize": { "x": ["4", "ft"], "y": ["4", "ft"], "z": ["4", "ft"] },
-      "maxSize": { "x": ["20", "ft"], "y": ["20", "ft"], "z": ["10", "ft"] },
+      "defaultSize": {
+        "x": [
+          "10",
+          "ft"
+        ],
+        "y": [
+          "10",
+          "ft"
+        ],
+        "z": [
+          "8",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "4",
+          "ft"
+        ],
+        "y": [
+          "4",
+          "ft"
+        ],
+        "z": [
+          "4",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "20",
+          "ft"
+        ],
+        "y": [
+          "20",
+          "ft"
+        ],
+        "z": [
+          "10",
+          "ft"
+        ]
+      },
       "defaultCount": 1,
       "color": "#eab308",
       "source": "CAV layout corpus 2022–2026, 171 drawings: 100% of observations",
@@ -109,9 +421,48 @@
       "name": "VVIP platform",
       "category": "GUEST",
       "geometry": "BOX",
-      "defaultSize": { "x": ["40", "ft"], "y": ["32", "ft"], "z": ["4", "ft"] },
-      "minSize": { "x": ["8", "ft"], "y": ["8", "ft"], "z": ["1", "ft"] },
-      "maxSize": { "x": ["120", "ft"], "y": ["100", "ft"], "z": ["8", "ft"] },
+      "defaultSize": {
+        "x": [
+          "40",
+          "ft"
+        ],
+        "y": [
+          "32",
+          "ft"
+        ],
+        "z": [
+          "4",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "8",
+          "ft"
+        ],
+        "y": [
+          "8",
+          "ft"
+        ],
+        "z": [
+          "1",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "120",
+          "ft"
+        ],
+        "y": [
+          "100",
+          "ft"
+        ],
+        "z": [
+          "8",
+          "ft"
+        ]
+      },
       "defaultCount": 1,
       "color": "#ef4444",
       "source": "CAV layout corpus 2022–2026, 171 drawings: 100% of observations",
@@ -122,9 +473,48 @@
       "name": "Pagoda",
       "category": "PUBLIC",
       "geometry": "BOX",
-      "defaultSize": { "x": ["16", "ft"], "y": ["16", "ft"], "z": ["10", "ft"] },
-      "minSize": { "x": ["8", "ft"], "y": ["8", "ft"], "z": ["8", "ft"] },
-      "maxSize": { "x": ["32", "ft"], "y": ["32", "ft"], "z": ["14", "ft"] },
+      "defaultSize": {
+        "x": [
+          "16",
+          "ft"
+        ],
+        "y": [
+          "16",
+          "ft"
+        ],
+        "z": [
+          "10",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "8",
+          "ft"
+        ],
+        "y": [
+          "8",
+          "ft"
+        ],
+        "z": [
+          "8",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "32",
+          "ft"
+        ],
+        "y": [
+          "32",
+          "ft"
+        ],
+        "z": [
+          "14",
+          "ft"
+        ]
+      },
       "defaultCount": 1,
       "color": "#a855f7",
       "source": "CAV layout corpus 2022–2026, 171 drawings: dominant size, 71% of observations",
@@ -135,9 +525,48 @@
       "name": "Pyro pit",
       "category": "SAFETY",
       "geometry": "BOX",
-      "defaultSize": { "x": ["60", "ft"], "y": ["4", "ft"], "z": ["5", "ft"] },
-      "minSize": { "x": ["8", "ft"], "y": ["2", "ft"], "z": ["1", "ft"] },
-      "maxSize": { "x": ["120", "ft"], "y": ["10", "ft"], "z": ["10", "ft"] },
+      "defaultSize": {
+        "x": [
+          "60",
+          "ft"
+        ],
+        "y": [
+          "4",
+          "ft"
+        ],
+        "z": [
+          "5",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "8",
+          "ft"
+        ],
+        "y": [
+          "2",
+          "ft"
+        ],
+        "z": [
+          "1",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "120",
+          "ft"
+        ],
+        "y": [
+          "10",
+          "ft"
+        ],
+        "z": [
+          "10",
+          "ft"
+        ]
+      },
       "defaultCount": 1,
       "color": "#dc2626",
       "source": "CAV layout corpus 2022–2026, 171 drawings: dominant size, 68% of observations",
@@ -148,9 +577,48 @@
       "name": "Riser",
       "category": "STAGE",
       "geometry": "BOX",
-      "defaultSize": { "x": ["8", "ft"], "y": ["4", "ft"], "z": ["2", "ft"] },
-      "minSize": { "x": ["2", "ft"], "y": ["2", "ft"], "z": ["1", "ft"] },
-      "maxSize": { "x": ["16", "ft"], "y": ["16", "ft"], "z": ["8", "ft"] },
+      "defaultSize": {
+        "x": [
+          "8",
+          "ft"
+        ],
+        "y": [
+          "4",
+          "ft"
+        ],
+        "z": [
+          "2",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "2",
+          "ft"
+        ],
+        "y": [
+          "2",
+          "ft"
+        ],
+        "z": [
+          "1",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "16",
+          "ft"
+        ],
+        "y": [
+          "16",
+          "ft"
+        ],
+        "z": [
+          "8",
+          "ft"
+        ]
+      },
       "defaultCount": 1,
       "color": "#0ea5e9",
       "source": "CAV layout corpus 2022–2026, 171 drawings: closed set 4x8x2, 6x8x2, 8x4x4, 8x8x6 noted; default 8x4x2",
@@ -161,12 +629,675 @@
       "name": "Audience area",
       "category": "AUDIENCE",
       "geometry": "FLAT",
-      "defaultSize": { "x": ["200", "ft"], "y": ["250", "ft"], "z": ["0", "ft"] },
-      "minSize": { "x": ["20", "ft"], "y": ["20", "ft"], "z": ["0", "ft"] },
-      "maxSize": { "x": ["2000", "ft"], "y": ["2000", "ft"], "z": ["0", "ft"] },
+      "defaultSize": {
+        "x": [
+          "200",
+          "ft"
+        ],
+        "y": [
+          "250",
+          "ft"
+        ],
+        "z": [
+          "0",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "20",
+          "ft"
+        ],
+        "y": [
+          "20",
+          "ft"
+        ],
+        "z": [
+          "0",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "2000",
+          "ft"
+        ],
+        "y": [
+          "2000",
+          "ft"
+        ],
+        "z": [
+          "0",
+          "ft"
+        ]
+      },
       "defaultCount": 1,
       "color": "#facc15",
       "source": "CAV layout corpus 2022–2026, 171 drawings: arena footprint set per venue",
+      "offeringMappings": []
+    },
+    {
+      "code": "TOILET_BLOCK",
+      "name": "Toilet block",
+      "category": "PUBLIC",
+      "geometry": "BOX",
+      "defaultSize": {
+        "x": [
+          "10",
+          "ft"
+        ],
+        "y": [
+          "10",
+          "ft"
+        ],
+        "z": [
+          "10",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "4",
+          "ft"
+        ],
+        "y": [
+          "4",
+          "ft"
+        ],
+        "z": [
+          "8",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "24",
+          "ft"
+        ],
+        "y": [
+          "24",
+          "ft"
+        ],
+        "z": [
+          "14",
+          "ft"
+        ]
+      },
+      "defaultCount": 1,
+      "color": "#0d9488",
+      "source": "CAV practice, provisional — confirm",
+      "offeringMappings": []
+    },
+    {
+      "code": "ENTRY_GATE",
+      "name": "Entry gate",
+      "category": "PUBLIC",
+      "geometry": "BOX",
+      "defaultSize": {
+        "x": [
+          "20",
+          "ft"
+        ],
+        "y": [
+          "10",
+          "ft"
+        ],
+        "z": [
+          "12",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "8",
+          "ft"
+        ],
+        "y": [
+          "4",
+          "ft"
+        ],
+        "z": [
+          "8",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "40",
+          "ft"
+        ],
+        "y": [
+          "20",
+          "ft"
+        ],
+        "z": [
+          "20",
+          "ft"
+        ]
+      },
+      "defaultCount": 1,
+      "color": "#6366f1",
+      "source": "CAV practice, provisional — confirm",
+      "offeringMappings": []
+    },
+    {
+      "code": "FRISKING_BOOTH",
+      "name": "Frisking booth",
+      "category": "SAFETY",
+      "geometry": "BOX",
+      "defaultSize": {
+        "x": [
+          "10",
+          "ft"
+        ],
+        "y": [
+          "10",
+          "ft"
+        ],
+        "z": [
+          "8",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "4",
+          "ft"
+        ],
+        "y": [
+          "4",
+          "ft"
+        ],
+        "z": [
+          "6",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "20",
+          "ft"
+        ],
+        "y": [
+          "20",
+          "ft"
+        ],
+        "z": [
+          "12",
+          "ft"
+        ]
+      },
+      "defaultCount": 1,
+      "color": "#7c3aed",
+      "source": "CAV practice, provisional — confirm",
+      "offeringMappings": []
+    },
+    {
+      "code": "BOX_OFFICE",
+      "name": "Box office",
+      "category": "PUBLIC",
+      "geometry": "BOX",
+      "defaultSize": {
+        "x": [
+          "16",
+          "ft"
+        ],
+        "y": [
+          "10",
+          "ft"
+        ],
+        "z": [
+          "10",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "6",
+          "ft"
+        ],
+        "y": [
+          "6",
+          "ft"
+        ],
+        "z": [
+          "8",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "40",
+          "ft"
+        ],
+        "y": [
+          "20",
+          "ft"
+        ],
+        "z": [
+          "14",
+          "ft"
+        ]
+      },
+      "defaultCount": 1,
+      "color": "#0891b2",
+      "source": "CAV practice, provisional — confirm",
+      "offeringMappings": []
+    },
+    {
+      "code": "BAR_COUNTER",
+      "name": "Bar counter",
+      "category": "FNB",
+      "geometry": "BOX",
+      "defaultSize": {
+        "x": [
+          "20",
+          "ft"
+        ],
+        "y": [
+          "10",
+          "ft"
+        ],
+        "z": [
+          "8",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "6",
+          "ft"
+        ],
+        "y": [
+          "4",
+          "ft"
+        ],
+        "z": [
+          "4",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "60",
+          "ft"
+        ],
+        "y": [
+          "20",
+          "ft"
+        ],
+        "z": [
+          "12",
+          "ft"
+        ]
+      },
+      "defaultCount": 1,
+      "color": "#d97706",
+      "source": "CAV practice, provisional — confirm",
+      "offeringMappings": []
+    },
+    {
+      "code": "MERCH_STALL",
+      "name": "Merch stall",
+      "category": "PUBLIC",
+      "geometry": "BOX",
+      "defaultSize": {
+        "x": [
+          "10",
+          "ft"
+        ],
+        "y": [
+          "10",
+          "ft"
+        ],
+        "z": [
+          "10",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "4",
+          "ft"
+        ],
+        "y": [
+          "4",
+          "ft"
+        ],
+        "z": [
+          "6",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "20",
+          "ft"
+        ],
+        "y": [
+          "20",
+          "ft"
+        ],
+        "z": [
+          "14",
+          "ft"
+        ]
+      },
+      "defaultCount": 1,
+      "color": "#be185d",
+      "source": "CAV practice, provisional — confirm",
+      "offeringMappings": []
+    },
+    {
+      "code": "GENERATOR",
+      "name": "Generator",
+      "category": "PRODUCTION",
+      "geometry": "BOX",
+      "defaultSize": {
+        "x": [
+          "12",
+          "ft"
+        ],
+        "y": [
+          "6",
+          "ft"
+        ],
+        "z": [
+          "8",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "4",
+          "ft"
+        ],
+        "y": [
+          "4",
+          "ft"
+        ],
+        "z": [
+          "4",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "40",
+          "ft"
+        ],
+        "y": [
+          "20",
+          "ft"
+        ],
+        "z": [
+          "14",
+          "ft"
+        ]
+      },
+      "defaultCount": 1,
+      "color": "#78350f",
+      "source": "CAV practice, provisional — confirm",
+      "offeringMappings": []
+    },
+    {
+      "code": "LED_WALL",
+      "name": "LED wall",
+      "category": "STAGE",
+      "geometry": "BOX",
+      "defaultSize": {
+        "x": [
+          "24",
+          "ft"
+        ],
+        "y": [
+          "14",
+          "ft"
+        ],
+        "z": [
+          "2",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "8",
+          "ft"
+        ],
+        "y": [
+          "6",
+          "ft"
+        ],
+        "z": [
+          "1",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "80",
+          "ft"
+        ],
+        "y": [
+          "40",
+          "ft"
+        ],
+        "z": [
+          "4",
+          "ft"
+        ]
+      },
+      "defaultCount": 1,
+      "color": "#1d4ed8",
+      "source": "CAV practice, provisional — confirm",
+      "offeringMappings": []
+    },
+    {
+      "code": "DELAY_TOWER",
+      "name": "Delay tower",
+      "category": "PRODUCTION",
+      "geometry": "BOX",
+      "defaultSize": {
+        "x": [
+          "12",
+          "ft"
+        ],
+        "y": [
+          "12",
+          "ft"
+        ],
+        "z": [
+          "20",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "6",
+          "ft"
+        ],
+        "y": [
+          "6",
+          "ft"
+        ],
+        "z": [
+          "10",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "32",
+          "ft"
+        ],
+        "y": [
+          "32",
+          "ft"
+        ],
+        "z": [
+          "40",
+          "ft"
+        ]
+      },
+      "defaultCount": 1,
+      "color": "#4338ca",
+      "source": "CAV practice, provisional — confirm",
+      "offeringMappings": []
+    },
+    {
+      "code": "AMBULANCE_BAY",
+      "name": "Ambulance bay",
+      "category": "SAFETY",
+      "geometry": "FLAT",
+      "defaultSize": {
+        "x": [
+          "25",
+          "ft"
+        ],
+        "y": [
+          "12",
+          "ft"
+        ],
+        "z": [
+          "0",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "12",
+          "ft"
+        ],
+        "y": [
+          "8",
+          "ft"
+        ],
+        "z": [
+          "0",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "60",
+          "ft"
+        ],
+        "y": [
+          "40",
+          "ft"
+        ],
+        "z": [
+          "0",
+          "ft"
+        ]
+      },
+      "defaultCount": 1,
+      "color": "#dc2626",
+      "source": "CAV practice, provisional — confirm",
+      "offeringMappings": []
+    },
+    {
+      "code": "PARKING_AREA",
+      "name": "Parking area",
+      "category": "PUBLIC",
+      "geometry": "FLAT",
+      "defaultSize": {
+        "x": [
+          "100",
+          "ft"
+        ],
+        "y": [
+          "100",
+          "ft"
+        ],
+        "z": [
+          "0",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "20",
+          "ft"
+        ],
+        "y": [
+          "20",
+          "ft"
+        ],
+        "z": [
+          "0",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "500",
+          "ft"
+        ],
+        "y": [
+          "500",
+          "ft"
+        ],
+        "z": [
+          "0",
+          "ft"
+        ]
+      },
+      "defaultCount": 1,
+      "color": "#334155",
+      "source": "CAV practice, provisional — confirm",
+      "offeringMappings": []
+    },
+    {
+      "code": "STORE_ROOM",
+      "name": "Store room",
+      "category": "BACKSTAGE",
+      "geometry": "BOX",
+      "defaultSize": {
+        "x": [
+          "16",
+          "ft"
+        ],
+        "y": [
+          "16",
+          "ft"
+        ],
+        "z": [
+          "10",
+          "ft"
+        ]
+      },
+      "minSize": {
+        "x": [
+          "8",
+          "ft"
+        ],
+        "y": [
+          "8",
+          "ft"
+        ],
+        "z": [
+          "8",
+          "ft"
+        ]
+      },
+      "maxSize": {
+        "x": [
+          "32",
+          "ft"
+        ],
+        "y": [
+          "32",
+          "ft"
+        ],
+        "z": [
+          "14",
+          "ft"
+        ]
+      },
+      "defaultCount": 1,
+      "color": "#65a30d",
+      "source": "CAV practice, provisional — confirm",
       "offeringMappings": []
     }
   ]
