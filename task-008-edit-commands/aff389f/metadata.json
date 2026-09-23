@@ -1,0 +1,14 @@
+{
+  "sha": "aff389fecc32b5c21505990bdca2cfec40314ee6",
+  "branch": "task/008-edit-commands",
+  "runUrl": "https://github.com/varous/project-overlord/actions/runs/35865795130",
+  "deployUrl": "https://1deddf88.project-overlord-7xs.pages.dev",
+  "createdAt": "2026-09-23T13:32:41Z",
+  "onlineSmokeOutcome": "success",
+  "groundHeight": {
+    "heightM": 1.8392332033447558,
+    "source": "sampled from Google 3D",
+    "lat": 22.5579,
+    "lon": 88.3439
+  }
+}
