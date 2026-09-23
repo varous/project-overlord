@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 5173",
-    "build": "tsc -b ../../packages/geo-core ../../packages/scene && vite build",
+    "build": "tsc -b ../../packages/geo-core ../../packages/scene ../../packages/commands && vite build",
     "preview": "vite preview --port 5173",
     "typecheck": "tsc -p tsconfig.test.json"
   },
@@ -15,6 +15,7 @@
     "vite-plugin-static-copy": "^4.1.1"
   },
   "dependencies": {
+    "@overlord/commands": "*",
     "@overlord/geo-core": "*",
     "@overlord/scene": "*",
     "cesium": "^1.145.0"

@@ -12,11 +12,11 @@
     "apps/*"
   ],
   "scripts": {
-    "typecheck": "tsc -b && tsc -p packages/geo-core/tsconfig.test.json && tsc -p packages/scene/tsconfig.test.json && tsc -p apps/api/tsconfig.test.json && tsc -p apps/web/tsconfig.test.json",
+    "typecheck": "tsc -b && tsc -p packages/geo-core/tsconfig.test.json && tsc -p packages/scene/tsconfig.test.json && tsc -p packages/commands/tsconfig.test.json && tsc -p apps/api/tsconfig.test.json && tsc -p apps/web/tsconfig.test.json",
     "lint": "eslint .",
     "test": "vitest run",
     "build:web": "npm run build -w @overlord/web",
-    "smoke": "playwright test e2e/offline.spec.ts e2e/persistence.spec.ts",
+    "smoke": "playwright test e2e/offline.spec.ts e2e/persistence.spec.ts e2e/editing.spec.ts",
     "smoke:online": "SMOKE_ONLINE=1 playwright test e2e/online.spec.ts"
   },
   "devDependencies": {

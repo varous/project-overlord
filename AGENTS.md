@@ -23,6 +23,10 @@ Permanent rules for every task in this repository. Read this before starting any
 8. **Packages listed in `scripts/check-zero-deps.mjs` have zero runtime dependencies** and must not
    import from `apps/` or from any package that is not also zero-dep.
 9. **Never commit secrets.** No API keys in code, tests, fixtures or reports.
+10. **Every scene change goes through `@overlord/commands`.** The viewer, the future agent and the
+    future layout engine all mutate a `SceneDoc` only by applying a typed `Command` through
+    `@overlord/commands` (which validates the result and returns its inverse). Nothing else writes to
+    a scene document — no direct field assignment, no ad-hoc mutation.
 
 ## Working rules
 

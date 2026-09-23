@@ -7,7 +7,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /** Packages that are required to stay zero-dependency. Paths are relative to the repo root. */
-const ZERO_DEP_PACKAGES = ['packages/geo-core', 'packages/scene'];
+const ZERO_DEP_PACKAGES = ['packages/geo-core', 'packages/scene', 'packages/commands'];
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 

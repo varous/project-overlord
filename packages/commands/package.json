@@ -1,0 +1,23 @@
+{
+  "name": "@overlord/commands",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Typed, validated scene edit commands with exact inverses — the only way a scene document changes.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@overlord/geo-core": "*",
+    "@overlord/scene": "*"
+  }
+}

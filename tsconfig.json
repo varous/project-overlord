@@ -3,6 +3,7 @@
   "references": [
     { "path": "packages/geo-core" },
     { "path": "packages/scene" },
+    { "path": "packages/commands" },
     { "path": "apps/api" }
   ]
 }

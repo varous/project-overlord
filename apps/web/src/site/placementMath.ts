@@ -1,6 +1,11 @@
 /**
  * Placement math. PURE module: no Cesium, no DOM.
+ *
+ * Angle snapping lives in `@overlord/commands` (`snapAngleDeg`) so the product has exactly one
+ * implementation; `snapHeading` is kept as the placement-facing name.
  */
+
+import { snapAngleDeg } from '@overlord/commands';
 
 import { normalizeHeading } from './urlState.js';
 
@@ -21,10 +26,7 @@ export function headingFromDrag(originEnu: EnuPoint, pointerEnu: EnuPoint): numb
 
 /** Round to the nearest multiple of `stepDeg`, normalised to [0, 360). */
 export function snapHeading(deg: number, stepDeg: number): number {
-  if (!(stepDeg > 0)) {
-    return normalizeHeading(deg);
-  }
-  return normalizeHeading(Math.round(deg / stepDeg) * stepDeg);
+  return snapAngleDeg(deg, stepDeg);
 }
 
 /** Add `deltaDeg` and normalise to [0, 360). */
