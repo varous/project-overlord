@@ -1,0 +1,14 @@
+{
+  "sha": "f07197fc0f6c43a855b1c844c67a89c078322ace",
+  "branch": "task/007-scene-persistence",
+  "runUrl": "https://github.com/varous/project-overlord/actions/runs/35827348819",
+  "deployUrl": "https://718314c2.project-overlord-7xs.pages.dev",
+  "createdAt": "2026-09-23T06:47:55Z",
+  "onlineSmokeOutcome": "success",
+  "groundHeight": {
+    "heightM": 1.8392332033447558,
+    "source": "sampled from Google 3D",
+    "lat": 22.5579,
+    "lon": 88.3439
+  }
+}
