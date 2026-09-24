@@ -36,7 +36,7 @@ describe.runIf(databaseAvailable)('POST /scenes and scene reads', () => {
 
   it('rejects an invalid doc with 422 and the issue codes', async () => {
     const app = await buildServer({ config: testConfig(), pool: db.pool, logger: false });
-    const bad = { ...demoDoc(), schemaVersion: 3 } as unknown as Record<string, unknown>;
+    const bad = { ...demoDoc(), schemaVersion: 2 } as unknown as Record<string, unknown>;
     const response = await app.inject({
       method: 'POST',
       url: '/scenes',

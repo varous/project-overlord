@@ -204,7 +204,11 @@ export function applyCommand(doc: SceneDoc, command: Command, ctx: ApplyContext)
         return fail(found.error.code, found.error.message);
       }
       const { index, element } = found;
-      const previous = element.placement.value;
+      const placement = element.placement;
+      if (placement === undefined) {
+        return fail('GEOMETRY_MISMATCH', `Element "${command.id}" is not a BOX/FLAT element.`);
+      }
+      const previous = placement.value;
       const next = cloneDoc(doc);
       const target = next.elements[index];
       if (target === undefined) {
@@ -215,14 +219,14 @@ export function applyCommand(doc: SceneDoc, command: Command, ctx: ApplyContext)
         placement: restate(
           { center: command.center, rotationDeg: previous.rotationDeg },
           command.provenance ?? 'STATED',
-          command.note ?? element.placement.note,
+          command.note ?? placement.note,
         ),
       };
       const inverse: Command = {
         type: 'MOVE_ELEMENT_ABSOLUTE',
         id: command.id,
         center: previous.center,
-        ...optionalFields(element.placement.provenance, element.placement.note),
+        ...optionalFields(placement.provenance, placement.note),
       };
       return finish(next, inverse, ctx.registry);
     }
@@ -233,7 +237,11 @@ export function applyCommand(doc: SceneDoc, command: Command, ctx: ApplyContext)
         return fail(found.error.code, found.error.message);
       }
       const { index, element } = found;
-      const previous = element.placement.value;
+      const placement = element.placement;
+      if (placement === undefined) {
+        return fail('GEOMETRY_MISMATCH', `Element "${command.id}" is not a BOX/FLAT element.`);
+      }
+      const previous = placement.value;
       const dz = command.delta.z ?? 0;
       const moved = {
         x: previous.center.x + command.delta.x,
@@ -250,14 +258,14 @@ export function applyCommand(doc: SceneDoc, command: Command, ctx: ApplyContext)
         placement: restate(
           { center: moved, rotationDeg: previous.rotationDeg },
           command.provenance ?? 'STATED',
-          command.note ?? element.placement.note,
+          command.note ?? placement.note,
         ),
       };
       const inverse: Command = {
         type: 'MOVE_ELEMENT_RELATIVE',
         id: command.id,
         delta: { x: -command.delta.x as Tmm, y: -command.delta.y as Tmm, z: -dz as Tmm },
-        ...optionalFields(element.placement.provenance, element.placement.note),
+        ...optionalFields(placement.provenance, placement.note),
       };
       return finish(next, inverse, ctx.registry);
     }
@@ -268,7 +276,11 @@ export function applyCommand(doc: SceneDoc, command: Command, ctx: ApplyContext)
         return fail(found.error.code, found.error.message);
       }
       const { index, element } = found;
-      const previous = element.placement.value;
+      const placement = element.placement;
+      if (placement === undefined) {
+        return fail('GEOMETRY_MISMATCH', `Element "${command.id}" is not a BOX/FLAT element.`);
+      }
+      const previous = placement.value;
       const next = cloneDoc(doc);
       const target = next.elements[index];
       if (target === undefined) {
@@ -279,14 +291,14 @@ export function applyCommand(doc: SceneDoc, command: Command, ctx: ApplyContext)
         placement: restate(
           { center: previous.center, rotationDeg: normalizeAngleDeg(command.rotationDeg) },
           command.provenance ?? 'STATED',
-          command.note ?? element.placement.note,
+          command.note ?? placement.note,
         ),
       };
       const inverse: Command = {
         type: 'ROTATE_ELEMENT',
         id: command.id,
         rotationDeg: previous.rotationDeg,
-        ...optionalFields(element.placement.provenance, element.placement.note),
+        ...optionalFields(placement.provenance, placement.note),
       };
       return finish(next, inverse, ctx.registry);
     }
@@ -297,6 +309,10 @@ export function applyCommand(doc: SceneDoc, command: Command, ctx: ApplyContext)
         return fail(found.error.code, found.error.message);
       }
       const { index, element } = found;
+      const sizeSourced = element.size;
+      if (sizeSourced === undefined) {
+        return fail('GEOMETRY_MISMATCH', `Element "${command.id}" is not a BOX/FLAT element.`);
+      }
       const def = ctx.registry.get(element.typeCode);
       if (def === undefined) {
         return fail('UNKNOWN_TYPE', `Unknown element type "${element.typeCode}".`);
@@ -305,7 +321,7 @@ export function applyCommand(doc: SceneDoc, command: Command, ctx: ApplyContext)
       if (bounds !== null) {
         return fail(bounds.code, bounds.message);
       }
-      const previous = element.size.value;
+      const previous = sizeSourced.value;
       const next = cloneDoc(doc);
       const target = next.elements[index];
       if (target === undefined) {
@@ -313,13 +329,13 @@ export function applyCommand(doc: SceneDoc, command: Command, ctx: ApplyContext)
       }
       next.elements[index] = {
         ...target,
-        size: restate(command.size, command.provenance ?? 'STATED', command.note ?? element.size.note),
+        size: restate(command.size, command.provenance ?? 'STATED', command.note ?? sizeSourced.note),
       };
       const inverse: Command = {
         type: 'RESIZE_ELEMENT',
         id: command.id,
         size: previous,
-        ...optionalFields(element.size.provenance, element.size.note),
+        ...optionalFields(sizeSourced.provenance, sizeSourced.note),
       };
       return finish(next, inverse, ctx.registry);
     }
@@ -332,18 +348,38 @@ export function applyCommand(doc: SceneDoc, command: Command, ctx: ApplyContext)
       const { index, element } = found;
       const next = cloneDoc(doc);
       next.elements.splice(index, 1);
-      const inverse: Command = {
-        type: 'ADD_ELEMENT',
-        typeCode: element.typeCode,
-        id: element.id,
-        label: element.label,
-        center: element.placement.value.center,
-        rotationDeg: element.placement.value.rotationDeg,
-        size: element.size.value,
-        provenance: element.placement.provenance,
-        sizeProvenance: element.size.provenance,
-        index,
-      };
+      let inverse: Command;
+      if (element.path !== undefined) {
+        inverse = {
+          type: 'ADD_LINEAR_ELEMENT',
+          typeCode: element.typeCode,
+          id: element.id,
+          label: element.label,
+          path: element.path.value,
+          widthTmm: element.widthTmm ?? 0,
+          provenance: element.path.provenance,
+          ...(element.path.note === undefined ? {} : { note: element.path.note }),
+          index,
+        };
+      } else {
+        const placement = element.placement;
+        const size = element.size;
+        if (placement === undefined || size === undefined) {
+          return fail('GEOMETRY_MISMATCH', 'Element has neither a path nor a placement/size.');
+        }
+        inverse = {
+          type: 'ADD_ELEMENT',
+          typeCode: element.typeCode,
+          id: element.id,
+          label: element.label,
+          center: placement.value.center,
+          rotationDeg: placement.value.rotationDeg,
+          size: size.value,
+          provenance: placement.provenance,
+          sizeProvenance: size.provenance,
+          index,
+        };
+      }
       return finish(next, inverse, ctx.registry);
     }
 
@@ -475,6 +511,21 @@ export function applyCommand(doc: SceneDoc, command: Command, ctx: ApplyContext)
       return finish(next, inverse, ctx.registry);
     }
 
+    case 'SET_ZONE_LABEL': {
+      const found = requireZone(doc, command.id);
+      if ('error' in found) {
+        return fail(found.error.code, found.error.message);
+      }
+      const { index, zone } = found;
+      const next = cloneDoc(doc);
+      const target = next.zones[index];
+      if (target === undefined) {
+        return fail('ZONE_NOT_FOUND', `No zone with id "${command.id}".`);
+      }
+      next.zones[index] = { ...target, label: command.label };
+      return finish(next, { type: 'SET_ZONE_LABEL', id: command.id, label: zone.label }, ctx.registry);
+    }
+
     case 'ADD_MEASUREMENT': {
       const id = command.measurement.id;
       if (idTaken(doc, id)) {
@@ -537,6 +588,91 @@ export function applyCommand(doc: SceneDoc, command: Command, ctx: ApplyContext)
       const next = cloneDoc(doc);
       next.name = command.name;
       return finish(next, { type: 'SET_SCENE_NAME', name: previous }, ctx.registry);
+    }
+
+    case 'ADD_LINEAR_ELEMENT': {
+      const def = ctx.registry.get(command.typeCode);
+      if (def === undefined) {
+        return fail('UNKNOWN_TYPE', `Unknown element type "${command.typeCode}".`);
+      }
+      if (def.geometry !== 'LINEAR' || def.linear === null) {
+        return fail('GEOMETRY_MISMATCH', `${command.typeCode} is not a LINEAR type.`);
+      }
+      const id = command.id ?? ctx.newId();
+      if (idTaken(doc, id)) {
+        return fail('DUPLICATE_ID', `Id "${id}" is already used in this scene.`);
+      }
+      if (!Array.isArray(command.path) || command.path.length < 2) {
+        return fail('PATH_TOO_FEW_POINTS', 'A linear element needs at least 2 points.');
+      }
+      const element: SceneElement = {
+        id,
+        typeCode: command.typeCode,
+        label: command.label ?? nextFreeLabel(doc, def.name),
+        path: restate(command.path, command.provenance, command.note),
+        widthTmm: (command.widthTmm ?? def.linear.defaultWidth) as Tmm,
+        params: {},
+      };
+      const next = cloneDoc(doc);
+      insertAt(next.elements, element, command.index);
+      return finish(next, { type: 'DELETE_ELEMENT', id }, ctx.registry);
+    }
+
+    case 'SET_LINEAR_PATH': {
+      const found = requireElement(doc, command.id);
+      if ('error' in found) {
+        return fail(found.error.code, found.error.message);
+      }
+      const { index, element } = found;
+      if (element.path === undefined) {
+        return fail('GEOMETRY_MISMATCH', `Element "${command.id}" is not a LINEAR element.`);
+      }
+      if (!Array.isArray(command.path) || command.path.length < 2) {
+        return fail('PATH_TOO_FEW_POINTS', 'A linear path needs at least 2 points.');
+      }
+      const next = cloneDoc(doc);
+      const target = next.elements[index];
+      if (target === undefined) {
+        return fail('ELEMENT_NOT_FOUND', `No element with id "${command.id}".`);
+      }
+      next.elements[index] = {
+        ...target,
+        path: restate(
+          command.path,
+          command.provenance ?? 'STATED',
+          command.note ?? element.path.note,
+        ),
+      };
+      const inverse: Command = {
+        type: 'SET_LINEAR_PATH',
+        id: command.id,
+        path: element.path.value,
+        ...optionalFields(element.path.provenance, element.path.note),
+      };
+      return finish(next, inverse, ctx.registry);
+    }
+
+    case 'SET_LINEAR_WIDTH': {
+      const found = requireElement(doc, command.id);
+      if ('error' in found) {
+        return fail(found.error.code, found.error.message);
+      }
+      const { index, element } = found;
+      if (element.path === undefined) {
+        return fail('GEOMETRY_MISMATCH', `Element "${command.id}" is not a LINEAR element.`);
+      }
+      const previous = (element.widthTmm ?? 0) as number;
+      const next = cloneDoc(doc);
+      const target = next.elements[index];
+      if (target === undefined) {
+        return fail('ELEMENT_NOT_FOUND', `No element with id "${command.id}".`);
+      }
+      next.elements[index] = { ...target, widthTmm: command.widthTmm as Tmm };
+      return finish(
+        next,
+        { type: 'SET_LINEAR_WIDTH', id: command.id, widthTmm: previous },
+        ctx.registry,
+      );
     }
 
     case 'REPLACE_CONTENT': {

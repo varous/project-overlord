@@ -20,7 +20,7 @@ describe('validateScene', () => {
 
   it('reports SCHEMA_VERSION', () => {
     const doc = makeScene();
-    (doc as unknown as { schemaVersion: number }).schemaVersion = 3;
+    (doc as unknown as { schemaVersion: number }).schemaVersion = 2;
     const result = validateScene(doc, elementTypeRegistry);
     expectCode(result.issues, 'SCHEMA_VERSION');
   });
@@ -39,7 +39,7 @@ describe('validateScene', () => {
   it('reports UNKNOWN_TYPE', () => {
     const doc = makeScene();
     if (doc.elements[0] !== undefined) {
-      doc.elements[0].typeCode = 'NOT_A_TYPE';
+      doc.elements[0]!.typeCode = 'NOT_A_TYPE';
     }
     expectCode(validateScene(doc, elementTypeRegistry).issues, 'UNKNOWN_TYPE');
   });
@@ -47,7 +47,7 @@ describe('validateScene', () => {
   it('reports UNSAFE_INTEGER', () => {
     const doc = makeScene();
     if (doc.elements[0] !== undefined) {
-      (doc.elements[0].size.value as { x: number }).x = 1.5;
+      (doc.elements[0]!.size!.value as { x: number }).x = 1.5;
     }
     expectCode(validateScene(doc, elementTypeRegistry).issues, 'UNSAFE_INTEGER');
   });
@@ -85,7 +85,7 @@ describe('validateScene', () => {
   it('reports SIZE_OUT_OF_BOUNDS', () => {
     const doc = makeScene();
     if (doc.elements[0] !== undefined) {
-      (doc.elements[0].size.value as { x: number }).x = 1_000_000;
+      (doc.elements[0]!.size!.value as { x: number }).x = 1_000_000;
     }
     expectCode(validateScene(doc, elementTypeRegistry).issues, 'SIZE_OUT_OF_BOUNDS');
   });
@@ -93,7 +93,7 @@ describe('validateScene', () => {
   it('reports GEOMETRY_MISMATCH for a BOX with z = 0', () => {
     const doc = makeScene();
     if (doc.elements[0] !== undefined) {
-      (doc.elements[0].size.value as { z: number }).z = 0;
+      (doc.elements[0]!.size!.value as { z: number }).z = 0;
     }
     expectCode(validateScene(doc, elementTypeRegistry).issues, 'GEOMETRY_MISMATCH');
   });
@@ -101,7 +101,7 @@ describe('validateScene', () => {
   it('reports MISSING_PROVENANCE', () => {
     const doc = makeScene();
     if (doc.elements[0] !== undefined) {
-      Reflect.deleteProperty(doc.elements[0].size, 'provenance');
+      Reflect.deleteProperty(doc.elements[0]!.size!, 'provenance');
     }
     expectCode(validateScene(doc, elementTypeRegistry).issues, 'MISSING_PROVENANCE');
   });
@@ -109,7 +109,7 @@ describe('validateScene', () => {
   it('reports SITE_TOO_LARGE', () => {
     const doc = makeScene();
     if (doc.elements[0] !== undefined) {
-      (doc.elements[0].placement.value.center as { x: number }).x = 60_000_000;
+      (doc.elements[0]!.placement!.value.center as { x: number }).x = 60_000_000;
     }
     expectCode(validateScene(doc, elementTypeRegistry).issues, 'SITE_TOO_LARGE');
   });
@@ -149,11 +149,11 @@ describe('validateScene', () => {
 
   it('collects every issue instead of stopping at the first', () => {
     const doc = makeScene();
-    (doc as unknown as { schemaVersion: number }).schemaVersion = 3;
+    (doc as unknown as { schemaVersion: number }).schemaVersion = 2;
     (doc.site.anchor.value as { headingDeg: number }).headingDeg = 720;
     if (doc.elements[0] !== undefined) {
-      doc.elements[0].typeCode = 'NOPE';
-      (doc.elements[0].size.value as { x: number }).x = 1.5;
+      doc.elements[0]!.typeCode = 'NOPE';
+      (doc.elements[0]!.size!.value as { x: number }).x = 1.5;
     }
     const result = validateScene(doc, elementTypeRegistry);
     expect(result.ok).toBe(false);

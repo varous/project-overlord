@@ -33,7 +33,7 @@ export function elementById(elements: readonly SceneElement[], id: string): Scen
 }
 
 export function yFeet(element: SceneElement): number {
-  return element.placement.value.center.y / 3048;
+  return element.placement!.value.center.y / 3048;
 }
 
 export { canonicalJson, elementTypeRegistry };

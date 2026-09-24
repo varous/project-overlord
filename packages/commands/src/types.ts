@@ -94,6 +94,41 @@ export interface SetZoneDensityCommand {
   note?: string;
 }
 
+export interface SetZoneLabelCommand {
+  type: 'SET_ZONE_LABEL';
+  id: string;
+  label: string;
+}
+
+export interface AddLinearElementCommand {
+  type: 'ADD_LINEAR_ELEMENT';
+  typeCode: string;
+  id?: string;
+  label?: string;
+  path: Ring2;
+  /** Defaults to the registry type's linear.defaultWidth. */
+  widthTmm?: number;
+  provenance: Provenance;
+  note?: string;
+  index?: number;
+}
+
+export interface SetLinearPathCommand {
+  type: 'SET_LINEAR_PATH';
+  id: string;
+  path: Ring2;
+  provenance?: Provenance;
+  note?: string;
+}
+
+export interface SetLinearWidthCommand {
+  type: 'SET_LINEAR_WIDTH';
+  id: string;
+  widthTmm: number;
+  provenance?: Provenance;
+  note?: string;
+}
+
 export interface AddMeasurementCommand {
   type: 'ADD_MEASUREMENT';
   measurement: SceneMeasurement;
@@ -158,6 +193,10 @@ export type Command =
   | SetElementLabelCommand
   | AddZoneCommand
   | SetZoneDensityCommand
+  | SetZoneLabelCommand
+  | AddLinearElementCommand
+  | SetLinearPathCommand
+  | SetLinearWidthCommand
   | AddMeasurementCommand
   | DeleteMeasurementCommand
   | SetSiteKindCommand
@@ -176,6 +215,8 @@ export type CommandErrorCode =
   | 'RING_INVALID'
   | 'WOULD_INVALIDATE'
   | 'DUPLICATE_ID'
+  | 'GEOMETRY_MISMATCH'
+  | 'PATH_TOO_FEW_POINTS'
   | 'MEASUREMENT_NOT_FOUND';
 
 export interface CommandError {

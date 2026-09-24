@@ -27,7 +27,11 @@ export function migrateSceneDoc(input: SceneDoc | Record<string, unknown>): Scen
     measurements?: unknown[];
   };
 
+  if (doc.schemaVersion === 3) {
+    return doc as unknown as SceneDoc;
+  }
   if (doc.schemaVersion === 2) {
+    doc.schemaVersion = 3;
     return doc as unknown as SceneDoc;
   }
   if (doc.schemaVersion !== 1) {
@@ -56,7 +60,7 @@ export function migrateSceneDoc(input: SceneDoc | Record<string, unknown>): Scen
 
   const migrated = {
     ...doc,
-    schemaVersion: 2,
+    schemaVersion: 3,
     site: migratedSite,
     zones,
     measurements: Array.isArray(doc.measurements) ? doc.measurements : [],

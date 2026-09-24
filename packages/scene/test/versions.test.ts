@@ -94,7 +94,7 @@ describe('commitVersion', () => {
     const first = await createInitialVersion(makeScene(), options);
     const next = makeScene();
     next.name = 'Edited';
-    (next as unknown as { schemaVersion: number }).schemaVersion = 3;
+    (next as unknown as { schemaVersion: number }).schemaVersion = 2;
     await expect(commitVersion(first, next, options)).rejects.toMatchObject({
       code: 'INVALID_SCENE',
     });
@@ -106,7 +106,7 @@ describe('diffScenes', () => {
     const before = makeScene();
     const after = makeScene();
     if (after.elements[0] !== undefined) {
-      (after.elements[0].placement.value.center as { x: number }).x = 1000;
+      (after.elements[0].placement!.value.center as { x: number }).x = 1000;
     }
     const diff = diffScenes(before, after);
     expect(diff.elements.changed).toEqual([{ id: 'main_stage', fields: ['placement'] }]);
@@ -116,7 +116,7 @@ describe('diffScenes', () => {
     const before = makeScene();
     const after = makeScene();
     if (after.elements[0] !== undefined) {
-      (after.elements[0].size.value as { x: number }).x = 100000;
+      (after.elements[0].size!.value as { x: number }).x = 100000;
       after.elements[0].label = 'Renamed';
     }
     const diff = diffScenes(before, after);

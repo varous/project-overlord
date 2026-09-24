@@ -21,9 +21,9 @@ function v1Doc(): SceneDoc {
 }
 
 describe('migrateSceneDoc', () => {
-  it('upgrades a v1 document to v2 with the new fields', () => {
+  it('upgrades a v1 document to the current schema with the new fields', () => {
     const migrated = migrateSceneDoc(v1Doc());
-    expect(migrated.schemaVersion).toBe(2);
+    expect(migrated.schemaVersion).toBe(3);
     expect(migrated.site.kind).toBe('OPEN_GROUND');
     expect(migrated.site.level).toBe(0);
     expect(migrated.measurements).toEqual([]);
@@ -36,16 +36,30 @@ describe('migrateSceneDoc', () => {
     }
   });
 
-  it('produces a valid v2 scene', () => {
+  it('produces a valid scene', () => {
     const migrated = migrateSceneDoc(v1Doc());
     expect(validateScene(migrated, elementTypeRegistry)).toEqual({ ok: true, issues: [] });
   });
 
-  it('is a no-op on an already-v2 document', () => {
+  it('is a no-op when run again', () => {
     const once = migrateSceneDoc(v1Doc());
     const twice = migrateSceneDoc(once);
-    expect(twice.schemaVersion).toBe(2);
+    expect(twice.schemaVersion).toBe(3);
     expect(canonicalJson(twice)).toBe(canonicalJson(once));
+  });
+
+  it('upgrades a v2 document to v3 without touching anything else', () => {
+    const v2 = JSON.parse(
+      readFileSync(
+        fileURLToPath(new URL('../../../contracts/scene/v2/examples/demo-scene.json', import.meta.url)),
+        'utf8',
+      ),
+    ) as SceneDoc;
+    const migrated = migrateSceneDoc(v2);
+    expect(migrated.schemaVersion).toBe(3);
+    // Everything apart from the version is identical.
+    expect(canonicalJson({ ...migrated, schemaVersion: 2 })).toBe(canonicalJson(v2));
+    expect(canonicalJson(migrateSceneDoc(migrated))).toBe(canonicalJson(migrated));
   });
 
   it('refuses an unsupported version', () => {

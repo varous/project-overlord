@@ -28,10 +28,10 @@ function rectangle(x0: number, y0: number, x1: number, y1: number): Ring2 {
 function footprints(elements: readonly SceneElement[]): { x0: number; y0: number; x1: number; y1: number; id: string }[] {
   return elements.map((element) => ({
     id: element.id,
-    x0: element.placement.value.center.x - element.size.value.x / 2,
-    x1: element.placement.value.center.x + element.size.value.x / 2,
-    y0: element.placement.value.center.y - element.size.value.y / 2,
-    y1: element.placement.value.center.y + element.size.value.y / 2,
+    x0: element.placement!.value.center.x - element.size!.value.x / 2,
+    x1: element.placement!.value.center.x + element.size!.value.x / 2,
+    y0: element.placement!.value.center.y - element.size!.value.y / 2,
+    y1: element.placement!.value.center.y + element.size!.value.y / 2,
   }));
 }
 
@@ -121,8 +121,8 @@ describe('repair', () => {
     const boundary = rectangle(-80000, -80000, 80000, 200000); // ~800 x 920 ft around the site origin
     const result = generateOk({ eventType: 'CONCERT', capacity: 5000, siteBoundary: boundary });
     const inside = (element: SceneElement): boolean => {
-      const xs = [element.placement.value.center.x - element.size.value.x / 2, element.placement.value.center.x + element.size.value.x / 2];
-      const ys = [element.placement.value.center.y - element.size.value.y / 2, element.placement.value.center.y + element.size.value.y / 2];
+      const xs = [element.placement!.value.center.x - element.size!.value.x / 2, element.placement!.value.center.x + element.size!.value.x / 2];
+      const ys = [element.placement!.value.center.y - element.size!.value.y / 2, element.placement!.value.center.y + element.size!.value.y / 2];
       return (
         Math.min(...xs) >= -80000 &&
         Math.max(...xs) <= 80000 &&
@@ -151,15 +151,15 @@ describe('provenance', () => {
       stageSize: { x: 100 * 3048, y: 60 * 3048, z: 8 * 3048 } as never,
     }).scene;
     const stage = elementById(stated.elements, 'gen_main_stage_1');
-    expect(stage.size.provenance).toBe('STATED');
-    expect(stage.size.value).toEqual({ x: 100 * 3048, y: 60 * 3048, z: 8 * 3048 });
+    expect(stage.size!.provenance).toBe('STATED');
+    expect(stage.size!.value).toEqual({ x: 100 * 3048, y: 60 * 3048, z: 8 * 3048 });
 
     const defaults = generateOk({ eventType: 'CONCERT', capacity: 5000 }).scene;
     const defaultStage = elementById(defaults.elements, 'gen_main_stage_1');
-    expect(defaultStage.size.provenance).toBe('ARCHETYPE');
+    expect(defaultStage.size!.provenance).toBe('ARCHETYPE');
     for (const element of defaults.elements) {
-      expect(element.size.provenance).not.toBe('STATED');
-      expect(element.placement.provenance).toBe('INFERRED');
+      expect(element.size!.provenance).not.toBe('STATED');
+      expect(element.placement!.provenance).toBe('INFERRED');
     }
     for (const zone of defaults.zones) {
       expect(zone.ring.provenance).not.toBe('STATED');
@@ -239,7 +239,7 @@ describe('applyGeneratedLayout', () => {
   it('produces one REPLACE_CONTENT command carrying the generated elements and zones', () => {
     const generated = generateOk({ eventType: 'CONCERT', capacity: 5000 });
     const emptyDoc: SceneDoc = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       id: 'scn_test0000000000000',
       name: 'Empty',
       site: {

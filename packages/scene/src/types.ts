@@ -36,14 +36,43 @@ export interface ElementSize {
   z: Tmm;
 }
 
+/** Registry geometry: a box, a flat footprint, or an open polyline run. */
+export type ElementKind = 'BOX' | 'FLAT' | 'LINEAR';
+
+/**
+ * A scene element. A BOX/FLAT element carries `placement` + `size`; a LINEAR element carries an
+ * open `path` + `widthTmm` and neither of the other two.
+ */
 export interface SceneElement {
   id: string;
   /** Must exist in the element-type registry. */
   typeCode: string;
   label: string;
+  placement?: Sourced<ElementPlacement>;
+  size?: Sourced<ElementSize>;
+  path?: Sourced<Ring2>;
+  widthTmm?: Tmm;
+  params: Record<string, Sourced<number | string>>;
+}
+
+/** A BOX/FLAT element: placement and size are both present. */
+export interface PlacedElement extends SceneElement {
   placement: Sourced<ElementPlacement>;
   size: Sourced<ElementSize>;
-  params: Record<string, Sourced<number | string>>;
+}
+
+/** A LINEAR element: an open path and a width are present. */
+export interface LinearElement extends SceneElement {
+  path: Sourced<Ring2>;
+  widthTmm: Tmm;
+}
+
+export function isLinearElement(element: SceneElement): element is LinearElement {
+  return element.path !== undefined;
+}
+
+export function isPlacedElement(element: SceneElement): element is PlacedElement {
+  return element.size !== undefined && element.placement !== undefined;
 }
 
 export type ZoneKind =
@@ -53,6 +82,10 @@ export type ZoneKind =
   | 'VIP'
   | 'PARKING'
   | 'CIRCULATION'
+  | 'HOSPITALITY'
+  | 'PIT'
+  | 'TABLES'
+  | 'SPONSOR'
   | 'OTHER';
 
 export const ZONE_KINDS: readonly ZoneKind[] = [
@@ -62,6 +95,10 @@ export const ZONE_KINDS: readonly ZoneKind[] = [
   'VIP',
   'PARKING',
   'CIRCULATION',
+  'HOSPITALITY',
+  'PIT',
+  'TABLES',
+  'SPONSOR',
   'OTHER',
 ];
 
@@ -92,7 +129,7 @@ export interface SceneViewpoint {
 }
 
 export interface SceneDoc {
-  schemaVersion: 2;
+  schemaVersion: 3;
   /** Stable scene id, e.g. "scn_" + 20 chars [a-z0-9]. */
   id: string;
   name: string;
@@ -117,4 +154,4 @@ export interface SceneVersion {
   doc: SceneDoc;
 }
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;

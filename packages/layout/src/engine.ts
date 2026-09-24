@@ -162,11 +162,16 @@ function rulePositions(
 }
 
 function footprintOf(element: SceneElement): Footprint {
+  const placement = element.placement;
+  const size = element.size;
+  if (placement === undefined || size === undefined) {
+    throw new Error(`layout engine: element ${element.id} has no placement/size`);
+  }
   return {
-    centerX: element.placement.value.center.x,
-    centerY: element.placement.value.center.y,
-    sizeX: element.size.value.x,
-    sizeY: element.size.value.y,
+    centerX: placement.value.center.x,
+    centerY: placement.value.center.y,
+    sizeX: size.value.x,
+    sizeY: size.value.y,
   };
 }
 
@@ -257,6 +262,10 @@ function repair(placed: Placed[], boundary: Ring2 | null): { kept: Placed[]; dro
       if (item === undefined) {
         continue;
       }
+      const placed = item.element.placement;
+      if (placed === undefined) {
+        continue;
+      }
 
       // Pull the element inward when a boundary is given; drop it when it cannot fit at all.
       if (boundary !== null) {
@@ -273,8 +282,8 @@ function repair(placed: Placed[], boundary: Ring2 | null): { kept: Placed[]; dro
           item.element = {
             ...item.element,
             placement: sourced(
-              { center: { ...item.element.placement.value.center, x: clamped.centerX, y: clamped.centerY }, rotationDeg: item.element.placement.value.rotationDeg },
-              item.element.placement.provenance,
+              { center: { ...placed.value.center, x: clamped.centerX, y: clamped.centerY }, rotationDeg: placed.value.rotationDeg },
+              placed.provenance,
             ),
           };
           moved = true;
@@ -308,8 +317,8 @@ function repair(placed: Placed[], boundary: Ring2 | null): { kept: Placed[]; dro
             item.element = {
               ...item.element,
               placement: sourced(
-                { center: { ...item.element.placement.value.center, x: trial.centerX, y: trial.centerY }, rotationDeg: item.element.placement.value.rotationDeg },
-                item.element.placement.provenance,
+                { center: { ...placed.value.center, x: trial.centerX, y: trial.centerY }, rotationDeg: placed.value.rotationDeg },
+                placed.provenance,
               ),
             };
             settled = true;
@@ -489,7 +498,7 @@ export function generateLayout(input: GenerateLayoutInput): GenerateLayoutResult
   }
 
   const scene: SceneDoc = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     id: deterministicSceneId(brief.eventType.value, brief.capacity.value),
     name: `${archetype.name} — ${brief.capacity.value} people`,
     site: {

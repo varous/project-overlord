@@ -4,6 +4,7 @@
 
 import { isSimpleRing, signedArea2 } from '@overlord/geo-core';
 
+import { pathLengthTmm } from './path.js';
 import type { ElementTypeRegistry } from './registry.js';
 import type { Ring2, SceneDoc } from './types.js';
 
@@ -22,7 +23,9 @@ export type IssueCode =
   | 'ANCHOR_INVALID'
   | 'SITE_INVALID'
   | 'ZONE_INVALID'
-  | 'MEASUREMENT_INVALID';
+  | 'MEASUREMENT_INVALID'
+  | 'PATH_TOO_FEW_POINTS'
+  | 'PATH_DEGENERATE';
 
 export interface Issue {
   code: IssueCode;
@@ -125,11 +128,11 @@ function checkRing(value: unknown, path: string, issues: Issue[]): void {
 export function validateScene(doc: SceneDoc, registry: ElementTypeRegistry): ValidationResult {
   const issues: Issue[] = [];
 
-  if (doc.schemaVersion !== 2) {
+  if (doc.schemaVersion !== 3) {
     issues.push({
       code: 'SCHEMA_VERSION',
       path: 'schemaVersion',
-      message: `schemaVersion must be 2, got ${String(doc.schemaVersion)}`,
+      message: `schemaVersion must be 3, got ${String(doc.schemaVersion)}`,
     });
   }
 
@@ -192,39 +195,108 @@ export function validateScene(doc: SceneDoc, registry: ElementTypeRegistry): Val
       issues.push({ code: 'UNKNOWN_TYPE', path: `${path}.typeCode`, message: `unknown element type "${element.typeCode}"` });
     }
 
-    checkProvenance(element.placement, `${path}.placement`, issues);
-    checkProvenance(element.size, `${path}.size`, issues);
-
-    const placement = (element.placement as { value?: unknown } | null | undefined)?.value;
-    if (typeof placement === 'object' && placement !== null) {
-      const record = placement as Record<string, unknown>;
-      checkLocalPoint(record.center, `${path}.placement.value.center`, issues);
-      if (typeof record.rotationDeg !== 'number' || !Number.isFinite(record.rotationDeg)) {
-        issues.push({ code: 'UNSAFE_INTEGER', path: `${path}.placement.value.rotationDeg`, message: 'rotationDeg must be finite' });
-      }
-    }
-
-    const size = (element.size as { value?: unknown } | null | undefined)?.value;
-    if (typeof size === 'object' && size !== null) {
-      const record = size as Record<string, unknown>;
-      const xOk = checkInteger(record.x, `${path}.size.value.x`, issues);
-      const yOk = checkInteger(record.y, `${path}.size.value.y`, issues);
-      const zOk = checkInteger(record.z, `${path}.size.value.z`, issues);
-      if (xOk && yOk && zOk && type !== undefined) {
-        if (type.geometry === 'FLAT' && record.z !== 0) {
-          issues.push({ code: 'GEOMETRY_MISMATCH', path: `${path}.size.value.z`, message: `FLAT type ${type.code} must have z = 0` });
-        }
-        if (type.geometry === 'BOX' && record.z === 0) {
-          issues.push({ code: 'GEOMETRY_MISMATCH', path: `${path}.size.value.z`, message: `BOX type ${type.code} must have z != 0` });
-        }
-        for (const axis of ['x', 'y', 'z'] as const) {
-          const value = record[axis];
-          if (typeof value === 'number' && (value < type.minSize[axis] || value > type.maxSize[axis])) {
+    if (type !== undefined && type.geometry === 'LINEAR') {
+      checkProvenance(element.path, `${path}.path`, issues);
+      const points = (element.path as { value?: unknown } | null | undefined)?.value;
+      if (!Array.isArray(points) || points.length < 2) {
+        issues.push({
+          code: 'PATH_TOO_FEW_POINTS',
+          path: `${path}.path.value`,
+          message: 'a linear path needs at least 2 points',
+        });
+      } else {
+        let allIntegers = true;
+        for (const [pointIndex, point] of points.entries()) {
+          if (typeof point !== 'object' || point === null) {
+            allIntegers = false;
             issues.push({
-              code: 'SIZE_OUT_OF_BOUNDS',
-              path: `${path}.size.value.${axis}`,
-              message: `${type.code}.${axis} must be within [${type.minSize[axis]}, ${type.maxSize[axis]}] tmm`,
+              code: 'UNSAFE_INTEGER',
+              path: `${path}.path.value[${pointIndex}]`,
+              message: 'path points must be {x, y}',
             });
+            continue;
+          }
+          const record = point as Record<string, unknown>;
+          const x = record.x;
+          const y = record.y;
+          const xOk = checkInteger(x, `${path}.path.value[${pointIndex}].x`, issues);
+          const yOk = checkInteger(y, `${path}.path.value[${pointIndex}].y`, issues);
+          allIntegers = allIntegers && xOk && yOk;
+          if (xOk && yOk) {
+            checkDistance(x, y, 0, `${path}.path.value[${pointIndex}]`, issues);
+          }
+        }
+        if (allIntegers) {
+          let degenerate = false;
+          for (let pointIndex = 1; pointIndex < points.length; pointIndex += 1) {
+            const previous = points[pointIndex - 1] as { x: number; y: number };
+            const current = points[pointIndex] as { x: number; y: number };
+            if (previous.x === current.x && previous.y === current.y) {
+              degenerate = true;
+            }
+          }
+          if (degenerate || pathLengthTmm(points as never) <= 0) {
+            issues.push({
+              code: 'PATH_DEGENERATE',
+              path: `${path}.path.value`,
+              message: 'the path has repeated consecutive points or zero length',
+            });
+          }
+        }
+      }
+      if (
+        typeof element.widthTmm !== 'number' ||
+        !Number.isSafeInteger(element.widthTmm) ||
+        element.widthTmm <= 0
+      ) {
+        issues.push({
+          code: 'UNSAFE_INTEGER',
+          path: `${path}.widthTmm`,
+          message: 'widthTmm must be a positive safe integer',
+        });
+      }
+    } else {
+      if (element.size === undefined || element.placement === undefined) {
+        issues.push({
+          code: 'GEOMETRY_MISMATCH',
+          path,
+          message: 'a BOX/FLAT element needs both placement and size',
+        });
+      }
+      checkProvenance(element.placement, `${path}.placement`, issues);
+      checkProvenance(element.size, `${path}.size`, issues);
+
+      const placement = (element.placement as { value?: unknown } | null | undefined)?.value;
+      if (typeof placement === 'object' && placement !== null) {
+        const record = placement as Record<string, unknown>;
+        checkLocalPoint(record.center, `${path}.placement.value.center`, issues);
+        if (typeof record.rotationDeg !== 'number' || !Number.isFinite(record.rotationDeg)) {
+          issues.push({ code: 'UNSAFE_INTEGER', path: `${path}.placement.value.rotationDeg`, message: 'rotationDeg must be finite' });
+        }
+      }
+
+      const size = (element.size as { value?: unknown } | null | undefined)?.value;
+      if (typeof size === 'object' && size !== null) {
+        const record = size as Record<string, unknown>;
+        const xOk = checkInteger(record.x, `${path}.size.value.x`, issues);
+        const yOk = checkInteger(record.y, `${path}.size.value.y`, issues);
+        const zOk = checkInteger(record.z, `${path}.size.value.z`, issues);
+        if (xOk && yOk && zOk && type !== undefined) {
+          if (type.geometry === 'FLAT' && record.z !== 0) {
+            issues.push({ code: 'GEOMETRY_MISMATCH', path: `${path}.size.value.z`, message: `FLAT type ${type.code} must have z = 0` });
+          }
+          if (type.geometry === 'BOX' && record.z === 0) {
+            issues.push({ code: 'GEOMETRY_MISMATCH', path: `${path}.size.value.z`, message: `BOX type ${type.code} must have z != 0` });
+          }
+          for (const axis of ['x', 'y', 'z'] as const) {
+            const value = record[axis];
+            if (typeof value === 'number' && (value < type.minSize[axis] || value > type.maxSize[axis])) {
+              issues.push({
+                code: 'SIZE_OUT_OF_BOUNDS',
+                path: `${path}.size.value.${axis}`,
+                message: `${type.code}.${axis} must be within [${type.minSize[axis]}, ${type.maxSize[axis]}] tmm`,
+              });
+            }
           }
         }
       }

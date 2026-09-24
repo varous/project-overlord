@@ -70,9 +70,9 @@ describe('ADD_ELEMENT', () => {
     );
     const added = element(doc, 'e_1');
     expect(added.label).toBe('Food stall 1');
-    expect(added.size.value).toEqual(def('FOOD_STALL').defaultSize);
-    expect(added.placement.value.rotationDeg).toBe(0);
-    expect(added.placement.provenance).toBe('STATED');
+    expect(added.size!.value).toEqual(def('FOOD_STALL').defaultSize);
+    expect(added.placement!.value.rotationDeg).toBe(0);
+    expect(added.placement!.provenance).toBe('STATED');
     expect(added.params).toEqual({});
     expect(inverse).toEqual({ type: 'DELETE_ELEMENT', id: 'e_1' });
 
@@ -97,7 +97,7 @@ describe('ADD_ELEMENT', () => {
     });
     const added = element(doc, 'riser_x');
     expect(added.label).toBe('Riser X');
-    expect(added.placement.value.rotationDeg).toBe(10);
+    expect(added.placement!.value.rotationDeg).toBe(10);
     expect(inverse).toEqual({ type: 'DELETE_ELEMENT', id: 'riser_x' });
   });
 
@@ -146,21 +146,21 @@ describe('element field commands', () => {
       center: point(5000, 6000, 9144),
     });
     const moved = element(doc, 'main_stage');
-    expect(moved.placement.value.center).toEqual({ x: 5000, y: 6000, z: 9144 });
-    expect(moved.placement.provenance).toBe('STATED');
+    expect(moved.placement!.value.center).toEqual({ x: 5000, y: 6000, z: 9144 });
+    expect(moved.placement!.provenance).toBe('STATED');
     const undone = must(doc, inverse);
     expect(canonicalJson(undone.doc)).toBe(canonicalJson(before));
   });
 
   it('MOVE_ELEMENT_RELATIVE adds the delta (z defaults to 0) and the inverse subtracts it', () => {
     const before = makeScene();
-    const start = element(before, 'main_stage').placement.value.center;
+    const start = element(before, 'main_stage').placement!.value.center;
     const { doc, inverse } = must(before, {
       type: 'MOVE_ELEMENT_RELATIVE',
       id: 'main_stage',
       delta: { x: 1000, y: -2000 } as never,
     });
-    const moved = element(doc, 'main_stage').placement.value.center;
+    const moved = element(doc, 'main_stage').placement!.value.center;
     expect(moved).toEqual({ x: start.x + 1000, y: start.y - 2000, z: start.z });
     expect(canonicalJson(must(doc, inverse).doc)).toBe(canonicalJson(before));
   });
@@ -168,7 +168,7 @@ describe('element field commands', () => {
   it('ROTATE_ELEMENT normalises and the inverse restores', () => {
     const before = makeScene();
     const { doc, inverse } = must(before, { type: 'ROTATE_ELEMENT', id: 'main_stage', rotationDeg: 370 });
-    expect(element(doc, 'main_stage').placement.value.rotationDeg).toBe(10);
+    expect(element(doc, 'main_stage').placement!.value.rotationDeg).toBe(10);
     expect(canonicalJson(must(doc, inverse).doc)).toBe(canonicalJson(before));
   });
 
@@ -179,7 +179,7 @@ describe('element field commands', () => {
       id: 'main_stage',
       size: { x: 30000, y: 30000, z: 5000 } as never,
     });
-    expect(element(doc, 'main_stage').size.value).toEqual({ x: 30000, y: 30000, z: 5000 });
+    expect(element(doc, 'main_stage').size!.value).toEqual({ x: 30000, y: 30000, z: 5000 });
     expect(canonicalJson(must(doc, inverse).doc)).toBe(canonicalJson(before));
 
     const bad = attempt(before, {
@@ -361,5 +361,102 @@ describe('purity and applyCommands', () => {
     if (result.ok) {
       expect(result.inverses).toHaveLength(2);
     }
+  });
+});
+
+describe('linear element commands', () => {
+  const run = [
+    { x: 0, y: 0 },
+    { x: 50000, y: 0 },
+  ] as never;
+
+  it('ADD_LINEAR_ELEMENT uses the registry width and round-trips exactly', () => {
+    const before = makeScene();
+    const result = attempt(before, {
+      type: 'ADD_LINEAR_ELEMENT',
+      typeCode: 'MOJO_BARRICADE',
+      path: run,
+      provenance: 'STATED',
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    const added = element(result.doc, 'attempt_1');
+    expect(added.path).toBeDefined();
+    expect(added.path!.value).toEqual(run);
+    expect(added.widthTmm).toBe(12500); // 1.25 m from the Aquatica block
+    expect(added.size).toBeUndefined();
+    expect(added.placement).toBeUndefined();
+    expect(added.label).toBe('Mojo barricade 1');
+    expect(result.inverse).toEqual({ type: 'DELETE_ELEMENT', id: 'attempt_1' });
+    expect(canonicalJson(must(result.doc, result.inverse).doc)).toBe(canonicalJson(before));
+  });
+
+  it('ADD_LINEAR_ELEMENT refuses a box type and a short path', () => {
+    const wrongKind = attempt(makeScene(), {
+      type: 'ADD_LINEAR_ELEMENT',
+      typeCode: 'RISER',
+      path: run,
+      provenance: 'STATED',
+    });
+    expect(wrongKind.ok).toBe(false);
+    if (!wrongKind.ok) {
+      expect(wrongKind.error.code).toBe('GEOMETRY_MISMATCH');
+    }
+    const short = attempt(makeScene(), {
+      type: 'ADD_LINEAR_ELEMENT',
+      typeCode: 'MOJO_BARRICADE',
+      path: [{ x: 0, y: 0 }] as never,
+      provenance: 'STATED',
+    });
+    expect(short.ok).toBe(false);
+    if (!short.ok) {
+      expect(short.error.code).toBe('PATH_TOO_FEW_POINTS');
+    }
+  });
+
+  it('SET_LINEAR_PATH and SET_LINEAR_WIDTH round-trip exactly', () => {
+    const added = attempt(makeScene(), {
+      type: 'ADD_LINEAR_ELEMENT',
+      typeCode: 'MOJO_BARRICADE',
+      path: run,
+      provenance: 'STATED',
+    });
+    if (!added.ok) {
+      throw new Error('add failed');
+    }
+    const moved = must(added.doc, {
+      type: 'SET_LINEAR_PATH',
+      id: 'attempt_1',
+      path: [
+        { x: 0, y: 0 },
+        { x: 100000, y: 0 },
+      ] as never,
+    });
+    expect(canonicalJson(must(moved.doc, moved.inverse).doc)).toBe(canonicalJson(added.doc));
+
+    const widened = must(moved.doc, { type: 'SET_LINEAR_WIDTH', id: 'attempt_1', widthTmm: 2000 });
+    expect(element(widened.doc, 'attempt_1').widthTmm).toBe(2000);
+    expect(canonicalJson(must(widened.doc, widened.inverse).doc)).toBe(canonicalJson(moved.doc));
+  });
+
+  it('rejects a linear command on a box element', () => {
+    const result = attempt(makeScene(), { type: 'SET_LINEAR_PATH', id: 'main_stage', path: run });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe('GEOMETRY_MISMATCH');
+    }
+  });
+
+  it('SET_ZONE_LABEL round-trips exactly', () => {
+    const before = makeScene();
+    const { doc, inverse } = must(before, {
+      type: 'SET_ZONE_LABEL',
+      id: 'audience_zone',
+      label: 'Renamed zone',
+    });
+    expect(zone(doc, 'audience_zone').label).toBe('Renamed zone');
+    expect(canonicalJson(must(doc, inverse).doc)).toBe(canonicalJson(before));
   });
 });

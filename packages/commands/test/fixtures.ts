@@ -7,7 +7,7 @@ import type { ApplyContext } from '../src/apply.js';
 import type { SceneElement, SceneZone } from '@overlord/scene';
 
 const demoPath = fileURLToPath(
-  new URL('../../../contracts/scene/v2/examples/demo-scene.json', import.meta.url),
+  new URL('../../../contracts/scene/v3/examples/demo-scene.json', import.meta.url),
 );
 
 /** A fresh deep copy of the valid demo scene. */
