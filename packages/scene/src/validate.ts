@@ -19,7 +19,10 @@ export type IssueCode =
   | 'GEOMETRY_MISMATCH'
   | 'MISSING_PROVENANCE'
   | 'SITE_TOO_LARGE'
-  | 'ANCHOR_INVALID';
+  | 'ANCHOR_INVALID'
+  | 'SITE_INVALID'
+  | 'ZONE_INVALID'
+  | 'MEASUREMENT_INVALID';
 
 export interface Issue {
   code: IssueCode;
@@ -122,11 +125,11 @@ function checkRing(value: unknown, path: string, issues: Issue[]): void {
 export function validateScene(doc: SceneDoc, registry: ElementTypeRegistry): ValidationResult {
   const issues: Issue[] = [];
 
-  if (doc.schemaVersion !== 1) {
+  if (doc.schemaVersion !== 2) {
     issues.push({
       code: 'SCHEMA_VERSION',
       path: 'schemaVersion',
-      message: `schemaVersion must be 1, got ${String(doc.schemaVersion)}`,
+      message: `schemaVersion must be 2, got ${String(doc.schemaVersion)}`,
     });
   }
 
@@ -144,8 +147,7 @@ export function validateScene(doc: SceneDoc, registry: ElementTypeRegistry): Val
     }
   };
 
-  checkProvenance(doc.site.anchor, 'site.anchor', issues);
-  const anchorValue = (doc.site.anchor as { value?: unknown } | null | undefined)?.value;
+  checkProvenance(doc.site.anchor, 'site.anchor', issues);  const anchorValue = (doc.site.anchor as { value?: unknown } | null | undefined)?.value;
   if (typeof anchorValue !== 'object' || anchorValue === null) {
     issues.push({ code: 'ANCHOR_INVALID', path: 'site.anchor.value', message: 'site anchor value is required' });
   } else {
@@ -164,6 +166,21 @@ export function validateScene(doc: SceneDoc, registry: ElementTypeRegistry): Val
   if (doc.site.boundary !== null) {
     checkProvenance(doc.site.boundary, 'site.boundary', issues);
     checkRing((doc.site.boundary as { value?: unknown }).value, 'site.boundary.value', issues);
+  }
+
+  if (doc.site.kind !== 'OPEN_GROUND' && doc.site.kind !== 'INDOOR_FLOOR') {
+    issues.push({
+      code: 'SITE_INVALID',
+      path: 'site.kind',
+      message: 'site.kind must be OPEN_GROUND or INDOOR_FLOOR',
+    });
+  }
+  if (!Number.isSafeInteger(doc.site.level) || (doc.site.level as number) < 0) {
+    issues.push({
+      code: 'SITE_INVALID',
+      path: 'site.level',
+      message: 'site.level must be a non-negative safe integer',
+    });
   }
 
   for (const [index, element] of doc.elements.entries()) {
@@ -227,6 +244,15 @@ export function validateScene(doc: SceneDoc, registry: ElementTypeRegistry): Val
     registerId(zone.id, `${path}.id`);
     checkProvenance(zone.ring, `${path}.ring`, issues);
     checkRing((zone.ring as { value?: unknown })?.value, `${path}.ring.value`, issues);
+    checkProvenance(zone.densitySqFtPerPerson, `${path}.densitySqFtPerPerson`, issues);
+    const density = (zone.densitySqFtPerPerson as { value?: unknown } | undefined)?.value;
+    if (typeof density !== 'number' || !Number.isFinite(density) || density <= 0) {
+      issues.push({
+        code: 'ZONE_INVALID',
+        path: `${path}.densitySqFtPerPerson.value`,
+        message: 'zone density must be a positive number of square feet per person',
+      });
+    }
   }
 
   for (const [index, viewpoint] of doc.viewpoints.entries()) {
@@ -234,6 +260,29 @@ export function validateScene(doc: SceneDoc, registry: ElementTypeRegistry): Val
     registerId(viewpoint.id, `${path}.id`);
     checkLocalPoint(viewpoint.eye, `${path}.eye`, issues);
     checkLocalPoint(viewpoint.target, `${path}.target`, issues);
+  }
+
+  for (const [index, measurement] of (doc.measurements ?? []).entries()) {
+    const path = `measurements[${index}]`;
+    registerId(measurement.id, `${path}.id`);
+    if (measurement.kind !== 'DISTANCE' && measurement.kind !== 'AREA') {
+      issues.push({
+        code: 'MEASUREMENT_INVALID',
+        path: `${path}.kind`,
+        message: 'measurement kind must be DISTANCE or AREA',
+      });
+    }
+    if (!Array.isArray(measurement.points) || measurement.points.length < 2) {
+      issues.push({
+        code: 'MEASUREMENT_INVALID',
+        path: `${path}.points`,
+        message: 'a measurement needs at least 2 points',
+      });
+    } else {
+      for (const [pointIndex, point] of measurement.points.entries()) {
+        checkLocalPoint(point, `${path}.points[${pointIndex}]`, issues);
+      }
+    }
   }
 
   return { ok: issues.length === 0, issues };

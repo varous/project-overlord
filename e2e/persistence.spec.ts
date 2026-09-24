@@ -28,7 +28,7 @@ test.beforeEach(async ({ page }) => {
 // console.json is written by offline.spec.ts; this suite only needs it for failure debugging.
 
 const demoDoc = JSON.parse(
-  readFileSync(fileURLToPath(new URL('../contracts/scene/v1/examples/demo-scene.json', import.meta.url)), 'utf8'),
+  readFileSync(fileURLToPath(new URL('../contracts/scene/v2/examples/demo-scene.json', import.meta.url)), 'utf8'),
 ) as SceneDoc;
 
 interface StubState {

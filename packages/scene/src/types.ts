@@ -13,11 +13,17 @@ export interface SceneImagery {
 }
 
 export interface SceneSite {
+  /** OPEN_GROUND for now; INDOOR_FLOOR is reserved for later. */
+  kind: SiteKind;
+  /** Indoor level; 0 outdoors. Reserved so retrofitting it later is not expensive. */
+  level: number;
   anchor: Sourced<SiteAnchor>;
   /** CCW simple ring in local tmm, or null. */
   boundary: Sourced<Ring2> | null;
   imagery: SceneImagery;
 }
+
+export type SiteKind = 'OPEN_GROUND' | 'INDOOR_FLOOR';
 
 export interface ElementPlacement {
   center: LocalPoint;
@@ -64,6 +70,18 @@ export interface SceneZone {
   kind: ZoneKind;
   label: string;
   ring: Sourced<Ring2>;
+  /** Planning density in square feet per person (5 is the CAV standard). */
+  densitySqFtPerPerson: Sourced<number>;
+}
+
+export type MeasurementKind = 'DISTANCE' | 'AREA';
+
+/** A user-drawn measurement. Its value is derived from `points`. */
+export interface SceneMeasurement {
+  id: string;
+  label: string;
+  kind: MeasurementKind;
+  points: LocalPoint[];
 }
 
 export interface SceneViewpoint {
@@ -74,7 +92,7 @@ export interface SceneViewpoint {
 }
 
 export interface SceneDoc {
-  schemaVersion: 1;
+  schemaVersion: 2;
   /** Stable scene id, e.g. "scn_" + 20 chars [a-z0-9]. */
   id: string;
   name: string;
@@ -82,6 +100,7 @@ export interface SceneDoc {
   elements: SceneElement[];
   zones: SceneZone[];
   viewpoints: SceneViewpoint[];
+  measurements: SceneMeasurement[];
 }
 
 /** An immutable scene version. */
@@ -98,4 +117,4 @@ export interface SceneVersion {
   doc: SceneDoc;
 }
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;

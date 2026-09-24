@@ -9,6 +9,8 @@
 
 import { sourced, toTmm, type LengthUnit, type SiteAnchor, type Tmm } from '@overlord/geo-core';
 import {
+  DEFAULT_DENSITY_SQFT_PER_PERSON,
+  DENSITY_NOTE,
   validateScene,
   type ElementSize,
   type ElementTypeRegistry,
@@ -445,6 +447,11 @@ export function generateLayout(input: GenerateLayoutInput): GenerateLayoutResult
       kind: 'AUDIENCE',
       label: 'Audience',
       ring: sourced(rectangleRing(rect.x0, rect.y0, rect.x1, rect.y1), 'INFERRED'),
+      densitySqFtPerPerson: sourced(
+        DEFAULT_DENSITY_SQFT_PER_PERSON,
+        'ARCHETYPE',
+        DENSITY_NOTE,
+      ),
     },
   ];
 
@@ -467,6 +474,11 @@ export function generateLayout(input: GenerateLayoutInput): GenerateLayoutResult
         ),
         'ARCHETYPE',
       ),
+      densitySqFtPerPerson: sourced(
+        DEFAULT_DENSITY_SQFT_PER_PERSON,
+        'ARCHETYPE',
+        DENSITY_NOTE,
+      ),
     });
   }
 
@@ -477,10 +489,12 @@ export function generateLayout(input: GenerateLayoutInput): GenerateLayoutResult
   }
 
   const scene: SceneDoc = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     id: deterministicSceneId(brief.eventType.value, brief.capacity.value),
     name: `${archetype.name} — ${brief.capacity.value} people`,
     site: {
+      kind: 'OPEN_GROUND',
+      level: 0,
       anchor: sourced(input.siteAnchor, 'STATED'),
       boundary: brief.siteBoundary === null ? null : sourced(brief.siteBoundary.value, 'STATED'),
       imagery: { provider: 'ESRI', captureDate: null },
@@ -488,6 +502,7 @@ export function generateLayout(input: GenerateLayoutInput): GenerateLayoutResult
     elements,
     zones,
     viewpoints: [],
+    measurements: [],
   };
 
   const capacity: CapacitySummary = {

@@ -7,7 +7,7 @@
  */
 
 import type { LocalPoint, Provenance, SiteAnchor, Tmm } from '@overlord/geo-core';
-import type { ElementSize, Ring2, SceneElement, SceneZone, ZoneKind } from '@overlord/scene';
+import type { ElementSize, Ring2, SceneElement, SceneMeasurement, SceneZone, SiteKind, ZoneKind } from '@overlord/scene';
 
 export interface AddElementCommand {
   type: 'ADD_ELEMENT';
@@ -77,8 +77,43 @@ export interface AddZoneCommand {
   id?: string;
   provenance?: Provenance;
   note?: string;
+  /** Planning density; defaults to 5 sq ft per person (CAV standard). */
+  densitySqFtPerPerson?: number;
+  /** Density provenance/note, so DELETE_ZONE's inverse can restore them exactly. */
+  densityProvenance?: Provenance;
+  densityNote?: string;
   /** Insertion index; used by DELETE_ZONE's inverse to restore the original order. */
   index?: number;
+}
+
+export interface SetZoneDensityCommand {
+  type: 'SET_ZONE_DENSITY';
+  id: string;
+  densitySqFtPerPerson: number;
+  provenance?: Provenance;
+  note?: string;
+}
+
+export interface AddMeasurementCommand {
+  type: 'ADD_MEASUREMENT';
+  measurement: SceneMeasurement;
+  /** Insertion index; used by DELETE_MEASUREMENT's inverse to restore the original order. */
+  index?: number;
+}
+
+export interface DeleteMeasurementCommand {
+  type: 'DELETE_MEASUREMENT';
+  id: string;
+}
+
+export interface SetSiteKindCommand {
+  type: 'SET_SITE_KIND';
+  kind: SiteKind;
+}
+
+export interface SetSiteLevelCommand {
+  type: 'SET_SITE_LEVEL';
+  level: number;
 }
 
 export interface SetZoneRingCommand {
@@ -122,6 +157,11 @@ export type Command =
   | DeleteElementCommand
   | SetElementLabelCommand
   | AddZoneCommand
+  | SetZoneDensityCommand
+  | AddMeasurementCommand
+  | DeleteMeasurementCommand
+  | SetSiteKindCommand
+  | SetSiteLevelCommand
   | SetZoneRingCommand
   | DeleteZoneCommand
   | SetSiteAnchorCommand
@@ -135,7 +175,8 @@ export type CommandErrorCode =
   | 'SIZE_OUT_OF_BOUNDS'
   | 'RING_INVALID'
   | 'WOULD_INVALIDATE'
-  | 'DUPLICATE_ID';
+  | 'DUPLICATE_ID'
+  | 'MEASUREMENT_NOT_FOUND';
 
 export interface CommandError {
   code: CommandErrorCode;

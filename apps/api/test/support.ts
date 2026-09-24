@@ -8,7 +8,7 @@ import type { SceneDoc } from '@overlord/scene';
 import type { ApiConfig } from '../src/config.js';
 
 const demoPath = fileURLToPath(
-  new URL('../../../contracts/scene/v1/examples/demo-scene.json', import.meta.url),
+  new URL('../../../contracts/scene/v2/examples/demo-scene.json', import.meta.url),
 );
 
 export function demoDoc(): SceneDoc {

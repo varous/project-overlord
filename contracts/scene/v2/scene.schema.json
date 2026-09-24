@@ -1,0 +1,490 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-overlord.dev/contracts/scene/v2/scene.schema.json",
+  "title": "project-overlord SceneDoc v2",
+  "description": "A versioned event-site scene. All lengths are integer tenth-millimetres (tmm).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "name",
+    "site",
+    "elements",
+    "zones",
+    "viewpoints",
+    "measurements"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 2
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^scn_[a-z0-9]{20}$"
+    },
+    "name": {
+      "type": "string"
+    },
+    "site": {
+      "$ref": "#/$defs/site"
+    },
+    "elements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/element"
+      }
+    },
+    "zones": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/zone"
+      }
+    },
+    "viewpoints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/viewpoint"
+      }
+    },
+    "measurements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/measurement"
+      }
+    }
+  },
+  "$defs": {
+    "provenance": {
+      "enum": [
+        "STATED",
+        "ARCHETYPE",
+        "MEASURED",
+        "INFERRED"
+      ]
+    },
+    "tmm": {
+      "type": "integer"
+    },
+    "point2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "$ref": "#/$defs/tmm"
+        },
+        "y": {
+          "$ref": "#/$defs/tmm"
+        }
+      }
+    },
+    "localPoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "$ref": "#/$defs/tmm"
+        },
+        "y": {
+          "$ref": "#/$defs/tmm"
+        },
+        "z": {
+          "$ref": "#/$defs/tmm"
+        }
+      }
+    },
+    "ring2": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "$ref": "#/$defs/point2"
+      }
+    },
+    "size": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "$ref": "#/$defs/tmm"
+        },
+        "y": {
+          "$ref": "#/$defs/tmm"
+        },
+        "z": {
+          "$ref": "#/$defs/tmm"
+        }
+      }
+    },
+    "anchorValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "latDeg",
+        "lonDeg",
+        "heightM",
+        "headingDeg"
+      ],
+      "properties": {
+        "latDeg": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "lonDeg": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "heightM": {
+          "type": "number"
+        },
+        "headingDeg": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 360
+        }
+      }
+    },
+    "sourcedAnchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "provenance"
+      ],
+      "properties": {
+        "value": {
+          "$ref": "#/$defs/anchorValue"
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "sourcedRing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "provenance"
+      ],
+      "properties": {
+        "value": {
+          "$ref": "#/$defs/ring2"
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "imagery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "captureDate"
+      ],
+      "properties": {
+        "provider": {
+          "enum": [
+            "ESRI",
+            "OSM",
+            "GOOGLE_3D"
+          ]
+        },
+        "captureDate": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "site": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "level",
+        "anchor",
+        "boundary",
+        "imagery"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/siteKind"
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "anchor": {
+          "$ref": "#/$defs/sourcedAnchor"
+        },
+        "boundary": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/sourcedRing"
+            }
+          ]
+        },
+        "imagery": {
+          "$ref": "#/$defs/imagery"
+        }
+      }
+    },
+    "sourcedPlacement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "provenance"
+      ],
+      "properties": {
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "center",
+            "rotationDeg"
+          ],
+          "properties": {
+            "center": {
+              "$ref": "#/$defs/localPoint"
+            },
+            "rotationDeg": {
+              "type": "number"
+            }
+          }
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "sourcedSize": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "provenance"
+      ],
+      "properties": {
+        "value": {
+          "$ref": "#/$defs/size"
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "sourcedParamValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "provenance"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "element": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "typeCode",
+        "label",
+        "placement",
+        "size",
+        "params"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "typeCode": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string"
+        },
+        "placement": {
+          "$ref": "#/$defs/sourcedPlacement"
+        },
+        "size": {
+          "$ref": "#/$defs/sourcedSize"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/sourcedParamValue"
+          }
+        }
+      }
+    },
+    "zone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "label",
+        "ring",
+        "densitySqFtPerPerson"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "AUDIENCE",
+            "BACKSTAGE",
+            "FNB",
+            "VIP",
+            "PARKING",
+            "CIRCULATION",
+            "OTHER"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "ring": {
+          "$ref": "#/$defs/sourcedRing"
+        },
+        "densitySqFtPerPerson": {
+          "$ref": "#/$defs/sourcedDensity"
+        }
+      }
+    },
+    "viewpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "eye",
+        "target"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string"
+        },
+        "eye": {
+          "$ref": "#/$defs/localPoint"
+        },
+        "target": {
+          "$ref": "#/$defs/localPoint"
+        }
+      }
+    },
+    "siteKind": {
+      "enum": [
+        "OPEN_GROUND",
+        "INDOOR_FLOOR"
+      ]
+    },
+    "sourcedDensity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "provenance"
+      ],
+      "properties": {
+        "value": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "kind",
+        "points"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "DISTANCE",
+            "AREA"
+          ]
+        },
+        "points": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/$defs/localPoint"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,13 +1,17 @@
 #!/usr/bin/env node
 // Acceptance-gate guard: packages listed here must have ZERO runtime dependencies, except that
 // they may depend on other listed zero-dep packages using workspace "*" versions.
-// devDependencies are allowed. Fails with a clear message.
-import { existsSync, readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+// devDependencies are allowed. A zero-dep package must never import @overlord/geom2.
+// Fails with a clear message.
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /** Packages that are required to stay zero-dependency. Paths are relative to the repo root. */
 const ZERO_DEP_PACKAGES = ['packages/geo-core', 'packages/scene', 'packages/commands', 'packages/layout'];
+
+/** Packages that zero-dep packages must never import (they carry external dependencies). */
+const FORBIDDEN_IMPORTS = ['@overlord/geom2'];
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -53,6 +57,34 @@ for (const { relPath, pkg } of packages) {
         `check-zero-deps: FAIL — ${relPath} depends on ${name}, which is not a zero-dep package`,
       );
       failed = true;
+    }
+  }
+
+  // No zero-dep package may import a dependency-carrying package.
+  const srcDir = resolve(repoRoot, relPath, 'src');
+  if (existsSync(srcDir)) {
+    const stack = [srcDir];
+    while (stack.length > 0) {
+      const dir = stack.pop();
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) {
+          stack.push(full);
+          continue;
+        }
+        if (!entry.name.endsWith('.ts')) {
+          continue;
+        }
+        const text = readFileSync(full, 'utf8');
+        for (const forbidden of FORBIDDEN_IMPORTS) {
+          if (text.includes(forbidden)) {
+            console.error(
+              `check-zero-deps: FAIL — ${relPath}/${entry.name} imports ${forbidden}, which is not allowed in a zero-dep package`,
+            );
+            failed = true;
+          }
+        }
+      }
     }
   }
 }

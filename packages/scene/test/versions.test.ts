@@ -94,7 +94,7 @@ describe('commitVersion', () => {
     const first = await createInitialVersion(makeScene(), options);
     const next = makeScene();
     next.name = 'Edited';
-    (next as unknown as { schemaVersion: number }).schemaVersion = 2;
+    (next as unknown as { schemaVersion: number }).schemaVersion = 3;
     await expect(commitVersion(first, next, options)).rejects.toMatchObject({
       code: 'INVALID_SCENE',
     });

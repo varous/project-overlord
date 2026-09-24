@@ -20,7 +20,7 @@ describe('validateScene', () => {
 
   it('reports SCHEMA_VERSION', () => {
     const doc = makeScene();
-    (doc as unknown as { schemaVersion: number }).schemaVersion = 2;
+    (doc as unknown as { schemaVersion: number }).schemaVersion = 3;
     const result = validateScene(doc, elementTypeRegistry);
     expectCode(result.issues, 'SCHEMA_VERSION');
   });
@@ -118,6 +118,33 @@ describe('validateScene', () => {
     const doc = makeScene();
     (doc.site.anchor.value as { latDeg: number }).latDeg = 100;
     expectCode(validateScene(doc, elementTypeRegistry).issues, 'ANCHOR_INVALID');
+  });
+
+  it('reports SITE_INVALID for a bad kind or level', () => {
+    const badKind = makeScene();
+    (badKind.site as { kind: string }).kind = 'SPACE';
+    expectCode(validateScene(badKind, elementTypeRegistry).issues, 'SITE_INVALID');
+
+    const badLevel = makeScene();
+    (badLevel.site as { level: number }).level = -1;
+    expectCode(validateScene(badLevel, elementTypeRegistry).issues, 'SITE_INVALID');
+  });
+
+  it('reports ZONE_INVALID for a non-positive zone density', () => {
+    const doc = makeScene();
+    if (doc.zones[0] !== undefined) {
+      (doc.zones[0].densitySqFtPerPerson as { value: number }).value = 0;
+    }
+    expectCode(validateScene(doc, elementTypeRegistry).issues, 'ZONE_INVALID');
+  });
+
+  it('reports MEASUREMENT_INVALID for a bad kind or too few points', () => {
+    const doc = makeScene();
+    doc.measurements = [
+      { id: 'm1', label: 'M', kind: 'NOPE' as never, points: [] },
+    ];
+    const issues = validateScene(doc, elementTypeRegistry).issues;
+    expect(codes(issues)).toContain('MEASUREMENT_INVALID');
   });
 
   it('collects every issue instead of stopping at the first', () => {

@@ -16,6 +16,8 @@ import {
   type Tmm,
 } from '@overlord/geo-core';
 import {
+  DEFAULT_DENSITY_SQFT_PER_PERSON,
+  DENSITY_NOTE,
   validateScene,
   type ElementSize,
   type ElementTypeDef,
@@ -86,7 +88,8 @@ function idTaken(doc: SceneDoc, id: string): boolean {
   return (
     doc.elements.some((element) => element.id === id) ||
     doc.zones.some((zone) => zone.id === id) ||
-    doc.viewpoints.some((viewpoint) => viewpoint.id === id)
+    doc.viewpoints.some((viewpoint) => viewpoint.id === id) ||
+    (doc.measurements ?? []).some((measurement) => measurement.id === id)
   );
 }
 
@@ -377,6 +380,14 @@ export function applyCommand(doc: SceneDoc, command: Command, ctx: ApplyContext)
         kind: command.kind,
         label: command.label,
         ring: restate(command.ring, command.provenance ?? 'STATED', command.note),
+        densitySqFtPerPerson:
+          command.densitySqFtPerPerson === undefined
+            ? sourced(DEFAULT_DENSITY_SQFT_PER_PERSON, 'ARCHETYPE', DENSITY_NOTE)
+            : restate(
+                command.densitySqFtPerPerson,
+                command.densityProvenance ?? 'STATED',
+                command.densityNote,
+              ),
       };
       const next = cloneDoc(doc);
       insertAt(next.zones, zone, command.index);
@@ -426,9 +437,84 @@ export function applyCommand(doc: SceneDoc, command: Command, ctx: ApplyContext)
         ring: zone.ring.value,
         id: zone.id,
         ...optionalFields(zone.ring.provenance, zone.ring.note),
+        densitySqFtPerPerson: zone.densitySqFtPerPerson.value,
+        densityProvenance: zone.densitySqFtPerPerson.provenance,
+        ...(zone.densitySqFtPerPerson.note === undefined
+          ? {}
+          : { densityNote: zone.densitySqFtPerPerson.note }),
         index,
       };
       return finish(next, inverse, ctx.registry);
+    }
+
+    case 'SET_ZONE_DENSITY': {
+      const found = requireZone(doc, command.id);
+      if ('error' in found) {
+        return fail(found.error.code, found.error.message);
+      }
+      const { index, zone } = found;
+      const next = cloneDoc(doc);
+      const target = next.zones[index];
+      if (target === undefined) {
+        return fail('ZONE_NOT_FOUND', `No zone with id "${command.id}".`);
+      }
+      next.zones[index] = {
+        ...target,
+        densitySqFtPerPerson: restate(
+          command.densitySqFtPerPerson,
+          command.provenance ?? 'STATED',
+          command.note,
+        ),
+      };
+      const inverse: Command = {
+        type: 'SET_ZONE_DENSITY',
+        id: command.id,
+        densitySqFtPerPerson: zone.densitySqFtPerPerson.value,
+        ...optionalFields(zone.densitySqFtPerPerson.provenance, zone.densitySqFtPerPerson.note),
+      };
+      return finish(next, inverse, ctx.registry);
+    }
+
+    case 'ADD_MEASUREMENT': {
+      const id = command.measurement.id;
+      if (idTaken(doc, id)) {
+        return fail('DUPLICATE_ID', `Id "${id}" is already used in this scene.`);
+      }
+      const next = cloneDoc(doc);
+      next.measurements = next.measurements ?? [];
+      insertAt(next.measurements, structuredClone(command.measurement), command.index);
+      return finish(next, { type: 'DELETE_MEASUREMENT', id }, ctx.registry);
+    }
+
+    case 'DELETE_MEASUREMENT': {
+      const measurements = doc.measurements ?? [];
+      const index = measurements.findIndex((measurement) => measurement.id === command.id);
+      const measurement = index < 0 ? undefined : measurements[index];
+      if (measurement === undefined) {
+        return fail('MEASUREMENT_NOT_FOUND', `No measurement with id "${command.id}".`);
+      }
+      const next = cloneDoc(doc);
+      next.measurements = (next.measurements ?? []).filter((entry) => entry.id !== command.id);
+      const inverse: Command = {
+        type: 'ADD_MEASUREMENT',
+        measurement,
+        index,
+      };
+      return finish(next, inverse, ctx.registry);
+    }
+
+    case 'SET_SITE_KIND': {
+      const previous = doc.site.kind;
+      const next = cloneDoc(doc);
+      next.site = { ...next.site, kind: command.kind };
+      return finish(next, { type: 'SET_SITE_KIND', kind: previous }, ctx.registry);
+    }
+
+    case 'SET_SITE_LEVEL': {
+      const previous = doc.site.level;
+      const next = cloneDoc(doc);
+      next.site = { ...next.site, level: command.level };
+      return finish(next, { type: 'SET_SITE_LEVEL', level: previous }, ctx.registry);
     }
 
     case 'SET_SITE_ANCHOR': {

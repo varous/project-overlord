@@ -4,6 +4,7 @@
     { "path": "packages/geo-core" },
     { "path": "packages/scene" },
     { "path": "packages/commands" },
+    { "path": "packages/geom2" },
     { "path": "packages/layout" },
     { "path": "apps/api" }
   ]

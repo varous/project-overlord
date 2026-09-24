@@ -1,0 +1,23 @@
+{
+  "name": "@overlord/geom2",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Boolean polygon operations, offsets and splits over integer tmm rings (polygon-clipping only).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@overlord/geo-core": "*",
+    "polygon-clipping": "^0.15.7"
+  }
+}

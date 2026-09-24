@@ -239,13 +239,20 @@ describe('applyGeneratedLayout', () => {
   it('produces one REPLACE_CONTENT command carrying the generated elements and zones', () => {
     const generated = generateOk({ eventType: 'CONCERT', capacity: 5000 });
     const emptyDoc: SceneDoc = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       id: 'scn_test0000000000000',
       name: 'Empty',
-      site: { anchor: { value: SITE_ANCHOR, provenance: 'STATED' }, boundary: null, imagery: { provider: 'ESRI', captureDate: null } },
+      site: {
+        kind: 'OPEN_GROUND',
+        level: 0,
+        anchor: { value: SITE_ANCHOR, provenance: 'STATED' },
+        boundary: null,
+        imagery: { provider: 'ESRI', captureDate: null },
+      },
       elements: [],
       zones: [],
       viewpoints: [],
+      measurements: [],
     };
     const command = applyGeneratedLayout(emptyDoc, generated);
     expect(command.type).toBe('REPLACE_CONTENT');
