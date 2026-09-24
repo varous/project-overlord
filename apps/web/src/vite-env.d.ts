@@ -1,8 +1,8 @@
 /// <reference types="vite/client" />
 
-import type { SiteAnchor } from '@overlord/geo-core';
+import type { LocalPoint, SiteAnchor } from '@overlord/geo-core';
 import type { Command } from '@overlord/commands';
-import type { SceneDoc, SceneElement } from '@overlord/scene';
+import type { SceneDoc, SceneElement, ZoneKind } from '@overlord/scene';
 
 import type { MapStack } from './viewer/mapStacks.js';
 import type { ViewpointName } from './viewer/viewpoints.js';
@@ -66,6 +66,32 @@ export interface OverlordTestHook {
   headingHandleScreen(): { x: number; y: number } | null;
   /** "active", "unavailable (403)" or "not active". */
   esriStatus(): string;
+  /** Number of undo entries (one per issued command). */
+  historyDepth(): number;
+  /** True when an entity with that id exists (used to check measurements render). */
+  hasEntity(id: string): boolean;
+  /** Draw a rectangle zone through the same path as the mouse tool. Returns the zone id. */
+  addRectangleZone(
+    centre: LocalPoint,
+    sizeX: number,
+    sizeY: number,
+    kind: ZoneKind,
+    label: string,
+  ): string | null;
+  /** Validate and draw a polygon zone (refused when self-intersecting). */
+  drawPolygon(
+    points: Array<{ x: number; y: number }>,
+    kind: ZoneKind,
+    label: string,
+  ): { ok: boolean; message?: string };
+  /** Move one zone vertex, issuing a single SET_ZONE_RING. */
+  moveZoneVertex(zoneId: string, index: number, x: number, y: number): boolean;
+  /** Add a measurement (AREA when 3+ points, otherwise DISTANCE). Returns its id. */
+  addMeasurement(kind: 'DISTANCE' | 'AREA', points: LocalPoint[], label: string): string | null;
+  isDrawing(): boolean;
+  drawMode(): 'rectangle' | 'polygon' | 'measure' | null;
+  startDraw(mode: 'rectangle' | 'polygon' | 'measure'): void;
+  finishDraw(): void;
 }
 
 declare global {

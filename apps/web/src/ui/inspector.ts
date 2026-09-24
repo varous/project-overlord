@@ -3,6 +3,7 @@
  * host. It never mutates a scene document itself; every edit goes back as a Command.
  */
 
+import { zoneAreaSqFt, zoneCapacity } from '@overlord/scene';
 import type { ElementTypeRegistry, SceneDoc, SceneElement, SceneZone } from '@overlord/scene';
 
 import type { Command } from '@overlord/commands';
@@ -244,18 +245,63 @@ export function createInspector(options: InspectorOptions): Inspector {
 
   function renderZone(zoneItem: SceneZone): void {
     body.replaceChildren();
+
+    const areaSqFt = zoneAreaSqFt(zoneItem.ring.value);
+    const areaM2 = areaSqFt * 0.09290304;
+    const density = zoneItem.densitySqFtPerPerson.value;
+    const pax = zoneCapacity(zoneItem.ring.value, density);
+
+    const densityControl = document.createElement('div');
+    densityControl.className = 'inspector__control';
+    const densityInput = document.createElement('input');
+    densityInput.type = 'text';
+    densityInput.className = 'inspector__input';
+    densityInput.dataset.field = 'density';
+    densityInput.setAttribute('aria-label', 'Density');
+    densityInput.value = String(density);
+    const densityAlt = document.createElement('span');
+    densityAlt.className = 'inspector__alt';
+    densityAlt.textContent = 'sq ft / person';
+    densityInput.addEventListener('change', () => {
+      const parsed = Number(densityInput.value);
+      if (!Number.isFinite(parsed) || parsed <= 0) {
+        setStatus('Enter the density as a positive number of square feet per person.');
+        refresh();
+        return;
+      }
+      commit({ type: 'SET_ZONE_DENSITY', id: zoneItem.id, densitySqFtPerPerson: parsed });
+    });
+    densityControl.append(densityInput, densityAlt);
+
+    const readout = document.createElement('p');
+    readout.className = 'inspector__readout';
+    readout.textContent = `${Math.round(areaSqFt).toLocaleString('en-US')} sq ft · ${pax.toLocaleString('en-US')} pax @ ${density} sq ft/person`;
+
     body.append(
       textRow('Type', `Zone (${zoneItem.kind})`),
       textRow('Label', zoneItem.label),
+      row('Area', (() => {
+        const span = document.createElement('span');
+        span.className = 'inspector__alt';
+        span.textContent = `${Math.round(areaSqFt).toLocaleString('en-US')} sq ft (${areaM2.toFixed(1)} m²)`;
+        return span;
+      })()),
+      row('Density', densityControl, zoneItem.densitySqFtPerPerson.provenance),
+      row('Pax', (() => {
+        const span = document.createElement('span');
+        span.className = 'inspector__alt';
+        span.textContent = pax.toLocaleString('en-US');
+        return span;
+      })()),
       textRow('Vertices', `${zoneItem.ring.value.length} points`),
+      row('Ring', (() => {
+        const span = document.createElement('span');
+        span.className = 'inspector__alt';
+        span.textContent = 'counter-clockwise';
+        return span;
+      })(), zoneItem.ring.provenance),
+      readout,
     );
-    const provenanceRow = row('Ring', (() => {
-      const span = document.createElement('span');
-      span.className = 'inspector__alt';
-      span.textContent = 'counter-clockwise';
-      return span;
-    })(), zoneItem.ring.provenance);
-    body.append(provenanceRow);
 
     const deleteButton = document.createElement('button');
     deleteButton.type = 'button';

@@ -18,7 +18,7 @@ import {
   type SiteAnchor,
   type Tmm,
 } from '@overlord/geo-core';
-import type { ElementTypeRegistry, SceneDoc, SceneElement } from '@overlord/scene';
+import { zoneAreaSqFt, type ElementTypeRegistry, type SceneDoc, type SceneElement } from '@overlord/scene';
 
 import { elementCornersLocal, type Placeable } from '../site/placement.js';
 
@@ -26,6 +26,7 @@ const TMM_PER_M = 10000;
 const LABEL_FAR_M = 600;
 const ZONE_COLOR = Cesium.Color.fromCssColorString('#facc15');
 const SELECTION_COLOR = Cesium.Color.fromCssColorString('#22d3ee');
+const MEASURE_COLOR = Cesium.Color.fromCssColorString('#f97316');
 
 export interface RenderOptions {
   /** Called when an element or zone is skipped because its ring is not simple. */
@@ -182,6 +183,49 @@ export function renderScene(
       continue;
     }
     entities.push(renderPolygon(viewer, anchor, zone.id, zone.label, ring, ZONE_COLOR, selected === zone.id));
+  }
+
+  for (const measurement of scene.measurements ?? []) {
+    const points = measurement.points;
+    if (points.length < 2) {
+      continue;
+    }
+    const positions = points.map((point) => toCartesian(localToGeodetic(anchor, point)));
+    if (measurement.kind === 'AREA' && positions.length >= 3) {
+      const value = `${Math.round(zoneAreaSqFt(points as never)).toLocaleString('en-US')} sq ft`;
+      entities.push(
+        viewer.entities.add({
+          id: measurement.id,
+          name: measurement.label,
+          polygon: {
+            hierarchy: new Cesium.PolygonHierarchy(positions),
+            material: MEASURE_COLOR.withAlpha(0.2),
+            outline: true,
+            outlineColor: MEASURE_COLOR,
+            perPositionHeight: true,
+          },
+          label: labelFor(`${measurement.label}: ${value}`),
+        }),
+      );
+    } else {
+      let distanceM = 0;
+      for (let index = 1; index < positions.length; index += 1) {
+        const previous = positions[index - 1];
+        const current = positions[index];
+        if (previous !== undefined && current !== undefined) {
+          distanceM += Cesium.Cartesian3.distance(previous, current);
+        }
+      }
+      const value = `${(distanceM / 0.3048).toFixed(1)} ft`;
+      entities.push(
+        viewer.entities.add({
+          id: measurement.id,
+          name: measurement.label,
+          polyline: { positions, width: 3, material: MEASURE_COLOR, clampToGround: true },
+          label: labelFor(`${measurement.label}: ${value}`),
+        }),
+      );
+    }
   }
 
   return entities;

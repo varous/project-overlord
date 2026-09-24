@@ -16,8 +16,7 @@ import { createApiClient, type ApiClient, type ApiError, type VersionDetail } fr
 import { createSessionStore, type Session } from './api/session.js';
 import { demoScene } from './site/demoSite.js';
 import { normalizeHeading, parseUrlState, serializeUrlState } from './site/urlState.js';
-import { createHistory, SNAP_MODULE_10FT, snapLengthTmm, type Command } from '@overlord/commands';
-import { renderAxes } from './viewer/axes.js';
+import { createHistory, polygonRing, rectRing, SNAP_MODULE_10FT, snapLengthTmm, type Command } from '@overlord/commands';import { renderAxes } from './viewer/axes.js';
 import { sampleGroundHeight } from './viewer/groundHeight.js';
 import { fitAltitudeM, sceneBoundsLocal } from './viewer/framing.js';
 import { createMapStacks, type MapStack, type MapStackChange } from './viewer/mapStacks.js';
@@ -25,7 +24,9 @@ import { renderScene } from './viewer/render.js';
 import { renderQualityFor } from './viewer/renderQuality.js';
 import { createViewpointButtons, flyToViewpoint, type ViewpointName } from './viewer/viewpoints.js';
 import { createDebugPanel } from './ui/debugPanel.js';
+import { createCapacityPanel } from './ui/capacityPanel.js';
 import { createDirectManipulation, pickedEntityId } from './ui/directManipulation.js';
+import { createDrawTools } from './ui/drawTools.js';
 import { createInspector, type Selection } from './ui/inspector.js';
 import { createNotices } from './ui/notices.js';
 import { createPalette } from './ui/palette.js';
@@ -681,8 +682,14 @@ function boundsOutsideView(): boolean {
 }
 
 /** Never move the camera automatically: just tell the user the fit shortcut exists. */
+let lastFitPromptMs = 0;
 function maybePromptFit(): void {
+  const now = Date.now();
+  if (now - lastFitPromptMs < 5000) {
+    return;
+  }
   if (boundsOutsideView()) {
+    lastFitPromptMs = now;
     notices.toast('Press F to fit', 'warn');
   }
 }
@@ -781,6 +788,9 @@ function refreshPersistence(): void {
   persistenceUi.refresh();
   placementRef?.setDisabled(readOnly);
   refreshEditControls();
+  refreshDrawButtons();
+  drawTools.refresh();
+  capacityPanel.refresh();
   refreshDebugPanel();
 }
 
@@ -954,6 +964,208 @@ const redoButton = barButton('Redo', 'redo', redo);
 editBar.append(addButton, undoButton, redoButton);
 persistenceUi.element.prepend(editBar);
 
+// --- Draw tools (Task 010) ------------------------------------------------------------------
+
+let measurementCounter = 0;
+function newMeasurementId(): string {
+  measurementCounter += 1;
+  let candidate = `meas_${measurementCounter}`;
+  while ((currentDoc.measurements ?? []).some((measurement) => measurement.id === candidate)) {
+    measurementCounter += 1;
+    candidate = `meas_${measurementCounter}`;
+  }
+  return candidate;
+}
+
+// Zone kind+label dialog, shared by the rectangle and polygon tools.
+const zoneDialog = document.createElement('div');
+zoneDialog.className = 'modal';
+zoneDialog.dataset.modal = 'zone-details';
+zoneDialog.hidden = true;
+const zoneDialogPanel = document.createElement('div');
+zoneDialogPanel.className = 'modal__panel';
+const zoneDialogTitle = document.createElement('h2');
+zoneDialogTitle.className = 'modal__title';
+zoneDialogTitle.textContent = 'Zone details';
+const zoneKindSelect = document.createElement('select');
+zoneKindSelect.className = 'modal__field';
+zoneKindSelect.setAttribute('aria-label', 'Zone kind');
+for (const kind of ['AUDIENCE', 'BACKSTAGE', 'FNB', 'VIP', 'PARKING', 'CIRCULATION', 'OTHER']) {
+  const option = document.createElement('option');
+  option.value = kind;
+  option.textContent = kind;
+  zoneKindSelect.appendChild(option);
+}
+const zoneLabelInput = document.createElement('input');
+zoneLabelInput.type = 'text';
+zoneLabelInput.className = 'modal__field';
+zoneLabelInput.setAttribute('aria-label', 'Zone label');
+zoneLabelInput.value = 'New zone';
+const zoneCreateButton = document.createElement('button');
+zoneCreateButton.type = 'button';
+zoneCreateButton.className = 'ui-button';
+zoneCreateButton.dataset.action = 'zone-create';
+zoneCreateButton.textContent = 'Create';
+const zoneCancelButton = document.createElement('button');
+zoneCancelButton.type = 'button';
+zoneCancelButton.className = 'ui-button';
+zoneCancelButton.dataset.action = 'zone-cancel';
+zoneCancelButton.textContent = 'Cancel';
+zoneDialogPanel.append(zoneDialogTitle, zoneKindSelect, zoneLabelInput, zoneCreateButton, zoneCancelButton);
+zoneDialog.appendChild(zoneDialogPanel);
+document.body.appendChild(zoneDialog);
+
+let pendingRing: { ring: import('@overlord/scene').Ring2; tool: string } | null = null;
+
+function openZoneDialog(ring: import('@overlord/scene').Ring2, tool: string): void {
+  pendingRing = { ring, tool };
+  zoneDialog.hidden = false;
+  zoneKindSelect.focus();
+}
+function closeZoneDialog(): void {
+  zoneDialog.hidden = true;
+  pendingRing = null;
+}
+function createPendingZone(): void {
+  const pending = pendingRing;
+  if (pending === null) {
+    return;
+  }
+  const kind = zoneKindSelect.value as import('@overlord/scene').ZoneKind;
+  const label = zoneLabelInput.value.trim() === '' ? 'Zone' : zoneLabelInput.value.trim();
+  const before = new Set(currentDoc.zones.map((zone) => zone.id));
+  closeZoneDialog();
+  const outcome = runCommand({ type: 'ADD_ZONE', kind, label, ring: pending.ring });
+  if (!outcome.ok) {
+    notices.showBanner('draw-error', outcome.message, { tone: 'error' });
+    return;
+  }
+  const added = currentDoc.zones.find((zone) => !before.has(zone.id));
+  if (added !== undefined) {
+    select('zone', added.id);
+  }
+}
+zoneCreateButton.addEventListener('click', createPendingZone);
+zoneCancelButton.addEventListener('click', closeZoneDialog);
+
+const drawBar = document.createElement('div');
+drawBar.className = 'edit-bar';
+function drawButton(label: string, action: string, onClick: () => void): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'ui-button';
+  button.dataset.action = action;
+  button.textContent = label;
+  button.addEventListener('click', onClick);
+  return button;
+}
+const rectangleButton = drawButton('Rectangle zone', 'draw-rectangle', () => drawTools.start('rectangle'));
+const polygonButton = drawButton('Polygon zone', 'draw-polygon', () => drawTools.start('polygon'));
+const measureButton = drawButton('Measure', 'draw-measure', () => drawTools.start('measure'));
+drawBar.append(rectangleButton, polygonButton, measureButton);
+persistenceUi.element.prepend(drawBar);
+
+function selectedZone(): import('@overlord/scene').SceneZone | null {
+  if (selected === null || selected.kind !== 'zone') {
+    return null;
+  }
+  return currentDoc.zones.find((zone) => zone.id === selected?.id) ?? null;
+}
+
+function addMeasurement(kind: 'DISTANCE' | 'AREA', points: import('@overlord/geo-core').LocalPoint[], label: string): string | null {
+  const measurement = { id: newMeasurementId(), label, kind, points };
+  const outcome = runCommand({ type: 'ADD_MEASUREMENT', measurement });
+  if (!outcome.ok) {
+    notices.showBanner('draw-error', outcome.message, { tone: 'error' });
+    return null;
+  }
+  return measurement.id;
+}
+
+function addRectangleZone(
+  centre: import('@overlord/geo-core').LocalPoint,
+  sizeX: number,
+  sizeY: number,
+  kind: import('@overlord/scene').ZoneKind,
+  label: string,
+): string | null {
+  const ring = rectRing(centre, sizeX as never, sizeY as never, 0);
+  const before = new Set(currentDoc.zones.map((zone) => zone.id));
+  const outcome = runCommand({ type: 'ADD_ZONE', kind, label, ring });
+  if (!outcome.ok) {
+    notices.showBanner('draw-error', outcome.message, { tone: 'error' });
+    return null;
+  }
+  const added = currentDoc.zones.find((zone) => !before.has(zone.id));
+  if (added !== undefined) {
+    select('zone', added.id);
+    return added.id;
+  }
+  return null;
+}
+
+function drawPolygon(
+  points: Array<{ x: number; y: number }>,
+  kind: import('@overlord/scene').ZoneKind,
+  label: string,
+): { ok: boolean; message?: string } {
+  let ring: import('@overlord/scene').Ring2;
+  try {
+    ring = polygonRing(points as never);
+  } catch (error) {
+    return { ok: false, message: error instanceof Error ? error.message : 'Invalid polygon.' };
+  }
+  const before = new Set(currentDoc.zones.map((zone) => zone.id));
+  const outcome = runCommand({ type: 'ADD_ZONE', kind, label, ring });
+  if (!outcome.ok) {
+    return { ok: false, message: outcome.message };
+  }
+  const added = currentDoc.zones.find((zone) => !before.has(zone.id));
+  if (added !== undefined) {
+    select('zone', added.id);
+  }
+  return { ok: true };
+}
+
+function moveZoneVertex(zoneId: string, index: number, x: number, y: number): boolean {
+  const zone = currentDoc.zones.find((candidate) => candidate.id === zoneId);
+  if (zone === undefined || zone.ring.value[index] === undefined) {
+    return false;
+  }
+  const ring = zone.ring.value.map((point, pointIndex) =>
+    pointIndex === index ? { x, y } as never : { ...point },
+  );
+  const outcome = runCommand({ type: 'SET_ZONE_RING', id: zoneId, ring });
+  return outcome.ok;
+}
+
+const drawTools = createDrawTools({
+  viewer,
+  notices,
+  getAnchor: () => anchor,
+  isEnabled: () => !readOnly,
+  getSelectedZone: selectedZone,
+  onRingDrawn: (ring, tool) => openZoneDialog(ring, tool),
+  onMeasurement: (measurement) => {
+    addMeasurement(measurement.kind, measurement.points, measurement.label);
+  },
+  onZoneRing: (zoneId, ring) => {
+    const outcome = runCommand({ type: 'SET_ZONE_RING', id: zoneId, ring });
+    if (!outcome.ok) {
+      notices.showBanner('draw-error', outcome.message, { tone: 'error' });
+    }
+  },
+  onError: (message) => notices.showBanner('draw-error', message, { tone: 'error' }),
+});
+
+const capacityPanel = createCapacityPanel(() => currentDoc);
+
+function refreshDrawButtons(): void {
+  for (const button of [rectangleButton, polygonButton, measureButton]) {
+    button.disabled = readOnly;
+  }
+}
+
 function refreshEditControls(): void {
   undoButton.disabled = !history.canUndo();
   redoButton.disabled = !history.canRedo();
@@ -991,11 +1203,18 @@ window.addEventListener('keydown', (event) => {
   const target = event.target as HTMLElement | null;
   const typing = target !== null && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
   if (event.key === 'Escape') {
-    if (pendingType !== null) {
+    if (drawTools.isDrawing()) {
+      drawTools.cancel();
+    } else if (pendingType !== null) {
       setPending(null);
     } else {
       clearSelection();
     }
+    return;
+  }
+  if (event.key === 'Enter' && drawTools.isDrawing()) {
+    event.preventDefault();
+    drawTools.finish();
     return;
   }
   if (typing) {
@@ -1172,6 +1391,17 @@ if (testEnabled) {
     placePending: (x, y) => finishPendingAdd({ x, y, z: 0 } as never),
     select: (kind, id) => select(kind, id),
     clearSelection: () => clearSelection(),
+    historyDepth: () => history.depth(),
+    hasEntity: (id) => viewer.entities.getById(id) !== undefined,
+    addRectangleZone: (centre, sizeX, sizeY, kind, label) =>
+      addRectangleZone(centre, sizeX, sizeY, kind, label),
+    drawPolygon: (points, kind, label) => drawPolygon(points, kind, label),
+    moveZoneVertex: (zoneId, index, x, y) => moveZoneVertex(zoneId, index, x, y),
+    addMeasurement: (kind, points, label) => addMeasurement(kind, points, label),
+    isDrawing: () => drawTools.isDrawing(),
+    drawMode: () => drawTools.mode(),
+    startDraw: (mode) => drawTools.start(mode),
+    finishDraw: () => drawTools.finish(),
     fittedAltitudeM: () => fitAltitudeM(sceneBoundsLocal(currentDoc), aspectRatio()),
     cameraAltitudeM: () => viewer.camera.positionCartographic.height,
     fit: () => fitCamera(),

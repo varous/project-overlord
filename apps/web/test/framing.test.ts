@@ -14,10 +14,12 @@ import {
 } from '../src/viewer/framing.js';
 
 const emptyScene: SceneDoc = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   id: 'scn_empty0000000000000',
   name: 'Empty',
   site: {
+    kind: 'OPEN_GROUND',
+    level: 0,
     anchor: {
       value: { latDeg: 22.5, lonDeg: 88.4, heightM: 0, headingDeg: 0 },
       provenance: 'STATED',
@@ -28,6 +30,7 @@ const emptyScene: SceneDoc = {
   elements: [],
   zones: [],
   viewpoints: [],
+  measurements: [],
 };
 
 function bounds(widthM: number, depthM: number) {
