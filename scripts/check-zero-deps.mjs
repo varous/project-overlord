@@ -8,7 +8,13 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /** Packages that are required to stay zero-dependency. Paths are relative to the repo root. */
-const ZERO_DEP_PACKAGES = ['packages/geo-core', 'packages/scene', 'packages/commands', 'packages/layout'];
+const ZERO_DEP_PACKAGES = [
+  'packages/geo-core',
+  'packages/scene',
+  'packages/commands',
+  'packages/layout',
+  'packages/boq',
+];
 
 /** Packages that zero-dep packages must never import (they carry external dependencies). */
 const FORBIDDEN_IMPORTS = ['@overlord/geom2'];

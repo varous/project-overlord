@@ -1,0 +1,28 @@
+# Local development: Postgres in Docker, app on the host via `npm run dev`.
+# Bring up only the database unless you are specifically testing the container.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: showplan
+      POSTGRES_PASSWORD: showplan
+      POSTGRES_DB: showplan
+    ports: ["5432:5432"]
+    volumes: ["showplan-pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U showplan"]
+      interval: 5s
+      retries: 10
+
+  app:
+    profiles: ["container"]
+    build: { context: .., dockerfile: infra/Dockerfile }
+    ports: ["8080:8080"]
+    env_file: [../.env]
+    environment:
+      DATABASE_URL: postgresql://showplan:showplan@db:5432/showplan?connection_limit=5
+    depends_on:
+      db: { condition: service_healthy }
+
+volumes:
+  showplan-pgdata:

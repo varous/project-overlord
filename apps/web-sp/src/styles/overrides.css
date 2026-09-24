@@ -1,0 +1,504 @@
+/* ===========================================================================
+   overrides.css — additions to design-system.css. NEVER edit that file.
+   Every rule here fixes something the handoff digest explicitly flagged in §8.
+   Each block cites the finding it closes so a designer can reconcile later.
+   =========================================================================== */
+
+/* --- §8: "Focus states: only Input has a designed focus." -----------------
+   Keyboard access is not optional. One ink ring, applied everywhere, matching
+   the Input treatment (1.5px accent) so it reads as part of the system. */
+.btn:focus-visible,
+.icon-btn:focus-visible,
+.tab:focus-visible,
+.seg__item:focus-visible,
+.tool-chip:focus-visible,
+.layer-row:focus-visible,
+.asset-card:focus-visible,
+.checkbox:focus-visible,
+.switch:focus-visible,
+.slider:focus-visible,
+.select:focus-visible,
+.search:focus-visible,
+.data-field:focus-visible,
+.menubar__menu:focus-visible,
+.menubar__item:focus-visible,
+.select__item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1.5px var(--accent-default);
+}
+/* Inside the canvas, the ring must not be mistaken for a selection. */
+.canvas :focus-visible { box-shadow: 0 0 0 1.5px var(--selection); }
+
+/* --- §8: "mode-bar 26px, snapping 22px, RM view toggle 18px are below the
+   24px WCAG 2.5.8 minimum." Keep the drawn box, grow the hit area. -------- */
+.hit-24 { position: relative; }
+.hit-24::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  min-width: 24px;
+  min-height: 24px;
+  width: 100%;
+  height: 100%;
+}
+
+/* --- §8: "Data Bar active field uses accent/soft in Figma but
+   --selection-soft/--selection in CSS — pick one (recommend CSS's)."
+   Taking the CSS treatment, per the digest's own recommendation. -------- */
+.data-field.is-active .data-field__value {
+  background: var(--selection-soft);
+  box-shadow: inset 0 0 0 1.5px var(--selection);
+}
+
+/* --- §8: "text-tertiary ~2.2:1, text-secondary ~3.9:1 fail AA at 10-12px."
+   Our own constraint on top of that: a quantity or a price is a number a
+   salesperson reads aloud to a client. Numbers are never small or grey. --- */
+.numeric,
+.boq-cell--qty,
+.boq-cell--rate,
+.boq-cell--amount {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+/* Tertiary is for placeholders only. Never for content. */
+.is-placeholder { color: var(--text-tertiary); }
+
+/* --- Uncalibrated state. Not in the design (§3.5) — invented; logged in
+   design-inventions.md. It has to be impossible to miss, because every
+   number downstream is wrong until it is resolved. --------------------- */
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-height: 32px;
+  padding: 0 var(--spacing-md);
+  font-size: 11.5px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-default);
+}
+.banner--warning { background: var(--chip-orange); color: var(--text-primary); }
+.banner--danger  { background: var(--chip-pink);   color: var(--text-primary); }
+.banner__action { margin-left: auto; }
+
+/* A tool that cannot produce a trustworthy number is disabled, not optimistic. */
+/* A tool that cannot produce a trustworthy number is disabled, not optimistic.
+   pointer-events stays on so the disabled tooltip can be read (QA-21 / scale). */
+.is-uncalibrated .tool-chip[data-requires-scale="true"],
+.is-uncalibrated .icon-btn[data-requires-scale="true"] {
+  opacity: .4;
+}
+
+/* --- Icon component defaults. §8 flagged three competing icon greys; all
+   SVGs were rewritten to currentColor, so colour comes from here alone. -- */
+.icon { display: inline-block; flex: none; color: var(--icon-default); }
+.icon--secondary { color: var(--text-secondary); }
+.icon--on-accent { color: var(--accent-text-on); }
+
+/* --- Utility: the shell needs a scroll container the design never showed.
+   §8: "reflow below 1728 is asserted in CSS but never designed." --------- */
+.scroll-y { overflow-y: auto; overscroll-behavior: contain; }
+.scroll-y::-webkit-scrollbar { width: 10px; }
+.scroll-y::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: var(--radius-full);
+}
+
+/* Reference-mode banner, so nobody mistakes the faithful V2 for the product. */
+.ref-ribbon {
+  position: fixed; z-index: 100; top: 0; right: 0;
+  padding: 2px 10px; font-size: 9px; font-weight: 600;
+  letter-spacing: .04em; text-transform: uppercase;
+  background: var(--accent-default); color: var(--accent-text-on);
+  border-bottom-left-radius: var(--radius-sm);
+}
+
+/* ===========================================================================
+   Fixes found by rendering the shell and comparing against the Figma frames.
+   Each is a gap in the handoff CSS, not a deviation from the design.
+   =========================================================================== */
+
+/* The design draws its own chevron on .select, so the native one must go —
+   otherwise every dropdown shows two. */
+.select select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--text-primary);
+  padding: 0 14px 0 0;
+  cursor: pointer;
+  max-width: 140px;
+}
+.select select:focus { outline: none; }
+.select { position: relative; }
+.select__chevron { position: absolute; right: 8px; pointer-events: none; }
+.select__value {
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--text-primary);
+  padding: 0 14px 0 0;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+button.select {
+  font: var(--type-label);
+  color: var(--text-primary);
+}
+
+/* Disabled must LOOK disabled. The design has no disabled state at all
+   (digest §8), and the whole capability-gating approach depends on a control
+   reading as reserved-not-broken. */
+.btn:disabled,
+.icon-btn:disabled,
+.tool-chip:disabled,
+.seg__item:disabled,
+.field__input:disabled,
+.menubar__menu:disabled,
+.menubar__item[data-disabled],
+.select:disabled,
+.select__item[data-disabled],
+.search input:disabled {
+  opacity: .38;
+  cursor: not-allowed;
+}
+.btn:disabled:hover, .icon-btn:disabled:hover { background: inherit; }
+/* QA-16: the app menus and Share are reserved V2 slots with nothing behind
+   them yet. They must not offer a hover affordance they cannot honour. */
+.menubar__menu:disabled:hover,
+.select:disabled:hover { background: inherit; }
+
+/* --- design-inventions.md §17: app-menu / view-bar dropdown (NOT PRESENT) -
+   Radix Content is unstyled; map onto tokens. Portaled because
+   `.menubar` / `.viewbar` are overflow:hidden. Highlight is --bg-panel-alt,
+   never --selection (canvas-only). --------------------------------------- */
+.menubar__content,
+.select__content {
+  min-width: 160px;
+  padding: var(--spacing-xs);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+}
+.menubar__item,
+.select__item {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--text-primary);
+  cursor: default;
+  outline: none;
+}
+.menubar__item[data-highlighted],
+.select__item[data-highlighted] { background: var(--bg-panel-alt); }
+.menubar__menu[data-state="open"],
+.select[data-state="open"] { background: var(--accent-soft); }
+
+/* Data Bar: the design sizes it 248px total with four compact fields. Without
+   an explicit width the inputs stretch across the canvas. */
+.data-bar { display: flex; align-items: center; gap: var(--spacing-xs); }
+.data-field { display: flex; align-items: center; gap: 4px; }
+.data-field__value { width: 62px; text-align: right; }
+
+/* Transform grid inputs are read-only placeholders until something is
+   selected; make that legible rather than looking like empty editable boxes. */
+.field-grid .field__input:read-only { color: var(--text-tertiary); }
+
+/* --- design-inventions.md §11: sign-in (NOT PRESENT in handoff) ------------
+   Centred card on --bg-app. Type tokens only — no invented sizes. */
+.sign-in {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: var(--bg-app);
+  padding: var(--spacing-lg);
+}
+.sign-in__card {
+  width: min(100%, calc(var(--left-panel-w) + var(--right-panel-w)));
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-xl);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+.sign-in__card .title {
+  margin: 0;
+  font: var(--type-display);
+  color: var(--text-primary);
+}
+.sign-in__hint {
+  margin: 0;
+  font: var(--type-body);
+  color: var(--text-secondary);
+}
+.sign-in__error {
+  margin: 0;
+  font: var(--type-body);
+  color: var(--text-primary);
+}
+.sign-in__btn { width: 100%; justify-content: center; }
+
+/* --- design-inventions.md §12: projects dashboard (NOT PRESENT) ------------
+   Menubar must match EditorShell: height var(--menubar-h) = 40px (tokens.json). */
+.projects { background: var(--bg-app); }
+.projects > .menubar {
+  height: var(--menubar-h);
+  overflow: hidden;
+  flex: none;
+}
+.projects__brand {
+  margin: 0;
+  margin-right: var(--spacing-sm);
+  font: var(--type-title);
+  color: var(--text-primary);
+}
+.projects__user {
+  font: var(--type-label);
+  color: var(--text-secondary);
+}
+.projects__main {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--spacing-xl);
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  /* Content column: left+right panel widths from layout tokens — no invented max-width. */
+  max-width: calc(var(--left-panel-w) + var(--right-panel-w));
+}
+.projects__header { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.projects__header .title {
+  margin: 0;
+  font: var(--type-display);
+  color: var(--text-primary);
+}
+.projects__lede {
+  margin: 0;
+  font: var(--type-body);
+  color: var(--text-secondary);
+}
+.projects__create {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--spacing-md);
+}
+.projects__create .field { flex: 1; }
+.projects__error {
+  margin: 0;
+  font: var(--type-body);
+  color: var(--text-primary);
+}
+.projects__empty {
+  padding: var(--spacing-xl);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+.projects__empty .title {
+  margin: 0;
+  font: var(--type-heading);
+  color: var(--text-primary);
+}
+.projects__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+  overflow: hidden;
+}
+.projects__row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--border-default);
+}
+.projects__row:last-child { border-bottom: 0; }
+.projects__open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-xs);
+  background: none;
+  border: 0;
+  padding: var(--spacing-xs) 0;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--text-primary);
+  /* Whole open control is the hit target — name + meta (QA-11). */
+  width: 100%;
+}
+.projects__open * {
+  pointer-events: none;
+}
+.projects__open:hover .projects__name { color: var(--accent-default); }
+.projects__open:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1.5px var(--accent-default);
+  border-radius: var(--radius-sm);
+}
+.projects__name {
+  font: var(--type-title);
+  color: var(--text-primary);
+}
+.projects__meta {
+  font: var(--type-label);
+  color: var(--text-secondary);
+}
+
+/* --- Modal (digest: modal/dialog NOT PRESENT) — invented; design-inventions.md --- */
+.modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: var(--spacing-md);
+}
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  background: var(--text-primary);
+  opacity: 0.4;
+}
+.modal {
+  position: relative;
+  z-index: 1;
+  width: min(100%, calc(var(--left-panel-w) + var(--right-panel-w)));
+  max-width: 100%;
+  padding: var(--spacing-md);
+  display: grid;
+  gap: var(--spacing-sm);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+.modal__title {
+  margin: 0;
+  font: var(--type-title);
+  color: var(--text-primary);
+}
+.modal__body {
+  margin: 0;
+  font: var(--type-label);
+  color: var(--text-secondary);
+}
+.modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
+}
+
+/* --- Slice 4: kit line list in the inspector (NOT PRESENT in the digest). --- */
+.kit-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--spacing-xs);
+}
+.kit-lines__row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-height: 24px;
+}
+.kit-lines__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--text-primary);
+}
+.kit-lines__off {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+/* --- ADR-007 ScrollArea. Tokens only; the 10px track matches .scroll-y. --- */
+.scroll-area {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.scroll-area__viewport {
+  height: 100%;
+  padding: 0 var(--spacing-md);
+}
+.scroll-area__viewport:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1.5px var(--accent-default);
+}
+.scroll-area__bar {
+  width: 10px;
+  padding: 3px;
+}
+.scroll-area__thumb {
+  background: var(--border-default);
+  border-radius: var(--radius-full);
+}
+.scroll-area__thumb:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1.5px var(--accent-default);
+}
+
+.palette-category {
+  margin-top: var(--spacing-sm);
+}
+.palette-category__title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: var(--spacing-sm) 0 var(--spacing-xs);
+}
+.show-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-height: 24px;
+  padding: var(--spacing-xs) 0;
+}
+.show-row__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--text-primary);
+}
+.show-row__qty {
+  width: 56px;
+}

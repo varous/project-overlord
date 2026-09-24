@@ -59,3 +59,20 @@ Decisions I made that the prompt did not specify: each with reason, or "none"
 Problems / failures: verbatim errors and diagnosis, or "none"
 Open questions: or "none"
 ```
+
+## ShowPlan lineage
+
+ShowPlan (CAV's own tool) was imported into this repo with its rate data removed from history.
+These rules keep the two halves honest:
+
+- **`packages/boq` is the domain** for the catalogue, packages, variants, the BOQ, findings and the
+  export gate. It is a zero-dependency package (see `scripts/check-zero-deps.mjs`) and imports nothing
+  from `apps/`.
+- **`docs/showplan` is the design record.** Its ADRs stay in force unless overturned in writing. That
+  includes the Shoplan architectural decisions; where one conflicts with this file, this file wins and
+  the conflict is recorded in the task report.
+- **Layout contents move into the versioned scene document in a later task (014).** Until then, no new
+  per-row layout endpoints may be added to `apps/api-sp`. The BOQ reads the layout; it does not define
+  a second source of scene truth.
+- **No seed bundle containing rates may ever be committed.** Catalogue data arrives from QuoteOS. Fuel
+  burn is physics and lives on the item row (`consumptionLitresPerHour`); money is never computed here.

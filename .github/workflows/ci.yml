@@ -53,6 +53,12 @@ jobs:
             echo "has_cloudflare_token=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Create ShowPlan test database
+        run: |
+          PGPASSWORD=postgres psql -h localhost -p 5433 -U postgres -c 'CREATE DATABASE showplan_test;'
+          DATABASE_URL='postgresql://postgres:postgres@localhost:5433/showplan_test' \
+            npx prisma migrate deploy --schema apps/api-sp/prisma/schema.prisma
+
       - name: Verify
         run: make verify
         env:
@@ -62,6 +68,7 @@ jobs:
           VITE_BRANCH: ${{ github.head_ref || github.ref_name }}
           VITE_API_BASE_URL: ${{ vars.API_BASE_URL || '' }}
           TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5433/postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/showplan_test
 
       - name: API integration test count
         run: |
@@ -69,6 +76,13 @@ jobs:
           node -e "const r=require('./api-tests.json'); const total=r.numTotalTests||0; const passed=r.numPassedTests||0; console.log('API tests ran in CI: '+passed+'/'+total+' passed'); if (total===0) process.exit(1);"
         env:
           TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5433/postgres
+
+      - name: ShowPlan API integration test count
+        run: |
+          npx vitest run --config apps/api-sp/vitest.config.ts --reporter=json --outputFile=api-sp-tests.json
+          node -e "const r=require('./api-sp-tests.json'); const total=r.numTotalTests||0; const passed=r.numPassedTests||0; console.log('ShowPlan API tests ran in CI: '+passed+'/'+total+' passed'); if (total===0) process.exit(1);"
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/showplan_test
 
       - name: Upload web dist
         uses: actions/upload-artifact@v4

@@ -12,10 +12,11 @@
     "apps/*"
   ],
   "scripts": {
-    "typecheck": "tsc -b && tsc -p packages/geo-core/tsconfig.test.json && tsc -p packages/scene/tsconfig.test.json && tsc -p packages/geom2/tsconfig.test.json && tsc -p packages/commands/tsconfig.test.json && tsc -p packages/layout/tsconfig.test.json && tsc -p apps/api/tsconfig.test.json && tsc -p apps/web/tsconfig.test.json",
+    "typecheck": "prisma generate --schema apps/api-sp/prisma/schema.prisma && tsc -b && tsc -p packages/geo-core/tsconfig.test.json && tsc -p packages/scene/tsconfig.test.json && tsc -p packages/geom2/tsconfig.test.json && tsc -p packages/commands/tsconfig.test.json && tsc -p packages/layout/tsconfig.test.json && tsc -p packages/boq/tsconfig.test.json && tsc -p apps/api/tsconfig.test.json && tsc -p apps/api-sp/tsconfig.test.json && tsc -p apps/web/tsconfig.test.json && tsc -p apps/web-sp/tsconfig.test.json",
     "lint": "eslint .",
-    "test": "vitest run",
+    "test": "vitest run && npm run test -w @overlord/boq && npm run test -w @overlord/api-sp && npm run test -w @overlord/web-sp",
     "build:web": "npm run build -w @overlord/web",
+    "build:web-sp": "npm run build -w @overlord/web-sp",
     "smoke": "playwright test e2e/offline.spec.ts e2e/persistence.spec.ts e2e/editing.spec.ts e2e/drawing.spec.ts",
     "smoke:online": "SMOKE_ONLINE=1 playwright test e2e/online.spec.ts"
   },
@@ -24,6 +25,7 @@
     "@types/node": "^26.6.2",
     "ajv": "^8.20.0",
     "eslint": "^9.39.5",
+    "prisma": "^5.20.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.70.1",
     "vitest": "^5.0.1",

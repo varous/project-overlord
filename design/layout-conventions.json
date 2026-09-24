@@ -1,0 +1,1025 @@
+{
+  "$schema_note": "Mined from 171 Clockwork AV AutoCAD site layouts, 2022-2026. Descriptive, not prescriptive.",
+  "generated": "2026-08-12",
+  "corpus": {
+    "drawings": 171,
+    "all_have_text_layer": true,
+    "authoring_tools": {
+      "other": 30,
+      "CorelDRAW": 11,
+      "AutoCAD": 115,
+      "Vectorworks": 4,
+      "Illustrator": 11
+    },
+    "single_page_pct": 84.8
+  },
+  "sheet_convention": {
+    "stage_at_top_pct": 82,
+    "basis": "88 drawings carrying both STAGE and ENTRY labels"
+  },
+  "standard_footprints_ft": {
+    "food_stall": {
+      "drawing_label": "FOOD STALLS",
+      "dominant_size_ft": "10x10",
+      "consistency_pct": 100.0,
+      "observations": 38,
+      "alternatives": []
+    },
+    "green_room": {
+      "drawing_label": "GREEN ROOMS",
+      "dominant_size_ft": "16x16",
+      "consistency_pct": 100.0,
+      "observations": 27,
+      "alternatives": []
+    },
+    "stock_room": {
+      "drawing_label": "STOCK ROOM",
+      "dominant_size_ft": "16x16",
+      "consistency_pct": 100.0,
+      "observations": 27,
+      "alternatives": []
+    },
+    "production_room": {
+      "drawing_label": "PROD. ROOM",
+      "dominant_size_ft": "16x16",
+      "consistency_pct": 100.0,
+      "observations": 27,
+      "alternatives": []
+    },
+    "cctv_room": {
+      "drawing_label": "CCTV ROOM",
+      "dominant_size_ft": "10x10",
+      "consistency_pct": 100.0,
+      "observations": 25,
+      "alternatives": []
+    },
+    "coupon_counter": {
+      "drawing_label": "CC COUPON COUNTER",
+      "dominant_size_ft": "10x10",
+      "consistency_pct": 85.7,
+      "observations": 14,
+      "alternatives": [
+        {
+          "size_ft": "8x8",
+          "n": 2
+        }
+      ]
+    },
+    "console": {
+      "drawing_label": "CONSOLE",
+      "dominant_size_ft": "20x16",
+      "consistency_pct": 81.8,
+      "observations": 44,
+      "alternatives": [
+        {
+          "size_ft": "10x10",
+          "n": 2
+        },
+        {
+          "size_ft": "16x6x2",
+          "n": 2
+        },
+        {
+          "size_ft": "16x6x1",
+          "n": 2
+        }
+      ]
+    },
+    "main_stage": {
+      "drawing_label": "MAIN STAGE",
+      "dominant_size_ft": "60x40x6",
+      "consistency_pct": 66.7,
+      "observations": 36,
+      "alternatives": [
+        {
+          "size_ft": "40x32x6",
+          "n": 6
+        },
+        {
+          "size_ft": "54x32x5",
+          "n": 2
+        },
+        {
+          "size_ft": "40x36x5",
+          "n": 2
+        }
+      ]
+    },
+    "pyro_pit": {
+      "drawing_label": "PYRO PIT",
+      "dominant_size_ft": "60x4x5",
+      "consistency_pct": 67.7,
+      "observations": 62,
+      "alternatives": [
+        {
+          "size_ft": "40x4x5",
+          "n": 11
+        },
+        {
+          "size_ft": "54x4x4",
+          "n": 4
+        },
+        {
+          "size_ft": "40x4x4",
+          "n": 2
+        }
+      ]
+    },
+    "vvip_platform": {
+      "drawing_label": "VVIP PLATFORM",
+      "dominant_size_ft": "40x32x4",
+      "consistency_pct": 100.0,
+      "observations": 11,
+      "alternatives": []
+    },
+    "pagoda": {
+      "drawing_label": "PAGODA",
+      "dominant_size_ft": "16x16",
+      "consistency_pct": 71.4,
+      "observations": 7,
+      "alternatives": [
+        {
+          "size_ft": "10x10",
+          "n": 2
+        }
+      ]
+    }
+  },
+  "element_prevalence": {
+    "STAGE": {
+      "drawings": 118,
+      "pct": 69.0
+    },
+    "BAR": {
+      "drawings": 99,
+      "pct": 57.9
+    },
+    "ENTRY": {
+      "drawings": 99,
+      "pct": 57.9
+    },
+    "FOOD": {
+      "drawings": 89,
+      "pct": 52.0
+    },
+    "CONSOLE": {
+      "drawings": 87,
+      "pct": 50.9
+    },
+    "EXIT": {
+      "drawings": 78,
+      "pct": 45.6
+    },
+    "TOILET": {
+      "drawings": 72,
+      "pct": 42.1
+    },
+    "LED": {
+      "drawings": 68,
+      "pct": 39.8
+    },
+    "GREEN ROOM": {
+      "drawings": 60,
+      "pct": 35.1
+    },
+    "CAMERA": {
+      "drawings": 57,
+      "pct": 33.3
+    },
+    "PRODUCTION": {
+      "drawings": 51,
+      "pct": 29.8
+    },
+    "GENERATOR": {
+      "drawings": 45,
+      "pct": 26.3
+    },
+    "BOX OFFICE": {
+      "drawings": 43,
+      "pct": 25.1
+    },
+    "RAMP": {
+      "drawings": 42,
+      "pct": 24.6
+    },
+    "PARKING": {
+      "drawings": 40,
+      "pct": 23.4
+    },
+    "LOUNGE": {
+      "drawings": 39,
+      "pct": 22.8
+    },
+    "CCTV": {
+      "drawings": 37,
+      "pct": 21.6
+    },
+    "VANITY VAN": {
+      "drawings": 34,
+      "pct": 19.9
+    },
+    "FANZONE": {
+      "drawings": 33,
+      "pct": 19.3
+    },
+    "KITCHEN": {
+      "drawings": 32,
+      "pct": 18.7
+    },
+    "SFX": {
+      "drawings": 32,
+      "pct": 18.7
+    },
+    "MOJO BARRICADING": {
+      "drawings": 30,
+      "pct": 17.5
+    },
+    "STORAGE": {
+      "drawings": 29,
+      "pct": 17.0
+    },
+    "SMOKING": {
+      "drawings": 29,
+      "pct": 17.0
+    },
+    "FRISKING": {
+      "drawings": 28,
+      "pct": 16.4
+    },
+    "PYRO PIT": {
+      "drawings": 27,
+      "pct": 15.8
+    },
+    "FIRST AID": {
+      "drawings": 26,
+      "pct": 15.2
+    },
+    "METAL RAILING": {
+      "drawings": 26,
+      "pct": 15.2
+    },
+    "HYDRATION": {
+      "drawings": 26,
+      "pct": 15.2
+    },
+    "TIN WALL": {
+      "drawings": 25,
+      "pct": 14.6
+    },
+    "AMBULANCE": {
+      "drawings": 24,
+      "pct": 14.0
+    },
+    "DFMD": {
+      "drawings": 22,
+      "pct": 12.9
+    },
+    "SCAFFOLDING": {
+      "drawings": 19,
+      "pct": 11.1
+    },
+    "MERCH": {
+      "drawings": 18,
+      "pct": 10.5
+    },
+    "STOCK ROOM": {
+      "drawings": 17,
+      "pct": 9.9
+    }
+  },
+  "implication_rules": [
+    {
+      "if": "TIN WALL",
+      "then": "METAL RAILING",
+      "confidence": 1.0,
+      "lift": 6.58,
+      "support": 25
+    },
+    {
+      "if": "METAL RAILING",
+      "then": "TIN WALL",
+      "confidence": 0.962,
+      "lift": 6.58,
+      "support": 25
+    },
+    {
+      "if": "DFMD",
+      "then": "FRISKING",
+      "confidence": 0.955,
+      "lift": 5.83,
+      "support": 21
+    },
+    {
+      "if": "METAL RAILING",
+      "then": "MOJO BARRICADING",
+      "confidence": 0.885,
+      "lift": 5.04,
+      "support": 23
+    },
+    {
+      "if": "TIN WALL",
+      "then": "MOJO BARRICADING",
+      "confidence": 0.88,
+      "lift": 5.02,
+      "support": 22
+    },
+    {
+      "if": "PYRO PIT",
+      "then": "FANZONE",
+      "confidence": 0.889,
+      "lift": 4.61,
+      "support": 24
+    },
+    {
+      "if": "METAL RAILING",
+      "then": "FANZONE",
+      "confidence": 0.885,
+      "lift": 4.58,
+      "support": 23
+    },
+    {
+      "if": "TIN WALL",
+      "then": "FANZONE",
+      "confidence": 0.88,
+      "lift": 4.56,
+      "support": 22
+    },
+    {
+      "if": "METAL RAILING",
+      "then": "PRODUCTION",
+      "confidence": 1.0,
+      "lift": 3.35,
+      "support": 26
+    },
+    {
+      "if": "TIN WALL",
+      "then": "PRODUCTION",
+      "confidence": 1.0,
+      "lift": 3.35,
+      "support": 25
+    },
+    {
+      "if": "VANITY VAN",
+      "then": "GENERATOR",
+      "confidence": 0.853,
+      "lift": 3.24,
+      "support": 29
+    },
+    {
+      "if": "FRISKING",
+      "then": "EXIT",
+      "confidence": 1.0,
+      "lift": 2.19,
+      "support": 28
+    },
+    {
+      "if": "DFMD",
+      "then": "EXIT",
+      "confidence": 1.0,
+      "lift": 2.19,
+      "support": 22
+    },
+    {
+      "if": "FRISKING",
+      "then": "TOILET",
+      "confidence": 0.857,
+      "lift": 2.04,
+      "support": 24
+    },
+    {
+      "if": "FIRST AID",
+      "then": "EXIT",
+      "confidence": 0.923,
+      "lift": 2.02,
+      "support": 24
+    },
+    {
+      "if": "VANITY VAN",
+      "then": "EXIT",
+      "confidence": 0.912,
+      "lift": 2.0,
+      "support": 31
+    },
+    {
+      "if": "SMOKING",
+      "then": "EXIT",
+      "confidence": 0.897,
+      "lift": 1.97,
+      "support": 26
+    },
+    {
+      "if": "GENERATOR",
+      "then": "EXIT",
+      "confidence": 0.889,
+      "lift": 1.95,
+      "support": 40
+    },
+    {
+      "if": "METAL RAILING",
+      "then": "FOOD",
+      "confidence": 1.0,
+      "lift": 1.92,
+      "support": 26
+    },
+    {
+      "if": "FIRST AID",
+      "then": "FOOD",
+      "confidence": 1.0,
+      "lift": 1.92,
+      "support": 26
+    },
+    {
+      "if": "TIN WALL",
+      "then": "FOOD",
+      "confidence": 1.0,
+      "lift": 1.92,
+      "support": 25
+    },
+    {
+      "if": "FANZONE",
+      "then": "CONSOLE",
+      "confidence": 0.97,
+      "lift": 1.91,
+      "support": 32
+    },
+    {
+      "if": "STORAGE",
+      "then": "EXIT",
+      "confidence": 0.862,
+      "lift": 1.89,
+      "support": 25
+    },
+    {
+      "if": "MOJO BARRICADING",
+      "then": "FOOD",
+      "confidence": 0.967,
+      "lift": 1.86,
+      "support": 29
+    },
+    {
+      "if": "PYRO PIT",
+      "then": "CONSOLE",
+      "confidence": 0.926,
+      "lift": 1.82,
+      "support": 25
+    },
+    {
+      "if": "METAL RAILING",
+      "then": "CONSOLE",
+      "confidence": 0.923,
+      "lift": 1.81,
+      "support": 24
+    },
+    {
+      "if": "TIN WALL",
+      "then": "CONSOLE",
+      "confidence": 0.92,
+      "lift": 1.81,
+      "support": 23
+    },
+    {
+      "if": "CCTV",
+      "then": "CONSOLE",
+      "confidence": 0.919,
+      "lift": 1.81,
+      "support": 34
+    },
+    {
+      "if": "VANITY VAN",
+      "then": "CONSOLE",
+      "confidence": 0.912,
+      "lift": 1.79,
+      "support": 31
+    },
+    {
+      "if": "PYRO PIT",
+      "then": "FOOD",
+      "confidence": 0.926,
+      "lift": 1.78,
+      "support": 25
+    },
+    {
+      "if": "SFX",
+      "then": "CONSOLE",
+      "confidence": 0.906,
+      "lift": 1.78,
+      "support": 29
+    },
+    {
+      "if": "SMOKING",
+      "then": "CONSOLE",
+      "confidence": 0.897,
+      "lift": 1.76,
+      "support": 26
+    },
+    {
+      "if": "DFMD",
+      "then": "FOOD",
+      "confidence": 0.909,
+      "lift": 1.75,
+      "support": 20
+    },
+    {
+      "if": "BOX OFFICE",
+      "then": "FOOD",
+      "confidence": 0.907,
+      "lift": 1.74,
+      "support": 39
+    },
+    {
+      "if": "SFX",
+      "then": "FOOD",
+      "confidence": 0.906,
+      "lift": 1.74,
+      "support": 29
+    },
+    {
+      "if": "HYDRATION",
+      "then": "CONSOLE",
+      "confidence": 0.885,
+      "lift": 1.74,
+      "support": 23
+    },
+    {
+      "if": "VANITY VAN",
+      "then": "ENTRY",
+      "confidence": 1.0,
+      "lift": 1.73,
+      "support": 34
+    },
+    {
+      "if": "MOJO BARRICADING",
+      "then": "BAR",
+      "confidence": 1.0,
+      "lift": 1.73,
+      "support": 30
+    },
+    {
+      "if": "METAL RAILING",
+      "then": "BAR",
+      "confidence": 1.0,
+      "lift": 1.73,
+      "support": 26
+    },
+    {
+      "if": "PYRO PIT",
+      "then": "BAR",
+      "confidence": 1.0,
+      "lift": 1.73,
+      "support": 27
+    }
+  ],
+  "stage_relative_depth_order": [
+    {
+      "element": "AMBULANCE",
+      "delta_x": 0.028,
+      "delta_y_depth_from_stage": -0.053,
+      "samples": 33
+    },
+    {
+      "element": "GREEN ROOM",
+      "delta_x": 0.004,
+      "delta_y_depth_from_stage": -0.031,
+      "samples": 158
+    },
+    {
+      "element": "MERCH",
+      "delta_x": -0.043,
+      "delta_y_depth_from_stage": -0.001,
+      "samples": 25
+    },
+    {
+      "element": "GENERATOR",
+      "delta_x": -0.023,
+      "delta_y_depth_from_stage": 0.008,
+      "samples": 352
+    },
+    {
+      "element": "STORAGE",
+      "delta_x": 0.063,
+      "delta_y_depth_from_stage": 0.011,
+      "samples": 109
+    },
+    {
+      "element": "PYRO",
+      "delta_x": -0.01,
+      "delta_y_depth_from_stage": 0.011,
+      "samples": 67
+    },
+    {
+      "element": "LED",
+      "delta_x": -0.007,
+      "delta_y_depth_from_stage": 0.014,
+      "samples": 286
+    },
+    {
+      "element": "RAMP",
+      "delta_x": 0.0,
+      "delta_y_depth_from_stage": 0.021,
+      "samples": 77
+    },
+    {
+      "element": "CONSOLE",
+      "delta_x": 0.001,
+      "delta_y_depth_from_stage": 0.022,
+      "samples": 168
+    },
+    {
+      "element": "CAMERA",
+      "delta_x": -0.008,
+      "delta_y_depth_from_stage": 0.022,
+      "samples": 160
+    },
+    {
+      "element": "PRODUCTION",
+      "delta_x": 0.098,
+      "delta_y_depth_from_stage": 0.042,
+      "samples": 93
+    },
+    {
+      "element": "FANZONE",
+      "delta_x": -0.027,
+      "delta_y_depth_from_stage": 0.046,
+      "samples": 108
+    },
+    {
+      "element": "VIP",
+      "delta_x": 0.029,
+      "delta_y_depth_from_stage": 0.072,
+      "samples": 167
+    },
+    {
+      "element": "FRISKING",
+      "delta_x": -0.042,
+      "delta_y_depth_from_stage": 0.08,
+      "samples": 102
+    },
+    {
+      "element": "EXIT",
+      "delta_x": -0.001,
+      "delta_y_depth_from_stage": 0.08,
+      "samples": 302
+    },
+    {
+      "element": "PARKING",
+      "delta_x": -0.072,
+      "delta_y_depth_from_stage": 0.083,
+      "samples": 79
+    },
+    {
+      "element": "BAR",
+      "delta_x": 0.064,
+      "delta_y_depth_from_stage": 0.091,
+      "samples": 271
+    },
+    {
+      "element": "TOILET",
+      "delta_x": 0.057,
+      "delta_y_depth_from_stage": 0.092,
+      "samples": 418
+    },
+    {
+      "element": "FOOD",
+      "delta_x": 0.013,
+      "delta_y_depth_from_stage": 0.101,
+      "samples": 918
+    },
+    {
+      "element": "BOX OFFICE",
+      "delta_x": -0.018,
+      "delta_y_depth_from_stage": 0.15,
+      "samples": 90
+    },
+    {
+      "element": "ENTRY",
+      "delta_x": -0.01,
+      "delta_y_depth_from_stage": 0.165,
+      "samples": 554
+    }
+  ],
+  "vocabulary_gaps": {
+    "unmatched_terms": [
+      [
+        "BAR",
+        56
+      ],
+      [
+        "SOUND",
+        33
+      ],
+      [
+        "LED",
+        33
+      ],
+      [
+        "FANZONE",
+        27
+      ],
+      [
+        "TIN WALL",
+        25
+      ],
+      [
+        "STORAGE",
+        25
+      ],
+      [
+        "SFX",
+        25
+      ],
+      [
+        "SMOKING",
+        25
+      ],
+      [
+        "KITCHEN",
+        22
+      ],
+      [
+        "SILVER",
+        21
+      ],
+      [
+        "CCTV",
+        19
+      ],
+      [
+        "PRATEKK KUHAD 2024",
+        19
+      ],
+      [
+        "LOUNGE",
+        17
+      ],
+      [
+        "STOCK ROOM",
+        17
+      ],
+      [
+        "MOH",
+        17
+      ],
+      [
+        "PROD ROOM",
+        17
+      ],
+      [
+        "LIVE TEAM",
+        17
+      ],
+      [
+        "CCTV ROOM",
+        17
+      ],
+      [
+        "VIP",
+        16
+      ],
+      [
+        "PLATINUM",
+        16
+      ],
+      [
+        "MONSTER",
+        16
+      ],
+      [
+        "GREET",
+        16
+      ],
+      [
+        "PYRO PIT",
+        15
+      ],
+      [
+        "STOCK",
+        15
+      ],
+      [
+        "DIAMOND",
+        15
+      ],
+      [
+        "CONTENT",
+        14
+      ],
+      [
+        "FANZONE VVIP ENTRY",
+        13
+      ],
+      [
+        "DIMENSIONS SHOULD BE",
+        12
+      ],
+      [
+        "BEFORE STARTING THE",
+        12
+      ],
+      [
+        "VERIFIED AT THE SITE",
+        12
+      ],
+      [
+        "LEVELS SHOULD BE",
+        12
+      ],
+      [
+        "MERCH",
+        12
+      ],
+      [
+        "24 IMAG",
+        12
+      ],
+      [
+        "PRODUCTION SUNNY JOSHI",
+        12
+      ],
+      [
+        "FAN PIT",
+        11
+      ],
+      [
+        "WALKY",
+        11
+      ],
+      [
+        "KOLKATA",
+        11
+      ],
+      [
+        "DRAWN BY",
+        11
+      ],
+      [
+        "ALL DIMENSIONS AND",
+        11
+      ],
+      [
+        "DO NOT SCALE THE",
+        11
+      ],
+      [
+        "WAY TO",
+        11
+      ],
+      [
+        "5 FOR AC",
+        11
+      ],
+      [
+        "FEET INCHES UNLESS",
+        10
+      ],
+      [
+        "GA ENTRY AISLES",
+        10
+      ],
+      [
+        "40 BOX",
+        10
+      ],
+      [
+        "MALE 4 FEMALE 2 EXIT 1",
+        10
+      ],
+      [
+        "JW ZONE",
+        10
+      ],
+      [
+        "BRONZE",
+        9
+      ],
+      [
+        "WORLD",
+        9
+      ],
+      [
+        "TOP UP",
+        9
+      ],
+      [
+        "FOH",
+        9
+      ],
+      [
+        "VIP 6QTY GA 6QTY",
+        9
+      ],
+      [
+        "FLUTE",
+        9
+      ],
+      [
+        "VIP ENTRY",
+        8
+      ],
+      [
+        "PHOTO",
+        8
+      ],
+      [
+        "CONFIDENTIAL DRAWING FOR",
+        8
+      ],
+      [
+        "INTERNAL REFERENCE ONLY",
+        8
+      ],
+      [
+        "BAR COUNTER",
+        8
+      ],
+      [
+        "INSTALLATION",
+        8
+      ],
+      [
+        "TITANIUM",
+        8
+      ],
+      [
+        "MASTER LAYOUT",
+        8
+      ],
+      [
+        "KUHAD",
+        8
+      ],
+      [
+        "16 LED",
+        8
+      ],
+      [
+        "TABLA",
+        8
+      ],
+      [
+        "SITAR",
+        8
+      ],
+      [
+        "VIP 4QTY GA 6QTY",
+        7
+      ],
+      [
+        "BACK STAGE",
+        7
+      ],
+      [
+        "EVENT DATE",
+        7
+      ],
+      [
+        "DELAY SOUND",
+        7
+      ],
+      [
+        "TICKET COUNTER",
+        7
+      ],
+      [
+        "EXTENSION",
+        7
+      ],
+      [
+        "CONTAINER",
+        7
+      ],
+      [
+        "GUITAR",
+        7
+      ],
+      [
+        "DISTRICT",
+        7
+      ],
+      [
+        "LED 5M X 9M",
+        7
+      ],
+      [
+        "DRAWN BY LAKHAN JANGID",
+        7
+      ],
+      [
+        "SHOW DATE SUNNY JOSHI",
+        7
+      ],
+      [
+        "CITY AHMEDABAD",
+        7
+      ],
+      [
+        "PRATEEK",
+        7
+      ],
+      [
+        "DATE 29 11 2024 UNITS FEET",
+        7
+      ]
+    ],
+    "note": "terms used in >=3 drawings with no catalogue item or tag match; ranked by drawings using them"
+  }
+}

@@ -1,0 +1,379 @@
+// ShowPlan lineage schema.
+//
+// Two rules that are cheap now and expensive later, from docs/06-stack-review.md:
+//   1. EVERY tenant-scoped table carries organisationId from migration one,
+//      even though there is only one organisation today. Adding it later means
+//      backfilling every row and auditing every query.
+//   2. Money is never stored here. Rates belong to QuoteOS. (AGENTS.md rule 7.)
+//
+// Migrations are plain SQL under prisma/migrations and are part of the handover
+// pack - a dev team on another stack can read and run them without Prisma.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organisation {
+  id        String   @id @default(cuid())
+  name      String
+  /// Google Workspace hosted domain that gates membership.
+  hd        String   @unique
+  createdAt DateTime @default(now())
+
+  users    User[]
+  projects Project[]
+}
+
+model User {
+  id             String   @id @default(cuid())
+  organisationId String
+  email          String   @unique
+  name           String
+  pictureUrl     String?
+  /// Google 'sub' claim - the stable subject id, not the email.
+  googleSub      String   @unique
+  role           Role     @default(MEMBER)
+  createdAt      DateTime @default(now())
+  lastSeenAt     DateTime?
+
+  organisation Organisation @relation(fields: [organisationId], references: [id])
+  sessions     Session[]
+  projects     Project[]   @relation("ProjectOwner")
+
+  @@index([organisationId])
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+  /// Read-only. Costs nothing, mirrors Rentman's free "basic user".
+  VIEWER
+}
+
+model Session {
+  /// Opaque random id; this value is what lives in the httpOnly cookie.
+  id        String   @id
+  userId    String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  userAgent String?
+  ip        String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Project {
+  id             String        @id @default(cuid())
+  organisationId String
+  ownerId        String
+  name           String
+  client         String?
+  /// Event metadata lives here in Phase 0; it becomes its own table in Phase 1.
+  venue          String?
+  /// Event fact. Feeds quantity over time and fuel. Never money.
+  city           String?
+  eventStart     DateTime?
+  eventEnd       DateTime?
+  /// Event fact. Feeds quantity over time and fuel. Never money.
+  vcDays         Int?
+  /// Event fact. Feeds quantity over time and fuel. Never money.
+  opsDays        Int?
+  /// Event fact. Feeds quantity over time and fuel. Never money.
+  defaultRunningHoursPerDay Float?
+  status         ProjectStatus @default(DRAFT)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id])
+  owner        User         @relation("ProjectOwner", fields: [ownerId], references: [id])
+  layouts      Layout[]
+
+  @@index([organisationId, updatedAt])
+}
+
+enum ProjectStatus {
+  DRAFT
+  ISSUED
+  ARCHIVED
+}
+
+model Layout {
+  id             String   @id @default(cuid())
+  organisationId String
+  projectId      String
+  name           String   @default("Layout 1")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  levels   Level[]
+  variants Variant[]
+  showItems ShowItem[]
+
+  @@index([organisationId])
+  @@index([projectId])
+}
+
+/// Under Layout from day one - resolves assumption A-05.
+model Level {
+  id             String @id @default(cuid())
+  organisationId String
+  layoutId       String
+  name           String @default("Ground")
+  ordinal        Int    @default(0)
+
+  layout       Layout        @relation(fields: [layoutId], references: [id], onDelete: Cascade)
+  baseMap      BaseMap?
+  instances    Instance[]
+  measureMarks MeasureMark[]
+
+  @@unique([layoutId, ordinal])
+  @@index([organisationId])
+}
+
+model BaseMap {
+  id             String   @id @default(cuid())
+  organisationId String
+  levelId        String   @unique
+  /// R2 object key. The bytes never pass through the app server - presigned URLs only.
+  objectKey      String
+  mimeType       String
+  widthPx        Int
+  heightPx       Int
+  /// Set when the source was a multi-page PDF (we store raster of sourcePage only).
+  pageCount      Int?
+  /// Always 1 in slice 3; page picker later. Surfaced as "Using page 1 of N."
+  sourcePage     Int      @default(1)
+  uploadedAt     DateTime @default(now())
+
+  /// Calibration GEOMETRY, not just the derived ratio - ADR-005.
+  /// All four null => uncalibrated => measurement tools stay disabled.
+  calAx          Float?
+  calAy          Float?
+  calBx          Float?
+  calBy          Float?
+  calKnownValue  Float?
+  calKnownUnit   String?
+  calibratedAt   DateTime?
+  calibratedById String?
+
+  level Level @relation(fields: [levelId], references: [id], onDelete: Cascade)
+
+  @@index([organisationId])
+}
+
+// ===========================================================================
+// CATALOGUE — imported from the seed bundle. Idempotent by code.
+// Source: ClockworkAV_BOQ_seed_v1 / SCHEMA.md. Regenerated from the master
+// Excel sheet and re-imported regularly, so nothing here may be hand-edited.
+// These tables are GLOBAL, not per-organisation: one company, one rate chart.
+// ===========================================================================
+
+model CatalogueVersion {
+  id         String   @id @default(cuid())
+  /// e.g. "seed_v1_2026-08-12". Every quote stamps the version that priced it.
+  label      String   @unique
+  importedAt DateTime @default(now())
+  itemCount  Int
+  /// Import-time Finding[] as JSON — the coverage gaps, kept for the admin UI.
+  findings   Json
+}
+
+model Item {
+  /// PRIMARY KEY. Immutable forever, never reused. The universal FK.
+  code            String   @id
+  name            String
+  category        String
+  section         String   // VC | OPS | POWER
+  unit            String   // display only; never enters a calculation
+  qtyBasis        String   // AREA | LENGTH | VOLUME | COUNT | COUNT_PER_DAY | CONSUMPTION_PER_HOUR | RATE_PER_LITRE
+  dayCurveId      String
+  /// Colloquial synonyms — the search / NLP corpus. Free text, not an enum.
+  tags            String[]
+  linkedRateItem  String?
+  powerSupplyKva  Float?
+  /// Reserved: demand-side load, for genset auto-sizing. Known gap 2.
+  powerLoadKva    Float?
+  notes           String?
+  sortOrder       Int
+  /// CANVAS | SHOW | PACKAGE_ONLY. Data; never inferred in the engine.
+  placement       String   @default("CANVAS")
+  /// Fuel burn, litres per running hour, for a CONSUMPTION_PER_HOUR item.
+  /// Physics, not price. Null for every other qtyBasis.
+  consumptionLitresPerHour Float?
+  updatedAt       DateTime @updatedAt
+
+  dayCurve     DayCurve       @relation(fields: [dayCurveId], references: [id])
+  packageItems PackageItem[]
+  variantLines VariantLine[]
+  showItems    ShowItem[]
+
+  @@index([section, sortOrder])
+  @@index([category])
+}
+
+model DayCurve {
+  /// FULL | ONCE | VC | RENT | PWR — and anything an admin adds. NOT an enum.
+  id        String   @id
+  /// { "1": 1, "2": 1, ... "14": 6.5 }. Values may be fractional.
+  table     Json
+  updatedAt DateTime @updatedAt
+
+  items Item[]
+}
+
+model PackageTemplate {
+  packageId   String   @id
+  name        String
+  description String?
+  /// e.g. ["width_ft","depth_ft","counters"]
+  params      String[]
+  /// Bumped on every admin edit. Editing a template never mutates a project.
+  version     Int      @default(1)
+  /// True when generated at import for a CANVAS item. Palette "Items" vs "Packages".
+  auto        Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+
+  lines    PackageItem[]
+  variants Variant[]
+
+  @@index([name])
+}
+
+model PackageItem {
+  id        String @id @default(cuid())
+  packageId String
+  itemCode  String
+  /// FIXED | PER_AREA | PER_LENGTH | PER_COUNT_PARAM:<param> | PER_FRONT_FACE:<param> | PER_VOLUME:<param>
+  qtyRule   String
+  qtyValue  Float
+  /// MANDATORY (cannot remove) | DEFAULT_ON (removable) | OPTIONAL (addable)
+  flag      String
+
+  template PackageTemplate @relation(fields: [packageId], references: [packageId], onDelete: Cascade)
+  item     Item            @relation(fields: [itemCode], references: [code])
+
+  @@unique([packageId, itemCode])
+}
+
+// ===========================================================================
+// PROJECT-LOCAL: Variant (a customised copy) and Instance (a placement).
+// ===========================================================================
+
+model Variant {
+  id             String   @id @default(cuid())
+  organisationId String
+  layoutId       String
+  packageId      String
+  name           String
+  /// The template version this was forked from. Later template edits do not
+  /// reach back into it.
+  templateVersion Int
+  /// Unused. Placement params (counters, lanes) live on Instance — they
+  /// describe this placement, not the kit. Size is instance geometry.
+  /// Kept as `{}` so three stages of different sizes share one variant.
+  params         Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  layout    Layout          @relation(fields: [layoutId], references: [id], onDelete: Cascade)
+  template  PackageTemplate @relation(fields: [packageId], references: [packageId])
+  lines     VariantLine[]
+  instances Instance[]
+
+  @@index([organisationId])
+  @@index([layoutId])
+}
+
+model VariantLine {
+  id        String  @id @default(cuid())
+  variantId String
+  itemCode  String
+  qtyRule   String
+  qtyValue  Float
+  flag      String
+  /// MANDATORY lines are always true; enforced in domain/instances.ts.
+  included  Boolean @default(true)
+  /// Vendor-negotiated one-off; beats the day curve for this line only.
+  overrideDays Float?
+
+  variant Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  item    Item    @relation(fields: [itemCode], references: [code])
+
+  @@unique([variantId, itemCode])
+}
+
+/// One canvas placement. Geometry ONLY — never quantities, never prices.
+model Instance {
+  id             String @id @default(cuid())
+  organisationId String
+  levelId        String
+  variantId      String
+  /// Pixel geometry; canonical mm/sqft are DERIVED via the scale.
+  xPx            Float
+  yPx            Float
+  widthPx        Float?
+  heightPx       Float?
+  rotationDeg    Float  @default(0)
+  /// Placement params (counters, lanes). Size is geometry, not a param.
+  /// A param describes THIS placement — editing it has no blast radius.
+  params         Json   @default("{}")
+  /// Asked only for a placement carrying a generator. NULL = fuel omitted from
+  /// the BOQ entirely. Per-placement because two gensets run different hours.
+  runningHoursPerDay Float?
+  /// Free polygon for non-rectangular footprints, as [{x,y},...].
+  pointsJson     Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  level   Level   @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  variant Variant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@index([organisationId])
+  @@index([levelId])
+}
+
+/// Declared quantity that belongs to the show, not a spot on the plan.
+/// Geometry stays required on Instance — a show item is not a placement.
+model ShowItem {
+  id             String   @id @default(cuid())
+  organisationId String
+  layoutId       String
+  itemCode       String
+  qty            Float
+  params         Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  layout Layout @relation(fields: [layoutId], references: [id], onDelete: Cascade)
+  item   Item   @relation(fields: [itemCode], references: [code])
+
+  @@unique([layoutId, itemCode])
+  @@index([organisationId])
+  @@index([layoutId])
+}
+
+/// Informational distance mark. Pixel geometry only — length is derived from
+/// the current scale at read time (ADR-005). Never a BOQ line, never a price.
+model MeasureMark {
+  id             String   @id @default(cuid())
+  organisationId String
+  levelId        String
+  /// Open polyline in base-map pixels: [{x,y}, ...]. Not metres.
+  pointsJson     Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  level Level @relation(fields: [levelId], references: [id], onDelete: Cascade)
+
+  @@index([organisationId])
+  @@index([levelId])
+}

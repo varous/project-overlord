@@ -1,0 +1,67 @@
+# Render Blueprint.
+#
+# Plans are pinned deliberately - see docs/11-deployment-cost-plan.md:
+#   web  starter        $7/mo   always on, no spin-down. The free instance spins
+#                              down after 15 min with a ~1 min cold start, which
+#                              is fatal on a live client call.
+#   db   basic-256mb    $6/mo   the FREE Postgres EXPIRES 30 DAYS after creation.
+#                              Never use it for anything with real data.
+# Workspace stays on the free Hobby plan - it can run paid services, and our
+# sales users are app users, not Render seats. Total $13/mo.
+#
+# There is deliberately NO preDeployCommand here; migrations run from the
+# container entrypoint because preDeployCommand does not apply to Docker services.
+
+services:
+  - type: web
+    name: showplan
+    runtime: image
+    plan: starter
+    region: singapore
+    healthCheckPath: /healthz
+    image:
+      dockerfilePath: ./infra/Dockerfile
+      dockerContext: .
+    domains:
+      # CNAME this from your DNS, exactly as quotes.clockwork-av.com is routed.
+      # Render provisions and renews TLS automatically, at no cost on any plan.
+      - layout.clockwork-av.com
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: PUBLIC_BASE_URL
+        value: https://layout.clockwork-av.com
+      - key: ALLOWED_HD
+        value: clockwork-av.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: showplan-db
+          property: connectionString
+      # Everything below is set by hand in Render > Environment and is NEVER
+      # committed. sync:false stops Render asking about them on every deploy.
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_ENDPOINT
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+
+databases:
+  - name: showplan-db
+    plan: basic-256mb
+    region: singapore
+    postgresMajorVersion: "16"
