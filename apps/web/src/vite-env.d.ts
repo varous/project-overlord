@@ -52,6 +52,20 @@ export interface OverlordTestHook {
   placePending(x: number, y: number): void;
   select(kind: 'element' | 'zone', id: string): void;
   clearSelection(): void;
+  /** Altitude the current scene would be fitted to at the current aspect ratio. */
+  fittedAltitudeM(): number;
+  /** Current camera altitude in metres. */
+  cameraAltitudeM(): number;
+  /** Re-run the Aerial framing for the current scene (the Fit button / F key). */
+  fit(): Promise<void>;
+  /** True while placement mode is active. */
+  isPlacing(): boolean;
+  /** True once the +Y heading handle exists. */
+  hasPlacementHandle(): boolean;
+  /** Screen position of the +Y heading handle, or null. */
+  headingHandleScreen(): { x: number; y: number } | null;
+  /** "active", "unavailable (403)" or "not active". */
+  esriStatus(): string;
 }
 
 declare global {

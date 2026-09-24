@@ -108,6 +108,9 @@ jobs:
           name: web-dist
           path: apps/web/dist
 
+      - name: Check the downloaded artifact
+        run: node scripts/check-web-build.mjs
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -139,11 +142,27 @@ jobs:
           echo "deployment_url=${UNIQUE_URL}" >> "$GITHUB_OUTPUT"
           echo "alias_url=${ALIAS_URL}" >> "$GITHUB_OUTPUT"
 
+      - name: Verify the deployment
+        id: verify_deploy
+        env:
+          UNIQUE_URL: ${{ steps.deploy.outputs.deployment_url }}
+          ALIAS_URL: ${{ steps.deploy.outputs.alias_url }}
+        run: |
+          set -e
+          if [ -z "$UNIQUE_URL" ] || [ -z "$ALIAS_URL" ]; then
+            echo "::error::Could not parse the deployment URLs from wrangler's output."
+            exit 1
+          fi
+          node scripts/check-deployment.mjs "$UNIQUE_URL"
+          node scripts/check-deployment.mjs "$ALIAS_URL"
+          echo "verified=${UNIQUE_URL},${ALIAS_URL}" >> "$GITHUB_OUTPUT"
+
       - name: Job summary
         if: always()
         run: |
           UNIQUE_URL="${{ steps.deploy.outputs.deployment_url }}"
           ALIAS_URL="${{ steps.deploy.outputs.alias_url }}"
+          DEPLOY_VERIFIED="${{ steps.verify_deploy.outputs.verified }}"
           {
             echo "### Cloudflare Pages deployment"
             echo ""
@@ -151,6 +170,7 @@ jobs:
             echo "- Commit: \`${GITHUB_SHA}\`"
             echo "- Unique deployment URL: ${UNIQUE_URL:-not found}"
             echo "- Branch alias URL: ${ALIAS_URL:-not found}"
+            echo "- Deployment verified: ${DEPLOY_VERIFIED:-not verified}"
           } >> "$GITHUB_STEP_SUMMARY"
 
   snapshots:

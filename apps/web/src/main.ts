@@ -19,6 +19,7 @@ import { normalizeHeading, parseUrlState, serializeUrlState } from './site/urlSt
 import { createHistory, SNAP_MODULE_10FT, snapLengthTmm, type Command } from '@overlord/commands';
 import { renderAxes } from './viewer/axes.js';
 import { sampleGroundHeight } from './viewer/groundHeight.js';
+import { fitAltitudeM, sceneBoundsLocal } from './viewer/framing.js';
 import { createMapStacks, type MapStack, type MapStackChange } from './viewer/mapStacks.js';
 import { renderScene } from './viewer/render.js';
 import { renderQualityFor } from './viewer/renderQuality.js';
@@ -32,7 +33,7 @@ import { createPersistenceUi, type SceneListItem, type VersionListItem } from '.
 import type { DisplayUnit } from './ui/units.js';
 import { createSitePlacement, type SitePlacementController } from './ui/placeSite.js';
 import { pickGroundGeodetic } from './viewer/sitePicker.js';
-import { geodeticToLocal, type LocalPoint } from '@overlord/geo-core';
+import { geodeticToEcef, geodeticToLocal, localToGeodetic, type LocalPoint } from '@overlord/geo-core';
 import './style.css';
 
 // Cesium ion, Bing and Cesium World Terrain are deliberately not used in this task.
@@ -109,6 +110,9 @@ let currentView: ViewpointName = urlState.view ?? 'Aerial';
 let renderErrors = 0;
 let tileErrors = 0;
 let googleStatus = 'not active';
+let esriStatus = 'active';
+let heightPending = false;
+let markerTimer: number | null = null;
 let ready = false;
 let placementSnapshot: {
   anchor: SiteAnchor;
@@ -209,6 +213,8 @@ function refreshDebugPanel(): void {
     tileErrors,
     googleStatus,
     arcgisToken: arcgisTokenStatus,
+    esri: esriStatus,
+    heightPending,
     scene: sceneStatus(),
     api: apiStatus,
     access: accessLabel,
@@ -580,6 +586,10 @@ const mapStacks = createMapStacks(viewer, {
     googleStatus = status;
     refreshDebugPanel();
   },
+  onEsriStatus: (status) => {
+    esriStatus = status;
+    refreshDebugPanel();
+  },
 });
 
 const persistenceUi = createPersistenceUi({
@@ -618,25 +628,114 @@ function setHeading(headingDeg: number): void {
   updateUrl();
 }
 
-async function applyPlacement(latDeg: number, lonDeg: number, headingDeg: number): Promise<void> {
-  anchor = { ...anchor, latDeg, lonDeg, headingDeg: normalizeHeading(headingDeg), heightM: 0 };
-  heightSource = 'ellipsoid 0';
+function dropPlacementMarker(latDeg: number, lonDeg: number): void {
+  if (markerTimer !== null) {
+    window.clearTimeout(markerTimer);
+    markerTimer = null;
+  }
+  const existing = viewer.entities.getById('placement-marker');
+  if (existing !== undefined) {
+    viewer.entities.remove(existing);
+  }
+  const [x, y, z] = geodeticToEcef({ latDeg, lonDeg, heightM: anchor.heightM });
+  const marker = viewer.entities.add({
+    id: 'placement-marker',
+    name: 'Placed site',
+    position: new Cesium.Cartesian3(x, y, z),
+    point: {
+      pixelSize: 12,
+      color: Cesium.Color.ORANGE,
+      outlineColor: Cesium.Color.WHITE,
+      outlineWidth: 2,
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    },
+  });
+  markerTimer = window.setTimeout(() => {
+    viewer.entities.remove(marker);
+    markerTimer = null;
+  }, 4000);
+}
 
-  if (mapStacks.getActive() === 'GOOGLE_3D') {
-    const tileset = mapStacks.getTileset();
-    if (tileset !== null) {
-      const sampled = await sampleGroundHeight(viewer, tileset, anchor);
-      if (sampled !== null) {
-        anchor = { ...anchor, heightM: sampled };
-        heightSource = 'sampled from Google 3D';
-      }
+/** True when any corner of the scene bounds is outside the camera's current view rectangle. */
+function boundsOutsideView(): boolean {
+  const bounds = sceneBoundsLocal(currentDoc);
+  const rect = viewer.camera.computeViewRectangle(viewer.scene.globe.ellipsoid);
+  if (rect === undefined) {
+    return false;
+  }
+  const corners = [
+    { x: bounds.minX, y: bounds.minY },
+    { x: bounds.maxX, y: bounds.minY },
+    { x: bounds.maxX, y: bounds.maxY },
+    { x: bounds.minX, y: bounds.maxY },
+  ];
+  for (const corner of corners) {
+    const geodetic = localToGeodetic(anchor, { x: corner.x, y: corner.y, z: 0 } as never);
+    const lon = Cesium.Math.toRadians(geodetic.lonDeg);
+    const lat = Cesium.Math.toRadians(geodetic.latDeg);
+    if (lon < rect.west || lon > rect.east || lat < rect.south || lat > rect.north) {
+      return true;
     }
   }
+  return false;
+}
 
+/** Never move the camera automatically: just tell the user the fit shortcut exists. */
+function maybePromptFit(): void {
+  if (boundsOutsideView()) {
+    notices.toast('Press F to fit', 'warn');
+  }
+}
+
+function aspectRatio(): number {
+  const canvas = viewer.canvas;
+  if (canvas.clientWidth > 0 && canvas.clientHeight > 0) {
+    return canvas.clientWidth / canvas.clientHeight;
+  }
+  return 16 / 10;
+}
+
+async function fitCamera(): Promise<void> {
+  currentView = 'Aerial';
+  updateUrl();
+  await flyToViewpoint(viewer, anchor, 'Aerial', {
+    doc: currentDoc,
+    aspectRatio: aspectRatio(),
+  });
+}
+
+async function applyPlacement(latDeg: number, lonDeg: number, headingDeg: number): Promise<void> {
+  // Apply immediately at ellipsoid height so the visible result is never blocked by sampling.
+  anchor = { ...anchor, latDeg, lonDeg, headingDeg: normalizeHeading(headingDeg), heightM: 0 };
+  heightSource = 'ellipsoid 0';
   setPlacementDocAnchor(anchor);
   rebuildScene();
   updateUrl();
   placement.refresh();
+  dropPlacementMarker(latDeg, lonDeg);
+  notices.toast('Site placed — drag the +Y handle or type a heading');
+  maybePromptFit();
+
+  // Sample the ground height in the background; update only if it resolves in time.
+  const tileset = mapStacks.getActive() === 'GOOGLE_3D' ? mapStacks.getTileset() : null;
+  if (tileset !== null) {
+    heightPending = true;
+    refreshDebugPanel();
+    const sampled = await sampleGroundHeight(viewer, tileset, anchor, 5000);
+    heightPending = false;
+    if (sampled !== null) {
+      anchor = { ...anchor, heightM: sampled };
+      heightSource = 'sampled from Google 3D';
+      rebuildScene();
+      updateUrl();
+    } else {
+      notices.toast(
+        'Could not read the ground height from Google 3D — using ellipsoid height',
+        'warn',
+      );
+    }
+    refreshDebugPanel();
+  }
 }
 
 function placeSite(latDeg: number, lonDeg: number, headingDeg: number): Promise<void> {
@@ -707,6 +806,7 @@ function runCommand(command: Command): { ok: true } | { ok: false; message: stri
     selected = null;
   }
   rebuildScene();
+  maybePromptFit();
   return { ok: true };
 }
 
@@ -901,6 +1001,11 @@ window.addEventListener('keydown', (event) => {
   if (typing) {
     return;
   }
+  if (event.key === 'f' || event.key === 'F') {
+    event.preventDefault();
+    void fitCamera();
+    return;
+  }
   if (event.key === 'Delete' || event.key === 'Backspace') {
     event.preventDefault();
     deleteSelection();
@@ -916,11 +1021,17 @@ window.addEventListener('keydown', (event) => {
   }
 });
 
-createViewpointButtons(document.body, (name) => {
-  currentView = name;
-  updateUrl();
-  void flyToViewpoint(viewer, anchor, name);
-});
+createViewpointButtons(
+  document.body,
+  (name) => {
+    currentView = name;
+    updateUrl();
+    void flyToViewpoint(viewer, anchor, name, { doc: currentDoc, aspectRatio: aspectRatio() });
+  },
+  () => {
+    void fitCamera();
+  },
+);
 
 // Defence in depth: if anything still throws inside the render loop, recover instead of stopping.
 const restartTimes: number[] = [];
@@ -1011,7 +1122,10 @@ if (testEnabled) {
       return ready;
     },
     get entityCount() {
-      return viewer.entities.values.length;
+      // Exclude transient interaction helpers (markers and handles) so the count reflects the
+      // scene only: elements + zones + axis entities.
+      const transient = new Set(['placement-marker', 'placement-handle', 'rotate-handle']);
+      return viewer.entities.values.filter((entity) => !transient.has(String(entity.id))).length;
     },
     get activeStack() {
       return activeStack;
@@ -1058,6 +1172,21 @@ if (testEnabled) {
     placePending: (x, y) => finishPendingAdd({ x, y, z: 0 } as never),
     select: (kind, id) => select(kind, id),
     clearSelection: () => clearSelection(),
+    fittedAltitudeM: () => fitAltitudeM(sceneBoundsLocal(currentDoc), aspectRatio()),
+    cameraAltitudeM: () => viewer.camera.positionCartographic.height,
+    fit: () => fitCamera(),
+    isPlacing: () => document.body.classList.contains('placing'),
+    hasPlacementHandle: () => viewer.entities.getById('placement-handle') !== undefined,
+    headingHandleScreen: () => {
+      const handle = viewer.entities.getById('placement-handle');
+      const position = handle?.position?.getValue(viewer.clock.currentTime);
+      if (position === undefined || position === null) {
+        return null;
+      }
+      const windowPosition = Cesium.SceneTransforms.worldToWindowCoordinates(viewer.scene, position);
+      return windowPosition === undefined ? null : { x: windowPosition.x, y: windowPosition.y };
+    },
+    esriStatus: () => esriStatus,
   };
 }
 
@@ -1091,7 +1220,10 @@ async function boot(): Promise<void> {
   placementRef = placement;
   refreshPersistence();
   updateUrl();
-  await flyToViewpoint(viewer, anchor, currentView);
+  await flyToViewpoint(viewer, anchor, currentView, {
+    doc: currentDoc,
+    aspectRatio: aspectRatio(),
+  });
   await waitForNextFrame();
   ready = true;
 }

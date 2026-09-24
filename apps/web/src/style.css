@@ -532,3 +532,8 @@ body {
 body.adding #cesium-container {
   cursor: crosshair;
 }
+
+/* Placement mode: crosshair cursor over the globe. */
+body.placing #cesium-container {
+  cursor: crosshair;
+}

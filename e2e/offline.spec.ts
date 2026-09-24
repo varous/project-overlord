@@ -82,6 +82,8 @@ test('offline: viewer keeps rendering, shows fallback banner and controls stay u
   expect(state.activeStack).toBe('OSM');
 
   await expect(page.locator('.notice-banner', { hasText: 'Imagery unavailable' })).toBeVisible();
+  // The fallback banner must name a reason, not just say imagery is missing.
+  await expect(page.locator('.notice-banner', { hasText: 'probes failed' })).toBeVisible();
 
   for (const name of ['Aerial', 'FOH', 'Stage'] as const) {
     await expect(page.getByRole('button', { name })).toBeEnabled();
@@ -118,8 +120,8 @@ test('offline: invalid lat/lon shows one warning and keeps the default anchor', 
   await expect(page.locator('.notice-banner--warning')).toHaveCount(1);
 
   const anchor = await page.evaluate(() => window.__overlord?.anchor ?? null);
-  expect(anchor?.latDeg).toBeCloseTo(22.5579, 6);
-  expect(anchor?.lonDeg).toBeCloseTo(88.3439, 6);
+  expect(anchor?.latDeg).toBeCloseTo(22.5389524, 6);
+  expect(anchor?.lonDeg).toBeCloseTo(88.4009058, 6);
 });
 
 test('offline: placeSite applies a placement and Escape restores the previous anchor', async ({
@@ -149,7 +151,7 @@ test('offline: placeSite applies a placement and Escape restores the previous an
   expect(placed.entityCount).toBe(EXPECTED_ENTITY_COUNT);
   expect(placed.renderErrors).toBe(0);
   await expect(page.locator('.debug-panel')).toContainText('unsaved changes');
-  await expect(page.locator('.debug-panel')).toContainText('Brigade Parade Ground demo');
+  await expect(page.locator('.debug-panel')).toContainText('Kolkata ground demo');
 
   const beforeMode = placed.anchor;
   await page.getByRole('button', { name: 'Place site' }).click();
@@ -159,4 +161,78 @@ test('offline: placeSite applies a placement and Escape restores the previous an
   expect(restored?.latDeg).toBeCloseTo(beforeMode?.latDeg ?? 0, 6);
   expect(restored?.lonDeg).toBeCloseTo(beforeMode?.lonDeg ?? 0, 6);
   expect(restored?.headingDeg).toBeCloseTo(beforeMode?.headingDeg ?? 0, 6);
+});
+
+test('offline: the camera opens framed on the scene and F re-fits it', async ({ page }) => {
+  await blockExternalRequests(page);
+  await page.goto(OFFLINE);
+  await waitForReady(page);
+
+  const fitted = await page.evaluate(() => window.__overlord?.fittedAltitudeM() ?? 0);
+  const bootAltitude = await page.evaluate(() => window.__overlord?.cameraAltitudeM() ?? 0);
+  expect(fitted).toBeGreaterThan(0);
+  expect(bootAltitude).toBeGreaterThan(fitted * 0.9);
+  expect(bootAltitude).toBeLessThan(fitted * 1.1);
+
+  await page.screenshot({ path: 'e2e-output/camera-fit.png' });
+
+  // Move the camera, then press F to re-fit.
+  const canvas = await page.locator('#cesium-container canvas').boundingBox();
+  await page.mouse.move(canvas.x + 640, canvas.y + 400);
+  await page.mouse.down();
+  await page.mouse.move(canvas.x + 720, canvas.y + 470, { steps: 8 });
+  await page.mouse.up();
+  await page.waitForTimeout(400);
+
+  await page.keyboard.press('F');
+  await page.waitForTimeout(2000);
+  const refitAltitude = await page.evaluate(() => window.__overlord?.cameraAltitudeM() ?? 0);
+  expect(refitAltitude).toBeGreaterThan(fitted * 0.9);
+  expect(refitAltitude).toBeLessThan(fitted * 1.1);
+});
+
+test('offline: placement is responsive, crosshair, handle-after-pick and click fall-through', async ({
+  page,
+}) => {
+  await blockExternalRequests(page);
+  await page.goto(OFFLINE);
+  await waitForReady(page);
+
+  const before = await page.evaluate(() => window.__overlord?.anchor ?? null);
+  const stackBefore = await page.evaluate(() => window.__overlord?.activeStack ?? 'none');
+
+  await page.getByRole('button', { name: 'Place site' }).click();
+  expect(await page.evaluate(() => window.__overlord?.isPlacing())).toBe(true);
+  // Entering placement mode must not change the active map stack.
+  expect(await page.evaluate(() => window.__overlord?.activeStack ?? 'none')).toBe(stackBefore);
+
+  const cursor = await page.evaluate(
+    () => getComputedStyle(document.querySelector('#cesium-container')).cursor,
+  );
+  expect(cursor).toBe('crosshair');
+
+  // The handle only appears after the first pick.
+  expect(await page.evaluate(() => window.__overlord?.hasPlacementHandle())).toBe(false);
+
+  const canvas = await page.locator('#cesium-container canvas').boundingBox();
+  const centre = { x: canvas.x + canvas.width / 2, y: canvas.y + canvas.height / 2 };
+  await page.mouse.click(centre.x, centre.y);
+  await page.waitForTimeout(300);
+
+  const afterFirst = await page.evaluate(() => window.__overlord?.anchor ?? null);
+  expect(afterFirst?.latDeg).not.toBe(before?.latDeg);
+  expect(await page.evaluate(() => window.__overlord?.hasPlacementHandle())).toBe(true);
+  await expect(page.locator('.notice-toast', { hasText: 'Site placed' })).toBeVisible();
+
+  // A click on the handle without movement must place the site (fall-through), not change heading.
+  const handle = await page.evaluate(() => window.__overlord?.headingHandleScreen() ?? null);
+  expect(handle).not.toBeNull();
+  const headingBefore = afterFirst?.headingDeg ?? -1;
+  if (handle !== null) {
+    await page.mouse.click(canvas.x + handle.x, canvas.y + handle.y);
+    await page.waitForTimeout(300);
+  }
+  const afterSecond = await page.evaluate(() => window.__overlord?.anchor ?? null);
+  expect(afterSecond?.latDeg).not.toBe(afterFirst?.latDeg);
+  expect(afterSecond?.headingDeg).toBeCloseTo(headingBefore, 5);
 });

@@ -3,6 +3,10 @@
  *
  * The Cesium specifics (ground picking, ENU conversion, handle position) live in
  * `../viewer/sitePicker.ts`; this module owns the DOM controls and the interaction lifecycle.
+ *
+ * The heading handle only appears after the first pick, and it needs a real drag: pressing on it
+ * arms a drag, but the heading only changes once the pointer has moved more than 4 px. A press and
+ * release on the handle without movement falls through and places the site at that point.
  */
 
 import * as Cesium from 'cesium';
@@ -41,11 +45,16 @@ const NUDGES: Array<[string, number]> = [
   ['+5\u00b0', 5],
 ];
 
+/** Pointer movement (px) required before a press on the handle becomes a heading drag. */
+const DRAG_THRESHOLD_PX = 4;
+
 export function createSitePlacement(options: SitePlacementOptions): SitePlacementController {
   const { viewer, notices } = options;
 
   let active = false;
   let dragging = false;
+  let armed = false;
+  let armPosition: Cesium.Cartesian2 | null = null;
   let shiftDown = false;
   let handle: Cesium.Entity | null = null;
   let savedEnableInputs = true;
@@ -154,6 +163,40 @@ export function createSitePlacement(options: SitePlacementOptions): SitePlacemen
     }
   }
 
+  /** Place the site at a screen position. Returns true when a ground point was picked. */
+  function placeAt(position: Cesium.Cartesian2): boolean {
+    const point = pickGroundGeodetic(viewer, position, options.isGoogleActive());
+    if (point === null) {
+      return false;
+    }
+    void options.onPick(point.latDeg, point.lonDeg);
+    ensureHandle();
+    updateHandle();
+    syncInput();
+    return true;
+  }
+
+  function startDragging(): void {
+    dragging = true;
+    savedEnableInputs = viewer.scene.screenSpaceCameraController.enableInputs;
+    viewer.scene.screenSpaceCameraController.enableInputs = false;
+  }
+
+  function endDragging(): void {
+    if (dragging) {
+      dragging = false;
+      viewer.scene.screenSpaceCameraController.enableInputs = savedEnableInputs;
+    }
+    armed = false;
+    armPosition = null;
+  }
+
+  function distancePx(a: Cesium.Cartesian2, b: Cesium.Cartesian2): number {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
   const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
   handler.setInputAction((event: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
@@ -162,23 +205,25 @@ export function createSitePlacement(options: SitePlacementOptions): SitePlacemen
     }
     const picked = viewer.scene.pick(event.position);
     if (handle !== null && picked !== undefined && picked !== null && picked.id === handle) {
-      dragging = true;
-      savedEnableInputs = viewer.scene.screenSpaceCameraController.enableInputs;
-      viewer.scene.screenSpaceCameraController.enableInputs = false;
+      // Arm a potential drag; the heading only changes once the pointer has moved.
+      armed = true;
+      armPosition = Cesium.Cartesian2.clone(event.position);
       return;
     }
-    const point = pickGroundGeodetic(viewer, event.position, options.isGoogleActive());
-    if (point === null) {
-      return;
-    }
-    void options.onPick(point.latDeg, point.lonDeg);
-    ensureHandle();
-    updateHandle();
-    syncInput();
+    placeAt(event.position);
   }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
 
   handler.setInputAction((event: Cesium.ScreenSpaceEventHandler.MotionEvent) => {
-    if (!active || !dragging) {
+    if (!active) {
+      return;
+    }
+    if (armed && !dragging) {
+      if (armPosition === null || distancePx(event.endPosition, armPosition) <= DRAG_THRESHOLD_PX) {
+        return;
+      }
+      startDragging();
+    }
+    if (!dragging) {
       return;
     }
     const point = pickGroundGeodetic(viewer, event.endPosition, options.isGoogleActive());
@@ -200,8 +245,14 @@ export function createSitePlacement(options: SitePlacementOptions): SitePlacemen
       return;
     }
     if (dragging) {
-      dragging = false;
-      viewer.scene.screenSpaceCameraController.enableInputs = savedEnableInputs;
+      endDragging();
+      return;
+    }
+    if (armed && armPosition !== null) {
+      // A press on the handle without movement falls through and places the site there.
+      const position = armPosition;
+      endDragging();
+      placeAt(position);
     }
   }, Cesium.ScreenSpaceEventType.LEFT_UP);
 
@@ -236,13 +287,13 @@ export function createSitePlacement(options: SitePlacementOptions): SitePlacemen
     toggleButton.classList.add('active');
     toggleButton.textContent = 'Placing\u2026';
     controls.hidden = false;
+    document.body.classList.add('placing');
     options.onStart?.();
     notices.showBanner(
       'place-hint',
       'Click the ground where the downstage-centre edge of the main stage should be',
       { tone: 'info' },
     );
-    ensureHandle();
     syncInput();
   }
 
@@ -251,11 +302,12 @@ export function createSitePlacement(options: SitePlacementOptions): SitePlacemen
       return;
     }
     active = false;
-    dragging = false;
+    endDragging();
     viewer.scene.screenSpaceCameraController.enableInputs = savedEnableInputs;
     toggleButton.classList.remove('active');
     toggleButton.textContent = 'Place site';
     controls.hidden = true;
+    document.body.classList.remove('placing');
     notices.clearBanner('place-hint');
     removeHandle();
   }

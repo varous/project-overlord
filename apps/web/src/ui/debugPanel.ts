@@ -23,6 +23,10 @@ export interface DebugInfo {
   api: string;
   /** "connected as <author>" or "not connected". */
   access: string;
+  /** "active", "unavailable (403)" or "not active". */
+  esri: string;
+  /** True while a Google 3D ground-height sample is in flight. */
+  heightPending: boolean;
 }
 
 export interface DebugPanelOptions {
@@ -66,10 +70,11 @@ export function createDebugPanel(container: HTMLElement, options: DebugPanelOpti
       el.replaceChildren(
         row('Anchor', `${info.anchor.latDeg.toFixed(6)}, ${info.anchor.lonDeg.toFixed(6)}`),
         row('Heading', `${info.anchor.headingDeg}°`),
-        row('Anchor height', `${info.anchor.heightM.toFixed(2)} m (${info.heightSource})`),
+        row('Anchor height', info.heightPending ? 'sampling…' : `${info.anchor.heightM.toFixed(2)} m (${info.heightSource})`),
         row('Map stack', info.stack),
         row('Tile errors', String(info.tileErrors)),
         row('Google 3D', info.googleStatus),
+        row('Esri', info.esri),
         row('Esri token', info.arcgisToken),
         row('Scene', info.scene),
         row('API', info.api),

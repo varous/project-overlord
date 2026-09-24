@@ -12,6 +12,7 @@
 import * as Cesium from 'cesium';
 
 import type { Notices } from '../ui/notices.js';
+import { shouldFallBack, WATCHDOG_WINDOW_MS } from './imageryWatchdog.js';
 
 export type MapStack = 'ESRI' | 'OSM' | 'GOOGLE_3D';
 
@@ -32,6 +33,8 @@ export interface MapStacksOptions {
   onStackChange: (change: MapStackChange) => void | Promise<void>;
   onTileError: () => void;
   onGoogleStatus?: (status: string) => void;
+  /** "active", "unavailable (403)" or "not active". */
+  onEsriStatus?: (status: string) => void;
 }
 
 export interface MapStacksController {
@@ -64,10 +67,25 @@ function describeError(error: unknown): string {
   return status?.[1] !== undefined ? `${status[1]} — ${summary}` : summary;
 }
 
-// Public, keyless endpoints used only to decide whether a provider is reachable. Loading a tile
-// through an <img> avoids CORS requirements and mirrors how Cesium actually fetches imagery.
-const ESRI_PROBE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/0/0/0';
+// Availability probes must exercise the SAME host and credentials the mounted provider will use,
+// so a rejected key can never pass the probe and then serve a black globe. Loading a tile through
+// an <img> avoids CORS requirements and mirrors how Cesium actually fetches imagery.
+const ESRI_KEYLESS_PROBE =
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/0/0/0';
+const ESRI_IBASEMAPS_PROBE =
+  'https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/0/0/0';
 const OSM_PROBE_URL = 'https://tile.openstreetmap.org/0/0/0.png';
+const GOOGLE_PROBE_URL = 'https://tile.googleapis.com/v1/3dtiles/root.json';
+
+function esriProbeUrl(arcgisKey: string): string {
+  return arcgisKey.length > 0
+    ? `${ESRI_IBASEMAPS_PROBE}?token=${encodeURIComponent(arcgisKey)}`
+    : ESRI_KEYLESS_PROBE;
+}
+
+function googleProbeUrl(googleKey: string): string {
+  return `${GOOGLE_PROBE_URL}?key=${encodeURIComponent(googleKey)}`;
+}
 
 function probeImage(url: string, timeoutMs = 5000): Promise<boolean> {
   return new Promise<boolean>((resolve) => {
@@ -97,11 +115,26 @@ function probeImage(url: string, timeoutMs = 5000): Promise<boolean> {
   });
 }
 
+/** Fetch-based probe for JSON endpoints (Google 3D), with a timeout. */
+async function probeFetch(url: string, timeoutMs = 5000): Promise<boolean> {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => {
+    controller.abort();
+  }, timeoutMs);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    return response.ok;
+  } catch {
+    return false;
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
 /**
  * Resolve once the tileset has loaded its first tiles (or the timeout elapses). Cesium removed
  * `Cesium3DTileset#readyPromise`, so the load event is used instead.
- */
-function waitForInitialTiles(tileset: Cesium.Cesium3DTileset, timeoutMs: number): Promise<void> {
+ */function waitForInitialTiles(tileset: Cesium.Cesium3DTileset, timeoutMs: number): Promise<void> {
   if (tileset.tilesLoaded) {
     return Promise.resolve();
   }
@@ -129,6 +162,14 @@ export function createMapStacks(
   let imageryLayer: Cesium.ImageryLayer | null = null;
   let tileset: Cesium.Cesium3DTileset | null = null;
   let switchToken = 0;
+
+  // Imagery watchdog state (see imageryWatchdog.ts).
+  let tileSuccesses = 0;
+  let tileFailures = 0;
+  let stackActivatedAt = 0;
+  let watchdogFired = false;
+  let watchdogRemove: (() => void) | null = null;
+  let watchdogTimer: number | null = null;
 
   const toolbar = document.createElement('div');
   toolbar.className = 'map-stacks';
@@ -158,6 +199,7 @@ export function createMapStacks(
   }
 
   function clearImagery(): void {
+    stopWatchdog();
     if (imageryLayer !== null) {
       viewer.imageryLayers.remove(imageryLayer, true);
       imageryLayer = null;
@@ -172,13 +214,83 @@ export function createMapStacks(
     }
   }
 
-  function mountImagery(provider: Cesium.ImageryProvider): void {
+  function mountImagery(provider: Cesium.ImageryProvider, stage: 'ESRI' | 'OSM'): void {
     clearImagery();
     const layer = viewer.imageryLayers.addImageryProvider(provider);
-    layer.errorEvent.addEventListener(() => {
+    layer.errorEvent.addEventListener((error: unknown) => {
+      tileFailures += 1;
       options.onTileError();
+      if (
+        !watchdogFired &&
+        shouldFallBack({
+          successes: tileSuccesses,
+          failures: tileFailures,
+          elapsedMs: Date.now() - stackActivatedAt,
+        })
+      ) {
+        watchdogFired = true;
+        stopWatchdog();
+        void handleWatchdog(stage, error);
+      }
     });
     imageryLayer = layer;
+    startWatchdog();
+  }
+
+  function startWatchdog(): void {
+    stopWatchdog();
+    tileSuccesses = 0;
+    tileFailures = 0;
+    watchdogFired = false;
+    stackActivatedAt = Date.now();
+    watchdogRemove = viewer.scene.postRender.addEventListener(() => {
+      if (viewer.scene.globe.tilesLoaded && viewer.imageryLayers.length > 0) {
+        tileSuccesses = Math.max(tileSuccesses, 1);
+      }
+    });
+    watchdogTimer = window.setTimeout(() => {
+      stopWatchdog();
+    }, WATCHDOG_WINDOW_MS);
+  }
+
+  function stopWatchdog(): void {
+    if (watchdogRemove !== null) {
+      watchdogRemove();
+      watchdogRemove = null;
+    }
+    if (watchdogTimer !== null) {
+      window.clearTimeout(watchdogTimer);
+      watchdogTimer = null;
+    }
+  }
+
+  function statusFromError(error: unknown): string {
+    const statusCode = (error as { statusCode?: unknown } | null)?.statusCode;
+    if (typeof statusCode === 'number') {
+      return String(statusCode);
+    }
+    const message = describeError(error);
+    return /\b([45]\d\d)\b/.exec(message)?.[1] ?? 'unavailable';
+  }
+
+  /** The active stack rejected every tile it asked for: fall back down the chain. */
+  async function handleWatchdog(stage: 'ESRI' | 'OSM', error: unknown): Promise<void> {
+    const token = switchToken;
+    if (stage === 'ESRI') {
+      options.onEsriStatus?.(`unavailable (${statusFromError(error)})`);
+      options.notices.showBanner(
+        'esri-fallback',
+        'Esri imagery rejected the key for this site — showing OSM',
+        { tone: 'warn' },
+      );
+      await activateImagery('OSM', token);
+      return;
+    }
+    options.notices.showBanner(
+      'imagery-unavailable',
+      'OSM imagery is not loading — site geometry is still accurate',
+      { tone: 'warn' },
+    );
   }
 
   async function activateImagery(requested: 'ESRI' | 'OSM', token: number): Promise<void> {
@@ -194,7 +306,8 @@ export function createMapStacks(
       }
 
       if (candidate === 'ESRI') {
-        if (!(await probeImage(ESRI_PROBE_URL))) {
+        if (!(await probeImage(esriProbeUrl(options.arcgisKey)))) {
+          options.onEsriStatus?.('unavailable');
           continue;
         }
         if (token !== switchToken) {
@@ -218,7 +331,8 @@ export function createMapStacks(
           if (token !== switchToken) {
             return;
           }
-          mountImagery(provider);
+          mountImagery(provider, 'ESRI');
+          options.onEsriStatus?.('active');
           if (requested === 'OSM') {
             options.notices.showBanner('osm-fallback', 'OSM imagery unavailable — showing ESRI', {
               tone: 'warn',
@@ -239,7 +353,9 @@ export function createMapStacks(
       }
       mountImagery(
         new Cesium.OpenStreetMapImageryProvider({ url: 'https://tile.openstreetmap.org/' }),
+        'OSM',
       );
+      options.onEsriStatus?.('unavailable');
       options.notices.clearBanner('osm-fallback');
       if (requested === 'ESRI') {
         options.notices.showBanner('esri-fallback', 'Esri imagery unavailable — showing OSM', {
@@ -258,7 +374,7 @@ export function createMapStacks(
     viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString('#1b1f27');
     options.notices.showBanner(
       'imagery-unavailable',
-      'Imagery unavailable — site geometry is still accurate',
+      'Imagery unavailable (Esri and OSM probes failed) — site geometry is still accurate',
       { tone: 'warn' },
     );
     updateButtons();
@@ -275,11 +391,26 @@ export function createMapStacks(
     if (stack === 'GOOGLE_3D') {
       clearImagery();
       clearTileset();
+      stopWatchdog();
       options.notices.clearBanner('imagery-unavailable');
       options.notices.clearBanner('esri-fallback');
       options.notices.clearBanner('osm-fallback');
       options.notices.clearBanner('google-fallback');
       viewer.scene.globe.show = false;
+      options.onEsriStatus?.('not active');
+      if (options.googleKey.length > 0 && !(await probeFetch(googleProbeUrl(options.googleKey)))) {
+        const reason = 'key rejected';
+        options.onGoogleStatus?.(reason);
+        options.notices.showBanner(
+          'google-fallback',
+          `Google 3D unavailable — showing ESRI imagery (${reason})`,
+          { tone: 'warn' },
+        );
+        viewer.scene.globe.show = true;
+        clearTileset();
+        await activateImagery('ESRI', token);
+        return;
+      }
       try {
         // Google's terms forbid pairing Photorealistic 3D Tiles with a non-Google geocoder.
         // This viewer has no geocoder at all, so acknowledge that with this flag.

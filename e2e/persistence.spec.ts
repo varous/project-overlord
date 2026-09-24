@@ -188,7 +188,7 @@ test('persistence: Save on an unsaved scene creates it and toasts Saved v1', asy
 
   await expect(page.locator('.notice-toast', { hasText: 'Saved v1' })).toBeVisible();
   expect(state.createBodies).toHaveLength(1);
-  expect(state.createBodies[0]?.name).toBe('Brigade Parade Ground demo');
+  expect(state.createBodies[0]?.name).toBe('Kolkata ground demo');
   expect(state.createBodies[0]?.doc?.elements).toHaveLength(6);
   await expect(page.locator('.debug-panel')).toContainText('(v1)');
 });
@@ -274,7 +274,7 @@ test('persistence: ?share=<token> renders read-only with no Save button', async 
   await setUp(page, state, '&share=tok_stub');
 
   await expect(
-    page.locator('.notice-banner', { hasText: 'Shared view — Brigade Parade Ground demo, v1 (read-only)' }),
+    page.locator('.notice-banner', { hasText: 'Shared view — Kolkata ground demo, v1 (read-only)' }),
   ).toBeVisible();
   await expect(page.locator('[data-action="save"]')).toBeHidden();
   await expect(page.locator('[data-action="save-as-new"]')).toBeHidden();
