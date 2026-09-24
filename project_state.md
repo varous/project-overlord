@@ -27,8 +27,9 @@ _Last updated: 24 Sep 2026._
   model; scene API; persistence; edit commands; camera/placement/watchdog/deploys; draw primitives
   and zone capacity; element library and linear elements).
 - **012:** not present in this repo's history.
-- **013 — ShowPlan import: IN PROGRESS, not pushed.** See `docs/task-013-state.md`.
-  Branch `task/013-showplan-import` @ `cfe6530` exists locally with the filtered-history merge.
+- **013 — ShowPlan import: COMPLETE on its own branch, pushed, NOT merged into `main`.**
+  `task/013-showplan-import` @ `c53dc9f` (STEPs 0–9 done; leak gate a/b/d pass and c's surviving
+  pricing-code hits are justified, no rate data). See `docs/task-013-state.md`.
 - **Next:** 013B (BOQ panel / EditorShell split), 014 (layout into the scene document, units).
 
 ## Current `main`
@@ -54,4 +55,5 @@ _Last updated: 24 Sep 2026._
   `render.yaml`). `apps/web-sp` / `apps/api-sp` build and test in CI only.
 - No API key or token, ever, in code, tests, fixtures, notices or reports.
 - ShowPlan's seed/rate data must never reach this repo's history; the leak gate in
-  `docs/task-013-state.md` must be green before any `task/013-*` branch is pushed.
+  `docs/task-013-state.md` was green before `task/013-showplan-import` was pushed and must stay green
+  for any future `task/013*` branch.
