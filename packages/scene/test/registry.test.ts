@@ -21,7 +21,7 @@ function makeType(overrides: Record<string, unknown> = {}): Record<string, unkno
 
 describe('element-type registry', () => {
   it('seeds every required type with empty offeringMappings', () => {
-    expect(elementTypeRegistry.size).toBe(13);
+    expect(elementTypeRegistry.size).toBe(25);
     for (const code of [
       'MAIN_STAGE',
       'CONSOLE_RISER',
@@ -36,6 +36,18 @@ describe('element-type registry', () => {
       'PYRO_PIT',
       'RISER',
       'AUDIENCE_AREA',
+      'TOILET_BLOCK',
+      'ENTRY_GATE',
+      'FRISKING_BOOTH',
+      'BOX_OFFICE',
+      'BAR_COUNTER',
+      'MERCH_STALL',
+      'GENERATOR',
+      'LED_WALL',
+      'DELAY_TOWER',
+      'AMBULANCE_BAY',
+      'PARKING_AREA',
+      'STORE_ROOM',
     ]) {
       const definition = elementTypeRegistry.get(code);
       expect(definition, code).toBeDefined();

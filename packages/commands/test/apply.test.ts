@@ -309,6 +309,14 @@ describe('site and scene commands', () => {
     expect(doc.name).toBe('Renamed scene');
     expect(canonicalJson(must(doc, inverse).doc)).toBe(canonicalJson(before));
   });
+
+  it('REPLACE_CONTENT round-trips exactly through its inverse', () => {
+    const before = makeScene();
+    const { doc, inverse } = must(before, { type: 'REPLACE_CONTENT', elements: [], zones: [] });
+    expect(doc.elements).toHaveLength(0);
+    expect(doc.zones).toHaveLength(0);
+    expect(canonicalJson(must(doc, inverse).doc)).toBe(canonicalJson(before));
+  });
 });
 
 describe('purity and applyCommands', () => {

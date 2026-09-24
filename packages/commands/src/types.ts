@@ -7,7 +7,7 @@
  */
 
 import type { LocalPoint, Provenance, SiteAnchor, Tmm } from '@overlord/geo-core';
-import type { ElementSize, Ring2, ZoneKind } from '@overlord/scene';
+import type { ElementSize, Ring2, SceneElement, SceneZone, ZoneKind } from '@overlord/scene';
 
 export interface AddElementCommand {
   type: 'ADD_ELEMENT';
@@ -106,6 +106,13 @@ export interface SetSceneNameCommand {
   name: string;
 }
 
+/** Replace the whole element and zone lists (used for one-step layout generation). */
+export interface ReplaceContentCommand {
+  type: 'REPLACE_CONTENT';
+  elements: SceneElement[];
+  zones: SceneZone[];
+}
+
 export type Command =
   | AddElementCommand
   | MoveElementAbsoluteCommand
@@ -118,7 +125,8 @@ export type Command =
   | SetZoneRingCommand
   | DeleteZoneCommand
   | SetSiteAnchorCommand
-  | SetSceneNameCommand;
+  | SetSceneNameCommand
+  | ReplaceContentCommand;
 
 export type CommandErrorCode =
   | 'ELEMENT_NOT_FOUND'
