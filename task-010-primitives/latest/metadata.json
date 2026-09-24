@@ -1,0 +1,14 @@
+{
+  "sha": "91016426a5454cb5a7b65e2a968d45415b413166",
+  "branch": "task/010-primitives",
+  "runUrl": "https://github.com/varous/project-overlord/actions/runs/35983860906",
+  "deployUrl": "https://0ffeb58a.project-overlord-7xs.pages.dev",
+  "createdAt": "2026-09-24T10:13:20Z",
+  "onlineSmokeOutcome": "success",
+  "groundHeight": {
+    "heightM": 0,
+    "source": "ellipsoid 0 (sample failed)",
+    "lat": 22.5389524,
+    "lon": 88.4009058
+  }
+}
