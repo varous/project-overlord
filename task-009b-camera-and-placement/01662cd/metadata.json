@@ -1,0 +1,14 @@
+{
+  "sha": "01662cd6d652fb783ec6532dd4d6263c9e94abb5",
+  "branch": "task/009b-camera-and-placement",
+  "runUrl": "https://github.com/varous/project-overlord/actions/runs/35968541054",
+  "deployUrl": "https://c534ed47.project-overlord-7xs.pages.dev",
+  "createdAt": "2026-09-24T07:33:42Z",
+  "onlineSmokeOutcome": "success",
+  "groundHeight": {
+    "heightM": 0,
+    "source": "ellipsoid 0 (sample failed)",
+    "lat": 22.5389524,
+    "lon": 88.4009058
+  }
+}
