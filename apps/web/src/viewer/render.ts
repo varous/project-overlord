@@ -18,7 +18,15 @@ import {
   type SiteAnchor,
   type Tmm,
 } from '@overlord/geo-core';
-import { zoneAreaSqFt, type ElementTypeRegistry, type SceneDoc, type SceneElement } from '@overlord/scene';
+import {
+  isLinearElement,
+  isPlacedElement,
+  zoneAreaSqFt,
+  type ElementTypeRegistry,
+  type Ring2,
+  type SceneDoc,
+  type SceneElement,
+} from '@overlord/scene';
 
 import { elementCornersLocal, type Placeable } from '../site/placement.js';
 
@@ -41,6 +49,46 @@ function toCartesian(g: Geodetic): Cesium.Cartesian3 {
 }
 
 /** 3x3 rotation (local metres -> ECEF) from geo-core's column-major Mat4. */
+/**
+ * A closed ribbon ring around an open path: each vertex is offset by half the width along the
+ * averaged normal of its adjacent segments, then the far side is walked back.
+ */
+function ribbonRing(path: Ring2, widthTmm: number): Ring2 {
+  const half = (widthTmm as number) / 2;
+  const left: Ring2 = [];
+  const right: Ring2 = [];
+  for (let index = 0; index < path.length; index += 1) {
+    const current = path[index];
+    if (current === undefined) {
+      continue;
+    }
+    const previous = path[index - 1] ?? current;
+    const next = path[index + 1] ?? current;
+    let dx = (next.x as number) - (previous.x as number);
+    let dy = (next.y as number) - (previous.y as number);
+    const length = Math.hypot(dx, dy);
+    if (length === 0) {
+      dx = 1;
+      dy = 0;
+    } else {
+      dx /= length;
+      dy /= length;
+    }
+    // Normal is the perpendicular of the averaged direction.
+    const nx = dy;
+    const ny = -dx;
+    left.push({
+      x: Math.round((current.x as number) + nx * half) as never,
+      y: Math.round((current.y as number) + ny * half) as never,
+    });
+    right.push({
+      x: Math.round((current.x as number) - nx * half) as never,
+      y: Math.round((current.y as number) - ny * half) as never,
+    });
+  }
+  return [...left, ...right.reverse()];
+}
+
 function matrix3FromMat4(m: Mat4): Cesium.Matrix3 {
   return Cesium.Matrix3.fromColumnMajorArray([
     m[0],
@@ -157,12 +205,28 @@ export function renderScene(
   for (const element of scene.elements) {
     const type = registry.get(element.typeCode);
     const color = type === undefined ? Cesium.Color.LIGHTGRAY : Cesium.Color.fromCssColorString(type.color);
+    const isSelected = selected === element.id;
+
+    // A LINEAR element renders as a ribbon of its width along the open path.
+    if (isLinearElement(element)) {
+      const ring = ribbonRing(element.path.value, element.widthTmm);
+      if (ring.length < 3 || !isSimpleRing(ring)) {
+        options.onWarning?.(`Skipped ${element.id}: ribbon is not a simple ring`);
+        continue;
+      }
+      entities.push(renderPolygon(viewer, anchor, element.id, element.label, ring, color, isSelected));
+      continue;
+    }
+
+    if (!isPlacedElement(element)) {
+      continue;
+    }
+
     const placeable: Placeable = {
       center: element.placement.value.center,
       size: element.size.value,
       rotationDeg: element.placement.value.rotationDeg,
     };
-    const isSelected = selected === element.id;
 
     if (type?.geometry === 'FLAT' || element.size.value.z === 0) {
       const ring = elementCornersLocal(placeable);

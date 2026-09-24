@@ -8,12 +8,22 @@ import * as Cesium from 'cesium';
 
 import { geodeticToLocal, localToGeodetic, type LocalPoint, type SiteAnchor, type Tmm } from '@overlord/geo-core';
 import { polygonRing, rectRing, SNAP_FINE_1FT, SNAP_MODULE_10FT, snapLengthTmm } from '@overlord/commands';
-import { zoneAreaSqFt, zoneCapacity, type Ring2, type SceneMeasurement, type SceneZone } from '@overlord/scene';
+import {
+  pathLengthFt,
+  pathLengthTmm,
+  segmentCount,
+  zoneAreaSqFt,
+  zoneCapacity,
+  type LinearElement,
+  type Ring2,
+  type SceneMeasurement,
+  type SceneZone,
+} from '@overlord/scene';
 
 import { pickGroundGeodetic } from '../viewer/sitePicker.js';
 import type { Notices } from './notices.js';
 
-export type DrawMode = 'rectangle' | 'polygon' | 'measure';
+export type DrawMode = 'rectangle' | 'polygon' | 'measure' | 'linear';
 
 export interface DrawToolsOptions {
   viewer: Cesium.Viewer;
@@ -24,11 +34,16 @@ export interface DrawToolsOptions {
   onRingDrawn: (ring: Ring2, tool: 'rectangle' | 'polygon') => void;
   onMeasurement: (measurement: Omit<SceneMeasurement, 'id'>) => void;
   onZoneRing: (zoneId: string, ring: Ring2) => void;
+  onLinearRun: (typeCode: string, path: Ring2, widthTmm: number | null) => void;
+  onLinearPath: (id: string, path: Ring2) => void;
+  getSelectedLinear: () => LinearElement | null;
+  linearSpec: (typeCode: string) => { segmentLength: number; defaultWidth: number; unit: 'RFT' | 'RM' } | null;
   onError: (message: string) => void;
 }
 
 export interface DrawTools {
   start(mode: DrawMode): void;
+  startLinear(typeCode: string, widthTmm: number | null): void;
   finish(): void;
   cancel(): void;
   isDrawing(): boolean;
@@ -39,6 +54,8 @@ export interface DrawTools {
 const PREVIEW_ID = 'draw-preview';
 const HANDLE_PREFIX = 'zone-handle-';
 const MIDPOINT_PREFIX = 'zone-midpoint-';
+const LINEAR_HANDLE_PREFIX = 'linear-handle-';
+const LINEAR_MIDPOINT_PREFIX = 'linear-midpoint-';
 
 function formatSqFt(value: number): string {
   return `${Math.round(value).toLocaleString('en-US')} sq ft`;
@@ -52,6 +69,8 @@ export function createDrawTools(options: DrawToolsOptions): DrawTools {
   const { viewer } = options;
 
   let mode: DrawMode | null = null;
+  let linearTypeCode: string | null = null;
+  let linearWidthTmm: number | null = null;
   let vertices: LocalPoint[] = [];
   let rectStart: LocalPoint | null = null;
   let rectCurrent: LocalPoint | null = null;
@@ -60,6 +79,7 @@ export function createDrawTools(options: DrawToolsOptions): DrawTools {
   // Zone vertex editing state.
   let handleDrag: { zoneId: string; vertexIndex: number; insert: boolean } | null = null;
   let handlePreviewRing: Ring2 | null = null;
+  let linearHandleDrag: { id: string; vertexIndex: number } | null = null;
 
   const chip = document.createElement('div');
   chip.className = 'draw-chip';
@@ -130,7 +150,12 @@ export function createDrawTools(options: DrawToolsOptions): DrawTools {
   function removeZoneHandles(): void {
     for (const entity of [...viewer.entities.values]) {
       const id = String(entity.id);
-      if (id.startsWith(HANDLE_PREFIX) || id.startsWith(MIDPOINT_PREFIX)) {
+      if (
+        id.startsWith(HANDLE_PREFIX) ||
+        id.startsWith(MIDPOINT_PREFIX) ||
+        id.startsWith(LINEAR_HANDLE_PREFIX) ||
+        id.startsWith(LINEAR_MIDPOINT_PREFIX)
+      ) {
         viewer.entities.remove(entity);
       }
     }
@@ -147,8 +172,48 @@ export function createDrawTools(options: DrawToolsOptions): DrawTools {
 
   function refresh(): void {
     removeZoneHandles();
+    if (mode !== null || !options.isEnabled()) {
+      return;
+    }
+    const linear = options.getSelectedLinear();
+    if (linear !== null) {
+      const ring = handlePreviewRing ?? linear.path.value;
+      ring.forEach((point, index) => {
+        viewer.entities.add({
+          id: `${LINEAR_HANDLE_PREFIX}${index}`,
+          position: handlePosition(point),
+          point: {
+            pixelSize: 12,
+            color: Cesium.Color.fromCssColorString('#f97316'),
+            outlineColor: Cesium.Color.WHITE,
+            outlineWidth: 2,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          },
+        });
+        const next = ring[index + 1];
+        if (next === undefined) {
+          return;
+        }
+        viewer.entities.add({
+          id: `${LINEAR_MIDPOINT_PREFIX}${index}`,
+          position: handlePosition({ x: Math.round((point.x + next.x) / 2), y: Math.round((point.y + next.y) / 2) }),
+          point: {
+            pixelSize: 8,
+            color: Cesium.Color.WHITE.withAlpha(0.7),
+            outlineColor: Cesium.Color.fromCssColorString('#c2410c'),
+            outlineWidth: 1,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          },
+        });
+      });
+      chip.style.left = '50%';
+      chip.style.top = '150px';
+      chip.style.transform = 'translateX(-50%)';
+      setChip(linearReadout(ring, linear.typeCode));
+      return;
+    }
     const zone = options.getSelectedZone();
-    if (zone === null || mode !== null || !options.isEnabled()) {
+    if (zone === null) {
       return;
     }
     const ring = handlePreviewRing ?? zone.ring.value;
@@ -197,8 +262,23 @@ export function createDrawTools(options: DrawToolsOptions): DrawTools {
     return `${formatSqFt(area)} · ${pax.toLocaleString('en-US')} pax @ ${density} sq ft/person`;
   }
 
+  function linearReadout(path: Ring2, typeCode: string | null): string {
+    const spec = typeCode === null ? null : options.linearSpec(typeCode);
+    const lengthFt = pathLengthFt(path);
+    const lengthM = pathLengthTmm(path) / 10000;
+    const segment = spec?.segmentLength ?? 0;
+    const segments = segment > 0 ? segmentCount(path, segment as never) : 0;
+    const segmentLabel =
+      segment > 0 ? ` \u00b7 ${segments} segments @ ${(segment / 10000).toFixed(2)} m` : '';
+    return `${Math.round(lengthFt).toLocaleString('en-US')} ft \u00b7 ${lengthM.toFixed(0)} m${segmentLabel}`;
+  }
+
   function setMode(next: DrawMode | null): void {
     mode = next;
+    if (next !== 'linear') {
+      linearTypeCode = null;
+      linearWidthTmm = null;
+    }
     vertices = [];
     rectStart = null;
     rectCurrent = null;
@@ -213,7 +293,9 @@ export function createDrawTools(options: DrawToolsOptions): DrawTools {
           ? 'Drag on the ground to draw a rectangle zone (Alt for 1 ft) — Escape cancels'
           : next === 'polygon'
             ? 'Click to add vertices; Enter or click the first vertex closes — Backspace removes the last — Escape cancels'
-            : 'Click points to measure; Enter finishes — Escape cancels',
+            : next === 'linear'
+              ? 'Click points to draw the run; Enter or double-click ends it — Escape cancels'
+              : 'Click points to measure; Enter finishes — Escape cancels',
         { tone: 'info' },
       );
     } else {
@@ -303,6 +385,16 @@ export function createDrawTools(options: DrawToolsOptions): DrawTools {
     if (!options.isEnabled()) {
       return;
     }
+    if (linearHandleDrag !== null && handlePreviewRing !== null) {
+      const drag = linearHandleDrag;
+      const ring = handlePreviewRing;
+      linearHandleDrag = null;
+      handlePreviewRing = null;
+      removePreview();
+      setChip(null);
+      options.onLinearPath(drag.id, ring);
+      return;
+    }
     if (handleDrag !== null && handlePreviewRing !== null) {
       const local = localFromScreen(event.endPosition);
       if (local === null) {
@@ -350,6 +442,8 @@ export function createDrawTools(options: DrawToolsOptions): DrawTools {
       if (preview.length >= 3) {
         showPreviewRing(preview.map((point) => ({ x: point.x, y: point.y })) as Ring2);
       }
+    } else if (mode === 'linear' && vertices.length > 0) {
+      setChip(linearReadout(vertices.map((point) => ({ x: point.x, y: point.y })) as Ring2, linearTypeCode));
     } else if (mode === 'measure' && vertices.length > 0) {
       const preview = [...vertices, snapped];
       showPreviewRing(preview.map((point) => ({ x: point.x, y: point.y })) as Ring2);
@@ -366,6 +460,16 @@ export function createDrawTools(options: DrawToolsOptions): DrawTools {
 
   handler.setInputAction(() => {
     if (!options.isEnabled()) {
+      return;
+    }
+    if (linearHandleDrag !== null && handlePreviewRing !== null) {
+      const drag = linearHandleDrag;
+      const ring = handlePreviewRing;
+      linearHandleDrag = null;
+      handlePreviewRing = null;
+      removePreview();
+      setChip(null);
+      options.onLinearPath(drag.id, ring);
       return;
     }
     if (handleDrag !== null && handlePreviewRing !== null) {
@@ -402,6 +506,16 @@ export function createDrawTools(options: DrawToolsOptions): DrawTools {
   }, Cesium.ScreenSpaceEventType.LEFT_UP);
 
   function finish(): void {
+    if (mode === 'linear' && vertices.length >= 2) {
+      const code = linearTypeCode;
+      const path = vertices.map((point) => ({ x: point.x, y: point.y })) as Ring2;
+      const width = linearWidthTmm;
+      setMode(null);
+      if (code !== null) {
+        options.onLinearRun(code, path, width);
+      }
+      return;
+    }
     if (mode === 'polygon' && vertices.length >= 3) {
       const points = vertices.map((point) => ({ x: point.x, y: point.y }));
       let ring: Ring2;
@@ -444,11 +558,22 @@ export function createDrawTools(options: DrawToolsOptions): DrawTools {
       altDown = false;
     }
   }
+  handler.setInputAction(() => {
+    if (options.isEnabled() && (mode === 'linear' || mode === 'polygon' || mode === 'measure')) {
+      finish();
+    }
+  }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
 
   return {
     start: (next) => setMode(next),
+    startLinear: (typeCode, widthTmm) => {
+      setMode('linear');
+      linearTypeCode = typeCode;
+      linearWidthTmm = widthTmm;
+    },
     finish,
     cancel: () => setMode(null),
     isDrawing: () => mode !== null,

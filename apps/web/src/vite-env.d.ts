@@ -2,7 +2,7 @@
 
 import type { LocalPoint, SiteAnchor } from '@overlord/geo-core';
 import type { Command } from '@overlord/commands';
-import type { SceneDoc, SceneElement, ZoneKind } from '@overlord/scene';
+import type { Ring2, SceneDoc, SceneElement, ZoneKind } from '@overlord/scene';
 
 import type { MapStack } from './viewer/mapStacks.js';
 import type { ViewpointName } from './viewer/viewpoints.js';
@@ -86,12 +86,18 @@ export interface OverlordTestHook {
   ): { ok: boolean; message?: string };
   /** Move one zone vertex, issuing a single SET_ZONE_RING. */
   moveZoneVertex(zoneId: string, index: number, x: number, y: number): boolean;
+  /** Move one linear-run vertex, issuing a single SET_LINEAR_PATH. */
+  moveLinearVertex(id: string, index: number, x: number, y: number): boolean;
   /** Add a measurement (AREA when 3+ points, otherwise DISTANCE). Returns its id. */
   addMeasurement(kind: 'DISTANCE' | 'AREA', points: LocalPoint[], label: string): string | null;
   isDrawing(): boolean;
-  drawMode(): 'rectangle' | 'polygon' | 'measure' | null;
+  drawMode(): 'rectangle' | 'polygon' | 'measure' | 'linear' | null;
   startDraw(mode: 'rectangle' | 'polygon' | 'measure'): void;
   finishDraw(): void;
+  /** Draw a linear run through the same path as the mouse tool. Returns the element id. */
+  addLinearRun(typeCode: string, path: Ring2, widthTmm: number | null): string | null;
+  /** The rendered length readout for a linear element, e.g. "2,073 ft". */
+  linearReadout(id: string): string | null;
 }
 
 declare global {

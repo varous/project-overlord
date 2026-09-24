@@ -159,7 +159,61 @@ test('drawing: editing the density to 8 lowers the pax, and a measurement persis
   await page.locator('.capacity-panel__summary').click();
   const panel = page.locator('.capacity-panel');
   await expect(panel).toContainText('Density zone');
-  await expect(panel).toContainText('1,250 pax @ 8');
+  await expect(panel).toContainText('8 sq ft/pax');
+  await expect(panel).toContainText('1,250 pax');
   await expect(panel).toContainText('Total —');
   await page.screenshot({ path: 'e2e-output/drawing-capacity-panel.png' });
+});
+
+test('drawing: a mojo barricade run reports its length and segments, and a vertex edit is one undo step', async ({
+  page,
+}) => {
+  await setUp(page);
+
+  // A 632 m run: the Aquatica V5 drawing places 632 one-metre straights.
+  const runId = await page.evaluate(() =>
+    window.__overlord?.addLinearRun(
+      'MOJO_BARRICADE',
+      [
+        { x: 0, y: 0 },
+        { x: 6320000, y: 0 },
+      ],
+      null,
+    ) ?? null,
+  );
+  expect(runId).not.toBeNull();
+
+  await expect(page.locator('.draw-chip')).toContainText('2,073 ft · 632 m · 632 segments @ 1.00 m');
+  expect(await page.evaluate((id) => window.__overlord?.linearReadout(id) ?? null, runId)).toBe('2,073 ft');
+  await page.screenshot({ path: 'e2e-output/linear-run.png' });
+
+  // Move the far vertex: exactly one command, and the run gets shorter.
+  const beforeMove = await page.evaluate(() => window.__overlord?.docHash() ?? '');
+  const depthBefore = await page.evaluate(() => window.__overlord?.historyDepth() ?? -1);
+  const moved = await page.evaluate(
+    ([id]) => window.__overlord?.moveLinearVertex(id, 1, 3160000, 0) ?? false,
+    [runId],
+  );
+  expect(moved).toBe(true);
+  expect(await page.evaluate(() => window.__overlord?.historyDepth() ?? -1)).toBe(depthBefore + 1);
+  expect(await page.evaluate((id) => window.__overlord?.linearReadout(id) ?? null, runId)).toBe('1,037 ft');
+
+  await page.evaluate(() => window.__overlord?.undo());
+  expect(await page.evaluate(() => window.__overlord?.docHash() ?? '')).toBe(beforeMove);
+});
+
+test('drawing: the palette searches aliases', async ({ page }) => {
+  await setUp(page);
+
+  await page.locator('[data-action="add"]').click();
+  const palette = page.locator('.modal[data-modal="palette"]');
+  await expect(palette).toBeVisible();
+
+  await palette.locator('.palette__search').fill('mojo');
+  await expect(palette.locator('[data-type-code="MOJO_BARRICADE"]')).toBeVisible();
+  await page.screenshot({ path: 'e2e-output/palette-search.png' });
+
+  await palette.locator('.palette__search').fill('metal detector');
+  await expect(palette.locator('[data-type-code="DFMD"]')).toBeVisible();
+  await expect(palette.locator('[data-type-code="MOJO_BARRICADE"]')).toBeHidden();
 });

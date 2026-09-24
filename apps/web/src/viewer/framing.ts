@@ -4,7 +4,7 @@
  */
 
 import { toTmm, type Tmm } from '@overlord/geo-core';
-import type { SceneDoc } from '@overlord/scene';
+import { isPlacedElement, type SceneDoc } from '@overlord/scene';
 
 import { elementCornersLocal } from '../site/placement.js';
 
@@ -40,6 +40,9 @@ export function sceneBoundsLocal(doc: SceneDoc): LocalBounds {
   };
 
   for (const element of doc.elements) {
+    if (!isPlacedElement(element)) {
+      continue;
+    }
     const corners = elementCornersLocal({
       center: element.placement.value.center,
       size: element.size.value,

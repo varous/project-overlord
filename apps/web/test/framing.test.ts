@@ -14,7 +14,7 @@ import {
 } from '../src/viewer/framing.js';
 
 const emptyScene: SceneDoc = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   id: 'scn_empty0000000000000',
   name: 'Empty',
   site: {

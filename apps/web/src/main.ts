@@ -7,8 +7,13 @@ import {
   canonicalJson,
   diffScenes,
   elementTypeRegistry,
+  isLinearElement,
+  isPlacedElement,
+  pathLengthFt,
   summariseDiff,
   validateScene,
+  type ElementSizeDef,
+  type LinearElement,
   type SceneDoc,
 } from '@overlord/scene';
 
@@ -126,6 +131,7 @@ const history = createHistory(currentDoc);
 let selected: Selection | null = null;
 let displayUnit: DisplayUnit = 'ft';
 let pendingType: string | null = null;
+let pendingSize: ElementSizeDef | null = null;
 let idCounter = 0;
 
 function newId(): string {
@@ -869,8 +875,9 @@ function redo(): void {
   rebuildScene();
 }
 
-function setPending(typeCode: string | null): void {
+function setPending(typeCode: string | null, size: ElementSizeDef | null = null): void {
   pendingType = typeCode;
+  pendingSize = size;
   if (typeCode === null) {
     notices.clearBanner('add-hint');
     document.body.classList.remove('adding');
@@ -900,6 +907,7 @@ function finishPendingAdd(local: LocalPoint): void {
       z: 0,
     } as never,
     provenance: 'STATED',
+    ...(pendingSize === null ? {} : { size: pendingSize }),
   });
   setPending(null);
   if (!outcome.ok) {
@@ -928,14 +936,21 @@ const inspector = createInspector({
 
 const palette = createPalette({
   registry: elementTypeRegistry,
-  onChoose: (typeCode) => setPending(typeCode),
+  onChoose: (typeCode, presetSize) => {
+    const definition = elementTypeRegistry.get(typeCode);
+    if (definition?.geometry === 'LINEAR') {
+      drawTools.startLinear(typeCode, null);
+      return;
+    }
+    setPending(typeCode, presetSize);
+  },
 });
 
 const manipulation = createDirectManipulation({
   viewer,
   getAnchor: () => anchor,
   getSelection: () => selected,
-  getElement: (id) => currentDoc.elements.find((element) => element.id === id) ?? null,
+  getElement: (id) => { const found = currentDoc.elements.find((element) => element.id === id); return found !== undefined && isPlacedElement(found) ? found : null; },
   onCommand: (command) => {
     const outcome = runCommand(command);
     if (!outcome.ok) {
@@ -1049,7 +1064,7 @@ zoneCreateButton.addEventListener('click', createPendingZone);
 zoneCancelButton.addEventListener('click', closeZoneDialog);
 
 const drawBar = document.createElement('div');
-drawBar.className = 'edit-bar';
+drawBar.className = 'edit-bar draw-menu';
 function drawButton(label: string, action: string, onClick: () => void): HTMLButtonElement {
   const button = document.createElement('button');
   button.type = 'button';
@@ -1059,11 +1074,72 @@ function drawButton(label: string, action: string, onClick: () => void): HTMLBut
   button.addEventListener('click', onClick);
   return button;
 }
-const rectangleButton = drawButton('Rectangle zone', 'draw-rectangle', () => drawTools.start('rectangle'));
-const polygonButton = drawButton('Polygon zone', 'draw-polygon', () => drawTools.start('polygon'));
-const measureButton = drawButton('Measure', 'draw-measure', () => drawTools.start('measure'));
-drawBar.append(rectangleButton, polygonButton, measureButton);
+const drawMenu = document.createElement('div');
+drawMenu.className = 'draw-menu__menu';
+drawMenu.hidden = true;
+const drawToggle = drawButton('Draw \u25be', 'draw-menu', () => {
+  drawMenu.hidden = !drawMenu.hidden;
+});
+const rectangleButton = drawButton('Rectangle zone', 'draw-rectangle', () => {
+  drawMenu.hidden = true;
+  drawTools.start('rectangle');
+});
+const polygonButton = drawButton('Polygon zone', 'draw-polygon', () => {
+  drawMenu.hidden = true;
+  drawTools.start('polygon');
+});
+const measureButton = drawButton('Measure', 'draw-measure', () => {
+  drawMenu.hidden = true;
+  drawTools.start('measure');
+});
+drawMenu.append(rectangleButton, polygonButton, measureButton);
+drawBar.append(drawToggle, drawMenu);
 persistenceUi.element.prepend(drawBar);
+
+function selectedLinear(): LinearElement | null {
+  if (selected === null || selected.kind !== 'element') {
+    return null;
+  }
+  const found = currentDoc.elements.find((element) => element.id === selected?.id);
+  return found !== undefined && isLinearElement(found) ? found : null;
+}
+
+function linearSpec(typeCode: string): { segmentLength: number; defaultWidth: number; unit: 'RFT' | 'RM' } | null {
+  const definition = elementTypeRegistry.get(typeCode);
+  if (definition?.linear === null || definition?.linear === undefined) {
+    return null;
+  }
+  return {
+    segmentLength: definition.linear.segmentLength,
+    defaultWidth: definition.linear.defaultWidth,
+    unit: definition.linear.unit,
+  };
+}
+
+function addLinearRun(
+  typeCode: string,
+  path: import('@overlord/scene').Ring2,
+  widthTmm: number | null,
+): string | null {
+  const before = new Set(currentDoc.elements.map((element) => element.id));
+  const outcome = runCommand({
+    type: 'ADD_LINEAR_ELEMENT',
+    typeCode,
+    path,
+    provenance: 'STATED',
+    ...(widthTmm === null ? {} : { widthTmm }),
+  });
+  if (!outcome.ok) {
+    notices.showBanner('draw-error', outcome.message, { tone: 'error' });
+    return null;
+  }
+  const added = currentDoc.elements.find((element) => !before.has(element.id));
+  if (added !== undefined) {
+    select('element', added.id);
+    return added.id;
+  }
+  return null;
+}
 
 function selectedZone(): import('@overlord/scene').SceneZone | null {
   if (selected === null || selected.kind !== 'zone') {
@@ -1127,6 +1203,18 @@ function drawPolygon(
   return { ok: true };
 }
 
+function moveLinearVertex(id: string, index: number, x: number, y: number): boolean {
+  const found = currentDoc.elements.find((element) => element.id === id);
+  if (found === undefined || !isLinearElement(found) || found.path.value[index] === undefined) {
+    return false;
+  }
+  const path = found.path.value.map((point, pointIndex) =>
+    pointIndex === index ? ({ x, y } as never) : { ...point },
+  );
+  const outcome = runCommand({ type: 'SET_LINEAR_PATH', id, path });
+  return outcome.ok;
+}
+
 function moveZoneVertex(zoneId: string, index: number, x: number, y: number): boolean {
   const zone = currentDoc.zones.find((candidate) => candidate.id === zoneId);
   if (zone === undefined || zone.ring.value[index] === undefined) {
@@ -1149,6 +1237,17 @@ const drawTools = createDrawTools({
   onMeasurement: (measurement) => {
     addMeasurement(measurement.kind, measurement.points, measurement.label);
   },
+  onLinearRun: (typeCode, path, widthTmm) => {
+    addLinearRun(typeCode, path, widthTmm);
+  },
+  onLinearPath: (id, path) => {
+    const outcome = runCommand({ type: 'SET_LINEAR_PATH', id, path });
+    if (!outcome.ok) {
+      notices.showBanner('draw-error', outcome.message, { tone: 'error' });
+    }
+  },
+  getSelectedLinear: selectedLinear,
+  linearSpec,
   onZoneRing: (zoneId, ring) => {
     const outcome = runCommand({ type: 'SET_ZONE_RING', id: zoneId, ring });
     if (!outcome.ok) {
@@ -1161,7 +1260,7 @@ const drawTools = createDrawTools({
 const capacityPanel = createCapacityPanel(() => currentDoc);
 
 function refreshDrawButtons(): void {
-  for (const button of [rectangleButton, polygonButton, measureButton]) {
+  for (const button of [drawToggle, rectangleButton, polygonButton, measureButton]) {
     button.disabled = readOnly;
   }
 }
@@ -1397,9 +1496,17 @@ if (testEnabled) {
       addRectangleZone(centre, sizeX, sizeY, kind, label),
     drawPolygon: (points, kind, label) => drawPolygon(points, kind, label),
     moveZoneVertex: (zoneId, index, x, y) => moveZoneVertex(zoneId, index, x, y),
+    moveLinearVertex: (id, index, x, y) => moveLinearVertex(id, index, x, y),
     addMeasurement: (kind, points, label) => addMeasurement(kind, points, label),
     isDrawing: () => drawTools.isDrawing(),
     drawMode: () => drawTools.mode(),
+    addLinearRun: (typeCode, path, widthTmm) => addLinearRun(typeCode, path, widthTmm),
+    linearReadout: (id) => {
+      const found = currentDoc.elements.find((element) => element.id === id);
+      return found !== undefined && isLinearElement(found)
+        ? `${Math.round(pathLengthFt(found.path.value)).toLocaleString('en-US')} ft`
+        : null;
+    },
     startDraw: (mode) => drawTools.start(mode),
     finishDraw: () => drawTools.finish(),
     fittedAltitudeM: () => fitAltitudeM(sceneBoundsLocal(currentDoc), aspectRatio()),

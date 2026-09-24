@@ -4,7 +4,18 @@
  */
 
 import { zoneAreaSqFt, zoneCapacity } from '@overlord/scene';
-import type { ElementTypeRegistry, SceneDoc, SceneElement, SceneZone } from '@overlord/scene';
+import {
+  isLinearElement,
+  isPlacedElement,
+  pathLengthFt,
+  pathLengthTmm,
+  segmentCount,
+  type ElementTypeRegistry,
+  type LinearElement,
+  type SceneDoc,
+  type SceneElement,
+  type SceneZone,
+} from '@overlord/scene';
 
 import type { Command } from '@overlord/commands';
 
@@ -191,7 +202,41 @@ export function createInspector(options: InspectorOptions): Inspector {
     refresh();
   }
 
+  function renderLinear(element: LinearElement): void {
+    body.replaceChildren();
+    const definition = options.registry.get(element.typeCode);
+    const spec = definition?.linear ?? null;
+    const segments = spec === null ? 0 : segmentCount(element.path.value, spec.segmentLength as never);
+    body.append(
+      textRow('Type', `${definition?.name ?? element.typeCode} (${element.typeCode})`),
+      textRow('Label', element.label),
+      textRow('Width', formatBoth(element.widthTmm as never, options.getUnit())),
+      textRow('Length', `${Math.round(pathLengthFt(element.path.value)).toLocaleString('en-US')} ft (${(pathLengthTmm(element.path.value) / 10000).toFixed(0)} m)`),
+      textRow('Segments', spec === null ? '—' : `${segments} @ ${(spec.segmentLength / 10000).toFixed(2)} m`),
+      row('Path', (() => {
+        const span = document.createElement('span');
+        span.className = 'inspector__alt';
+        span.textContent = `${element.path.value.length} points`;
+        return span;
+      })(), element.path.provenance),
+    );
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'inspector__delete';
+    deleteButton.dataset.action = 'delete-element';
+    deleteButton.textContent = 'Delete';
+    deleteButton.addEventListener('click', () => options.onDelete());
+    body.append(deleteButton);
+  }
+
   function renderElement(element: SceneElement): void {
+    if (isLinearElement(element)) {
+      renderLinear(element);
+      return;
+    }
+    if (!isPlacedElement(element)) {
+      return;
+    }
     const unit = options.getUnit();
     const definition = options.registry.get(element.typeCode);
     body.replaceChildren();
@@ -279,7 +324,9 @@ export function createInspector(options: InspectorOptions): Inspector {
 
     body.append(
       textRow('Type', `Zone (${zoneItem.kind})`),
-      textRow('Label', zoneItem.label),
+      textRow('Label', zoneItem.label, (label) => {
+        commit({ type: 'SET_ZONE_LABEL', id: zoneItem.id, label });
+      }),
       row('Area', (() => {
         const span = document.createElement('span');
         span.className = 'inspector__alt';

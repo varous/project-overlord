@@ -22,7 +22,7 @@ import {
   snapLengthTmm,
   type Command,
 } from '@overlord/commands';
-import type { SceneElement } from '@overlord/scene';
+import type { PlacedElement } from '@overlord/scene';
 
 import { pickGroundGeodetic } from '../viewer/sitePicker.js';
 
@@ -32,7 +32,7 @@ export interface DirectManipulationOptions {
   viewer: Cesium.Viewer;
   getAnchor: () => SiteAnchor;
   getSelection: () => Selection | null;
-  getElement: (id: string) => SceneElement | null;
+  getElement: (id: string) => PlacedElement | null;
   onCommand: (command: Command) => { ok: boolean };
   isEnabled: () => boolean;
 }
@@ -122,7 +122,7 @@ export function createDirectManipulation(options: DirectManipulationOptions): Di
     }
   }
 
-  function handlePosition(element: SceneElement): Cesium.Cartesian3 {
+  function handlePosition(element: PlacedElement): Cesium.Cartesian3 {
     const center = element.placement.value.center;
     const radians = (element.placement.value.rotationDeg * Math.PI) / 180;
     const distance = element.size.value.x / 2 + HANDLE_OFFSET_TMM;

@@ -31,8 +31,8 @@ describe('demoScene', () => {
     expect(demoScene.site.anchor.provenance).toBe('STATED');
     expect(demoScene.site.anchor.note).toContain('Sourav');
     for (const item of demoScene.elements) {
-      expect(item.placement.provenance).toBe('ARCHETYPE');
-      expect(item.size.provenance).toBe('ARCHETYPE');
+      expect(item.placement!.provenance).toBe('ARCHETYPE');
+      expect(item.size!.provenance).toBe('ARCHETYPE');
     }
     for (const zone of demoScene.zones) {
       expect(zone.ring.provenance).toBe('ARCHETYPE');
@@ -40,7 +40,7 @@ describe('demoScene', () => {
   });
 
   it('sizes the main stage exactly 60 x 40 x 6 ft', () => {
-    expect(element('main_stage').size.value).toEqual({ x: 182880, y: 121920, z: 18288 });
+    expect(element('main_stage').size!.value).toEqual({ x: 182880, y: 121920, z: 18288 });
   });
 
   it('places the main stage +Y face exactly at y = 0', () => {
