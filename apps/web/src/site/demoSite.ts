@@ -12,7 +12,7 @@ import type { Placeable } from './placement.js';
 /** The demo scene exactly as it is published in contracts/scene/v1/examples/demo-scene.json. */
 export const demoScene = demoSceneJson as unknown as SceneDoc;
 
-/** The demo anchor (22.5579, 88.3439, heading 0). */
+/** The demo anchor (22.5389524, 88.4009058, heading 273) — placed on the live site by Sourav. */
 export const DEMO_ANCHOR = demoScene.site.anchor.value;
 
 /** The geometric inputs the placement math needs, taken from a scene element. */

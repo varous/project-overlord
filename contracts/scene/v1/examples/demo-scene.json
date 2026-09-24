@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "id": "scn_0k3m9pl2q7r5t8v1w4x6",
-  "name": "Brigade Parade Ground demo",
+  "name": "Kolkata ground demo",
   "site": {
     "anchor": {
-      "value": { "latDeg": 22.5579, "lonDeg": 88.3439, "heightM": 0, "headingDeg": 0 },
-      "provenance": "ARCHETYPE",
-      "note": "demo — replace with a user-placed anchor"
+      "value": { "latDeg": 22.5389524, "lonDeg": 88.4009058, "heightM": 0, "headingDeg": 273 },
+      "provenance": "STATED",
+      "note": "placed on the live site by Sourav, 24 Sep 2026 — real Kolkata event ground"
     },
     "boundary": null,
     "imagery": { "provider": "ESRI", "captureDate": null }

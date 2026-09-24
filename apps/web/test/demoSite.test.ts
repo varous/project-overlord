@@ -18,12 +18,18 @@ describe('demoScene', () => {
     expect(result).toEqual({ ok: true, issues: [] });
   });
 
-  it('has the demo anchor', () => {
-    expect(DEMO_ANCHOR).toMatchObject({ latDeg: 22.5579, lonDeg: 88.3439, heightM: 0, headingDeg: 0 });
+  it('has the real site anchor', () => {
+    expect(DEMO_ANCHOR).toMatchObject({
+      latDeg: 22.5389524,
+      lonDeg: 88.4009058,
+      heightM: 0,
+      headingDeg: 273,
+    });
   });
 
-  it('uses ARCHETYPE provenance throughout', () => {
-    expect(demoScene.site.anchor.provenance).toBe('ARCHETYPE');
+  it('marks the anchor STATED and keeps the element/zone provenance ARCHETYPE', () => {
+    expect(demoScene.site.anchor.provenance).toBe('STATED');
+    expect(demoScene.site.anchor.note).toContain('Sourav');
     for (const item of demoScene.elements) {
       expect(item.placement.provenance).toBe('ARCHETYPE');
       expect(item.size.provenance).toBe('ARCHETYPE');
