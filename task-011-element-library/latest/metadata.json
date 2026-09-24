@@ -1,0 +1,14 @@
+{
+  "sha": "ab35c5ddafa846f6d2ad16ccb82acb54ea134be1",
+  "branch": "task/011-element-library",
+  "runUrl": "https://github.com/varous/project-overlord/actions/runs/35989906408",
+  "deployUrl": "https://8afc0a2b.project-overlord-7xs.pages.dev",
+  "createdAt": "2026-09-24T11:18:09Z",
+  "onlineSmokeOutcome": "success",
+  "groundHeight": {
+    "heightM": 1.8392332075729636,
+    "source": "sampled from Google 3D",
+    "lat": 22.5389524,
+    "lon": 88.4009058
+  }
+}
