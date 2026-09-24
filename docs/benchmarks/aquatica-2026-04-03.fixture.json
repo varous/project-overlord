@@ -1,0 +1,124 @@
+{
+  "$note": "Extracted from KA - KOLKATA - 240326.dwg (AutoCAD 2018, INSUNITS=4 millimetres) by Claude, 24 Sep 2026. Benchmark fixture for project-overlord: the layout engine and takeoff are scored against this. Every figure carries a confidence and a source. Nothing here is inferred silently.",
+  "meta": {
+    "event": "P - POP CULTURE TOUR",
+    "venue": "AQUATICA, KOLKATA",
+    "drawingTitle": "VENUE LAYOUT",
+    "eventDate": "2026-04-03",
+    "drawingVersion": "V5",
+    "drawnBy": "SONIYA SONY",
+    "status": "final built layout; event ran close to sold out (stated by Sourav, 24 Sep 2026)",
+    "sourceFile": "KA - KOLKATA - 240326.dwg",
+    "modelUnits": "millimetres (INSUNITS 4)",
+    "planExtentM": { "x": 304, "y": 270 },
+    "duplicateCopies": {
+      "found": 2,
+      "offsetM": { "x": 26.7, "y": 4.7 },
+      "note": "The model space contains the entire layout twice, translated. All counts below are de-duplicated. An importer MUST detect this: look for a single translation that maps a large share of inserts onto other inserts of the same block."
+    }
+  },
+  "statedRules": [
+    { "rule": "standing density", "value": "5 sq ft per person", "confidence": "high", "source": "zone labels and notes block, repeated on every zone" },
+    { "rule": "dimension units", "value": "feet and inches unless written otherwise", "confidence": "high", "source": "notes block" },
+    { "rule": "drawing use", "value": "do not scale the drawing; only written dimensions are to be followed; verify on site", "confidence": "high", "source": "notes block" }
+  ],
+  "zones": [
+    { "id": "vip", "label": "VIP", "statedAreaSqFt": 20000, "densitySqFtPerPerson": 5, "statedPax": 4000, "confidence": "high", "source": "zone label" },
+    { "id": "ga", "label": "GA", "statedAreaSqFt": 20000, "densitySqFtPerPerson": 5, "statedPax": 4000, "confidence": "high", "source": "zone label" },
+    { "id": "fanzone", "label": "FANZONE", "statedAreaSqFt": 10000, "densitySqFtPerPerson": 5, "statedPax": 2000, "confidence": "high", "source": "zone label (appears twice in plan: two fanzone pockets)" },
+    { "id": "ppop_pit", "label": "P - POP PIT", "statedAreaSqFt": 380, "densitySqFtPerPerson": 5, "statedPax": 75, "confidence": "medium", "source": "zone label; the capacity summary says 150 pax for this zone — see discrepancies" },
+    { "id": "king_of_good_times", "label": "KING OF GOOD TIMES", "sizeFt": "48 x 36 x 4 HT", "statedAreaSqFt": 1500, "densitySqFtPerPerson": 5, "statedPax": 300, "confidence": "high", "source": "zone label (raised platform)" },
+    { "id": "admin_lounge", "label": "ADMIN LOUNGE", "sizeFt": "36 x 28 x 5 HT", "statedAreaSqFt": 1000, "densitySqFtPerPerson": 5, "statedPax": 200, "confidence": "high", "source": "zone label (raised platform)" },
+    { "id": "vvip_tables_crystal", "label": "CRYSTAL TABLES", "tables": 8, "paxPerTable": 15, "statedPax": 120, "tableSizeFt": "12 x 16", "platformFt": "64 x 28 x 4 HT", "confidence": "high", "source": "table block note" },
+    { "id": "vvip_tables_diamond", "label": "DIAMOND TABLES", "tables": 12, "paxPerTable": 8, "statedPax": 96, "tableSizeFt": "12 x 10", "platformFt": "64 x 28 x 5 HT", "confidence": "high", "source": "table block note" }
+  ],
+  "capacitySummary": {
+    "statedTotalPax": 12866,
+    "breakdown": { "VIP": 4000, "GA": 4000, "FANZONE": 4000, "VVIP_TABLES": 216, "P_POP_PIT": 150, "KING_OF_GOOD_TIMES": 300, "ADMIN": 200 },
+    "note": "FANZONE totals 4,000 because two 10,000 sq ft fanzone pockets are drawn. The summary's P-POP PIT figure (150) is twice the zone label's (75)."
+  },
+  "quantitiesStated": {
+    "$source": "legend block; treat as the drawing's own bill of quantities",
+    "PAGODA_5M_X_5M": 35,
+    "COUPON_COUNTER_10FT_X_10FT": 13,
+    "FOOD_COUNTER_10FT_X_10FT": 12,
+    "FOOD_PREP_10FT_X_10FT": 6,
+    "HYDRATION_COUNTER_10FT_X_10FT": 7,
+    "FIRST_AID_TENT_10FT_X_10FT": 3,
+    "LIGHT_TOWER_2M_X_2M": 17,
+    "BOX_OFFICE_5M_X_5M": 4
+  },
+  "quantitiesObserved": {
+    "$source": "de-duplicated block insertions and text labels in model space",
+    "$caveat": "Some items are drawn as a generic 10ft x 10ft block plus a text label, so block counts alone under-count them; label counts are given where they are the better signal.",
+    "MOJO_BARRICADE_STRAIGHT": { "count": 632, "blockFootprint": "1.00 m x 1.25 m", "impliedRunM": 632, "impliedRunFt": 2073, "confidence": "medium-high" },
+    "MOJO_BARRICADE_CORNER_45DEG": { "count": 72, "confidence": "medium-high" },
+    "GREEN_ROOM_5M_X_5M": { "count": 37, "confidence": "medium", "note": "block footprint measures 198 in = 5.03 m square" },
+    "SCAFFOLDING": { "count": 54, "confidence": "low", "note": "a parked cluster of 54 sits off-plan; not clear how many are placed" },
+    "TURNSTILE": { "count": 32, "confidence": "medium-high" },
+    "DFMD_DOOR_FRAME_METAL_DETECTOR": { "count": 21, "confidence": "medium-high" },
+    "FRISKING_POINT": { "count": 11, "confidence": "medium" },
+    "TOILET_VAN": { "count": 9, "confidence": "medium" },
+    "TOILET_FIXTURE_FEMALE": { "count": 96, "confidence": "low", "note": "fixture-level symbols, partly parked off-plan" },
+    "URINAL": { "count": 15, "confidence": "low" },
+    "GENERATOR": { "count": 12, "confidence": "medium" },
+    "LIGHTING_TOWER_2M_X_2M_X_6M": { "count": 16, "labelCount": 16, "statedInLegend": 17, "confidence": "high" },
+    "FOOD_STALL": { "blockCount": 14, "labelCount": 22, "statedInLegend": 12, "confidence": "low", "note": "labels include FOOD STALLS and FOOD PREP; needs label-class separation" },
+    "COUPON_COUNTER": { "labelCount": 15, "statedInLegend": 13, "confidence": "medium" },
+    "HYDRATION_COUNTER": { "labelCount": 9, "statedInLegend": 7, "confidence": "medium" },
+    "FIRST_AID": { "labelCount": 3, "statedInLegend": 3, "confidence": "high" },
+    "FIRE_ENGINE_BAY": { "count": 2, "confidence": "medium" },
+    "FIRE_LANE_MARKER": { "labelCount": 8, "confidence": "medium" }
+  },
+  "structures": [
+    { "type": "C_STAGE", "sizeFt": "20 x 20 x 4'6\" HT", "confidence": "high" },
+    { "type": "MAIN_STAGE", "sizeFt": "unresolved", "confidence": "low", "note": "the 'stage new' block measures 240 in square (20 ft) which matches the C stage, not a main stage; main stage geometry is drawn as lines/hatch and needs the geometry pass" },
+    { "type": "VVIP_TABLE_PLATFORM", "sizeFt": "64 x 28 x 4 HT", "count": 1, "confidence": "high" },
+    { "type": "VVIP_TABLE_PLATFORM", "sizeFt": "64 x 28 x 5 HT", "count": 1, "confidence": "high" },
+    { "type": "SPONSOR_ACTIVATION", "label": "KINGFISHER ACTIVATION ZONE", "sizeFt": "40 x 30", "confidence": "high" },
+    { "type": "SMOKING_ZONE", "sizeFt": "20 x 16", "confidence": "high" },
+    { "type": "SMOKING_ZONE", "sizeFt": "12 x 16", "confidence": "high" },
+    { "type": "BAR", "sizesFt": ["12 x 10", "16 x 10", "24 x 10", "28 x 10", "40 x 10"], "confidence": "high", "note": "sponsor-branded variants: KF BAR, BEER BAR, REDBULL BARS" },
+    { "type": "BAR_STORAGE", "sizeFt": "10 x 10", "confidence": "high" },
+    { "type": "MASKING_WALL", "confidence": "medium" },
+    { "type": "OPS_ROOM_5M_X_5M", "instances": ["PRODUCTION OFFICE", "DISTRICT OFFICE", "TI OFFICE", "SAFETY MAKERS", "CCTV WALKIE & INTERNET", "CONTENT ROOM", "CREW KITCHEN", "STORAGE ROOM"], "confidence": "high" },
+    { "type": "CREW_DINING", "sizeM": "10 x 5", "confidence": "high" }
+  ],
+  "gatesAndFlow": [
+    "FANZONE ENTRY", "LOUNGE ENTRY", "VIP ENTRY", "GA ENTRY", "GA & VVIP TABLES ENTRY",
+    "ARTIST ENTRY", "BACKSTAGE ENTRY", "BOX OFFICE (5M x 5M, 4 qty)",
+    "EMERGENCY EXIT (x3 labelled)", "EXIT (x6 labelled)", "AUDIENCE WALK", "MAIN ROAD", "FIRE LANE (x8 labelled)"
+  ],
+  "discrepancies": [
+    { "item": "P - POP PIT capacity", "zoneLabel": 75, "capacitySummary": 150, "impact": "75 pax", "note": "one of the two is stale" },
+    { "item": "light towers", "legend": 17, "placed": 16, "impact": "1 unit" },
+    { "item": "coupon counters", "legend": 13, "labelled": 15, "impact": "2 units" },
+    { "item": "hydration counters", "legend": 7, "labelled": 9, "impact": "2 units" },
+    { "item": "food counters", "legend": 12, "labelled": "22 including FOOD PREP", "impact": "unclear until labels are classed" },
+    { "$conclusion": "The legend and the plan disagree by small amounts on nearly every line. A takeoff derived from placed geometry is the fix; the legend is the thing that drifts." }
+  ],
+  "registryCorrections": [
+    { "code": "OPS_ROOM", "currentDefault": "16 x 16 ft (from the 171-drawing PDF corpus)", "aquaticaValue": "5 x 5 m", "action": "add a 5 x 5 m variant; keep 16 x 16 ft as the alternative and tag both by event type" },
+    { "code": "PAGODA", "aquaticaValue": "5 x 5 m", "action": "correct from 16 x 16 ft" },
+    { "code": "DELAY_TOWER / LIGHT_TOWER", "aquaticaValue": "2 x 2 x 6 m", "action": "correct height and footprint" },
+    { "code": "BOX_OFFICE", "aquaticaValue": "5 x 5 m, typically 4 off", "action": "correct from 16 x 10 ft" },
+    { "code": "FOOD_STALL / COUPON_COUNTER / HYDRATION / FIRST_AID", "aquaticaValue": "10 x 10 ft", "action": "confirmed; no change" },
+    { "code": "BAR_COUNTER", "aquaticaValue": "10 ft deep, 12/16/24/28/40 ft wide", "action": "make width a placement parameter rather than one fixed size" },
+    { "code": "DENSITY", "currentDefault": "2.5 persons/m2", "aquaticaValue": "5 sq ft/person = 2.152 persons/m2", "action": "change the engine default and cite this drawing" }
+  ],
+  "missingElementTypes": [
+    "TURNSTILE", "DFMD", "FRISKING_POINT (have)", "HYDRATION_COUNTER", "FOOD_PREP", "FIRST_AID_TENT",
+    "MOJO_BARRICADE (linear, 1.00 x 1.25 m segments + 45-degree corners)", "TIN_BARRICADE (linear)", "RAILING (linear)",
+    "TOILET_VAN", "URINAL_BANK", "WASHROOM_BLOCK",
+    "BAR_STORAGE", "SMOKING_ZONE", "SPONSOR_ACTIVATION", "MERCH_STALL (have)",
+    "VVIP_TABLE_PLATFORM", "VVIP_TABLE (12x16 @15 pax, 12x10 @8 pax)",
+    "MASKING_WALL", "FIRE_LANE (linear)", "FIRE_ENGINE_BAY", "AUDIENCE_WALK (circulation)",
+    "SERVER_ROOM", "DANCERS_ROOM", "HELP_DESK", "CREW_DINING", "CREW_KITCHEN"
+  ],
+  "openItems": [
+    "Zone polygons: the audience zones are drawn as hatches/line loops, not closed polylines, so their real areas are not yet extracted. A geometry pass (hatch boundaries + line-loop closing) is needed before position scoring.",
+    "Site frame: stage position and rotation not yet resolved in model coordinates; the 'stage new' block is the C stage, not the main stage.",
+    "Block definition units are inconsistent — some blocks are drawn in inches (FOOD STALLS = 120 in = 10 ft), some in millimetres (MB_alu_straight = 1000 x 1250 mm). The importer must resolve units per block via its insert scale.",
+    "Georeference: the model has no known lat/lon; matching the plan to Aquatica's satellite imagery needs a manual two-point alignment."
+  ]
+}
