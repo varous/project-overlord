@@ -1,0 +1,13 @@
+# Docker build context exclusions (context is the repo root).
+# Keep host node_modules/dist out of the image; images install their own.
+**/node_modules
+**/dist
+**/coverage
+.git
+.github
+**/*.tsbuildinfo
+e2e-output
+test-results
+playwright-report
+docs
+design

@@ -24,6 +24,9 @@ const base = urlArg.replace(/\/+$/, '');
 const ATTEMPTS = Number(process.env.DEPLOY_CHECK_ATTEMPTS ?? 5);
 const RETRY_WAIT_MS = 5000;
 
+/** The ShowPlan editor (overlord-editor). Optional: skipped until its secrets exist. */
+const editorUrl = (process.env.EDITOR_URL ?? '').replace(/\/+$/, '');
+
 function isJs(contentType) {
   return /javascript|ecmascript/i.test(contentType ?? '');
 }
@@ -124,6 +127,50 @@ async function checkOnce(cesiumDir) {
   }
 }
 
+/**
+ * The ShowPlan editor is checked only when EDITOR_URL is set, so this gate does
+ * not fail before the Render service and its secrets exist.
+ */
+async function checkEditor() {
+  const health = await fetch(`${editorUrl}/healthz`, { redirect: 'follow' });
+  record(health.status, health.headers.get('content-type'), `GET ${editorUrl}/healthz`);
+  if (health.status !== 200) {
+    throw new Error('editor GET /healthz did not return 200');
+  }
+  const root = await fetch(`${editorUrl}/`, { redirect: 'follow' });
+  record(root.status, root.headers.get('content-type'), `GET ${editorUrl}/`);
+  if (root.status !== 200) {
+    throw new Error('editor GET / did not return 200');
+  }
+  if (!isHtml(root.headers.get('content-type'))) {
+    throw new Error('editor GET / did not return text/html');
+  }
+  const html = await root.text();
+  if (!html.includes('id="root"')) {
+    throw new Error('editor GET / did not contain the web-sp app root (id="root")');
+  }
+}
+
+async function checkEditorWithRetries() {
+  if (editorUrl === '') {
+    console.log('check-deployment: EDITOR_URL not set — skipping the editor check.');
+    return;
+  }
+  let lastEditorError = null;
+  for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
+    try {
+      await checkEditor();
+      console.log(`check-deployment: editor OK — ${editorUrl}`);
+      return;
+    } catch (error) {
+      lastEditorError = error;
+      console.error(`check-deployment: editor attempt ${attempt} failed — ${error.message}`);
+      await new Promise((resolve) => setTimeout(resolve, RETRY_WAIT_MS));
+    }
+  }
+  throw new Error(`editor check failed: ${lastEditorError?.message}`);
+}
+
 let lastError = null;
 for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
   console.log(`check-deployment: ${base} (attempt ${attempt}/${ATTEMPTS})`);
@@ -131,6 +178,12 @@ for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
     await new Promise((resolve) => setTimeout(resolve, RETRY_WAIT_MS));
     await checkOnce(cesiumDirFromDist());
     console.log(`check-deployment: OK — ${base}`);
+    try {
+      await checkEditorWithRetries();
+    } catch (editorError) {
+      console.error(`check-deployment: FAIL — ${editorError.message}`);
+      process.exit(1);
+    }
     process.exit(0);
   } catch (error) {
     lastError = error;

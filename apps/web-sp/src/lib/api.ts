@@ -279,6 +279,43 @@ export const api = {
     packages: () =>
       request<{ packages: CataloguePackage[]; showItems: CatalogueShowItem[] }>("/api/catalogue/packages"),
   },
+  boq: {
+    get: (projectId: string) => request<BoqResponse>(`/api/projects/${projectId}/boq`),
+  },
+};
+
+export type BoqContribution = {
+  instanceId: string | null;
+  showItemId: string | null;
+  variantName: string;
+  qty: number;
+};
+
+export type BoqLine = {
+  itemCode: string;
+  name: string;
+  unit: string;
+  qtyBasis: string;
+  section: "VC" | "OPS" | "POWER";
+  category: string;
+  qty: number;
+  contributions: BoqContribution[];
+};
+
+export type BoqFinding = {
+  severity: "error" | "warning" | "info";
+  code: string;
+  message: string;
+  itemCode?: string;
+  packageId?: string;
+  instanceId?: string;
+  showItemId?: string;
+};
+
+export type BoqResponse = {
+  catalogueVersion: string;
+  lines: BoqLine[];
+  findings: BoqFinding[];
 };
 
 /** Direct PUT to R2 — never through the app server. */

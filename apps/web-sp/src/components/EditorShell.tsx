@@ -18,6 +18,8 @@ import type { IconName } from "./icon-registry.js";
 import { MVP, NOT_YET, SNAP_NOT_YET, SCALE_FIRST, AREA_LATER, AIDS_NOT_YET, ZONES_NOT_YET, type Capabilities } from "../lib/capabilities.js";
 import { applyTheme, getTheme, type Theme } from "../lib/theme.js";
 import { AppMenubar } from "./AppMenubar.js";
+import { BoqPanel } from "./BoqPanel.js";
+import { invalidateBoq } from "../lib/boq-query.js";
 import { DropdownSelect } from "./DropdownSelect.js";
 import { CanvasStage } from "./CanvasStage.js";
 import {
@@ -147,6 +149,11 @@ export function EditorShell({
   const historyRef = useRef(new History());
   const [, setHistTick] = useState(0);
   const bumpHist = () => setHistTick((n) => n + 1);
+
+  /* Any change to placements, show items or variants re-derives the BOQ. */
+  useEffect(() => {
+    invalidateBoq(projectId);
+  }, [instances, layoutShowItems, variants, projectId]);
 
   const calibrated = mapState === "calibrated";
   const mapPresentUncalibrated = mapState === "map_uncalibrated";
@@ -1211,13 +1218,19 @@ export function EditorShell({
           ) : null}
           {selectedMark ? null : (
           <Tabs>
-            {["Shape", "Data", "Notes"].map((t) => (
+            {["Shape", "Data", "Notes", "BOQ"].map((t) => (
               <Tab key={t} label={t} active={oipTab === t} onSelect={() => setOipTab(t)} />
             ))}
           </Tabs>
           )}
 
-          {selectedMark ? null : (
+          {selectedMark ? null : oipTab === "BOQ" ? (
+            projectId ? (
+              <BoqPanel projectId={projectId} projectName={projectName ?? "project"} />
+            ) : (
+              <p className="panel-hint">Open a project to see its BOQ.</p>
+            )
+          ) : (
           <>
           <Section>
             <SectionHeader title="Transform" />

@@ -10,6 +10,20 @@ import { registerRoutes } from "./routes/index.js";
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 /**
+ * The editor (web-sp) build served from this service's own origin.
+ *
+ * Same origin is not cosmetic: api-sp signs users in with a session cookie, and
+ * a Pages frontend calling an onrender.com API would need third-party cookies,
+ * which browsers block. So api-sp serves the web-sp build itself.
+ *
+ * `here` is this file's dir (apps/api-sp/{src|dist}); two levels up is `apps/`.
+ * Exported so a test can prove it is web-sp's build, not the Cesium viewer's.
+ */
+export function webRootDir(): string {
+  return path.resolve(here, "../../web-sp/dist");
+}
+
+/**
  * Build the Fastify app without listening. Tests call this; server.ts listens.
  */
 export async function buildApp(opts?: {
@@ -34,7 +48,7 @@ export async function buildApp(opts?: {
   await registerRoutes(app);
 
   if (isProd) {
-    const webRoot = path.resolve(here, "../../web/dist");
+    const webRoot = webRootDir();
     // index:false made GET / 403 (directory match); send never 404s that path
     // so the SPA fallback never ran. Deep links still 404 → callNotFound.
     await app.register(fastifyStatic, { root: webRoot, index: ["index.html"] });

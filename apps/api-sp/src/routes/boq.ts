@@ -32,6 +32,8 @@ export async function boqRoutes(app: FastifyInstance): Promise<void> {
         name: l.item.name,
         unit: l.item.unit,
         qtyBasis: l.item.qtyBasis,
+        section: l.item.section,
+        category: l.item.category,
         qty: l.qty,
         contributions: l.contributions.map((c) => ({
           instanceId: c.instanceId,

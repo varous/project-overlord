@@ -250,3 +250,17 @@ jobs:
 
       - name: Image size
         run: docker images --format '{{.Repository}}:{{.Tag}} {{.Size}}' | head -n 5
+
+  editor-image:
+    name: editor-image
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build editor image (build only, no push)
+        run: docker build -f apps/api-sp/infra/Dockerfile -t overlord-editor:ci .
+
+      - name: Image size
+        run: docker images --format '{{.Repository}}:{{.Tag}} {{.Size}}' | head -n 5

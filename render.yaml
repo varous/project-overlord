@@ -35,6 +35,53 @@ services:
         value: https://project-overlord-7xs.pages.dev
       # COMMIT_SHA is served at runtime from Render's RENDER_GIT_COMMIT (see apps/api/src/config.ts).
 
+  # The ShowPlan editor service (apps/api-sp serves its own apps/web-sp build on
+  # one origin — session cookies need same-origin). Shares project-overlord-db,
+  # isolated in its own Postgres schema. See docs/runbooks/editor-deploy.md.
+  - type: web
+    name: overlord-editor
+    runtime: docker
+    dockerfilePath: apps/api-sp/infra/Dockerfile
+    dockerContext: "."
+    region: singapore
+    plan: starter
+    healthCheckPath: /healthz
+    branch: main
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+      - key: DB_SCHEMA
+        value: showplan
+      - key: DATABASE_URL
+        fromDatabase:
+          name: project-overlord-db
+          property: connectionString
+      - key: PUBLIC_BASE_URL
+        value: https://overlord-editor.onrender.com
+      - key: ALLOWED_HD
+        value: clockwork-av.com
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_ENDPOINT
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+
 databases:
   - name: project-overlord-db
     plan: basic-256mb
