@@ -236,3 +236,16 @@ describe("PACKAGE_ONLY reachability", () => {
     expect(findings.some((f) => f.code === "QTY_RULE_CONFLICT" && f.itemCode === "FACE")).toBe(true);
   });
 });
+
+describe("linked_rate_item is an opaque QuoteOS key", () => {
+  it("does not require it to resolve, and keeps the string unchanged", () => {
+    const { catalogue, findings } = loadBundle({
+      items: [itemRow({ code: "TEST_LINKME", linked_rate_item: "TEST_ABSENT" })],
+      day_curves: { FULL: fullCurve() },
+      packages: [],
+      package_items: [],
+    }, "t");
+    expect(findings.filter((f) => f.severity === "error")).toEqual([]);
+    expect(catalogue.items.get("TEST_LINKME")!.linkedRateItem).toBe("TEST_ABSENT");
+  });
+});

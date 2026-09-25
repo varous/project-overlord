@@ -127,6 +127,7 @@ export function loadBundle(
       qtyBasis: r.qty_basis as QtyBasis,
       dayCurve: r.day_curve,
       tags: r.tags ?? [],
+      /* Opaque QuoteOS join key: stored as-is, intentionally never resolved locally. */
       linkedRateItem: r.linked_rate_item ?? null,
       consumptionLitresPerHour: consumption,
       powerSupplyKva: r.power_supply_kva ?? null,
@@ -160,16 +161,6 @@ export function loadBundle(
     }
     items.set(item.code, item);
     if (r.auto_qty_rule) autoQtyByCode.set(item.code, r.auto_qty_rule);
-  }
-
-  /* linked_rate_item must resolve */
-  for (const item of items.values()) {
-    if (item.linkedRateItem && !items.has(item.linkedRateItem)) {
-      findings.push({
-        severity: "error", code: "FUEL_LINK_MISSING", itemCode: item.code,
-        message: `Item ${item.code} links to rate item "${item.linkedRateItem}", which does not exist.`,
-      });
-    }
   }
 
   /* --- packages --- */

@@ -18,7 +18,6 @@ export interface Finding {
     | "ITEM_UNKNOWN"
     | "PARAM_MISSING"
     | "RULE_BASIS_MISMATCH"
-    | "FUEL_LINK_MISSING"
     | "CONSUMPTION_MISSING"
     | "DAYS_CLAMPED"
     | "GEOMETRY_MISSING"

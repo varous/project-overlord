@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 // @ts-expect-error — plain ESM script, not part of the TS project
 import { assertNoRateKeys, makeRateFreeBundle } from "../make-rate-free-bundle.mjs";
+import { loadBundle, type Bundle } from "@overlord/boq";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "../..");
@@ -26,6 +27,7 @@ function makeSource(overrides = {}) {
     item({
       code: "TEST_FUEL", name: "Fuel", unit: "l/hr",
       qty_basis: "CONSUMPTION_PER_HOUR", reference_rate: false,
+      linked_rate_item: "TEST_DIESEL",
     }),
     item({
       code: "TEST_DIESEL", name: "Diesel", unit: "litre",
@@ -53,6 +55,17 @@ function makeSource(overrides = {}) {
 
 function outDir() {
   return mkdtempSync(join(tmpdir(), "sp-out-"));
+}
+
+/** Read a written bundle back into the domain loader's Bundle shape. */
+function readBundle(dir: string): Bundle {
+  const read = (file: string) => JSON.parse(readFileSync(join(dir, file), "utf8"));
+  return {
+    items: read("items.json"),
+    day_curves: read("day_curves.json"),
+    packages: read("packages.json"),
+    package_items: read("package_items.json"),
+  };
 }
 
 describe("make-rate-free-bundle", () => {
@@ -117,5 +130,13 @@ describe("make-rate-free-bundle", () => {
   it("fails loudly when a consumption row is missing", () => {
     const source = makeSource({ omitRates: true });
     expect(() => makeRateFreeBundle(source, outDir())).toThrow(/no rates\.json row/);
+  });
+
+  it("loads a rate-free bundle whose fuel links to the dropped RATE_PER_LITRE item", () => {
+    const out = join(outDir(), "bundle");
+    makeRateFreeBundle(makeSource(), out);
+    const { catalogue, findings } = loadBundle(readBundle(out), "synthetic_test_v1");
+    expect(findings.filter((f) => f.severity === "error")).toEqual([]);
+    expect(catalogue.items.get("TEST_FUEL")!.linkedRateItem).toBe("TEST_DIESEL");
   });
 });

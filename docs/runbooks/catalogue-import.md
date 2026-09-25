@@ -6,50 +6,63 @@ ShowPlan seed, which also contains CLIENT/VENDOR rates. This repo is public, so 
 
 This is interim until QuoteOS serves the catalogue (AGENTS.md, "ShowPlan lineage").
 
-## 1. Produce a rate-free bundle (on Sourav's machine, with the private seed)
-
-`scripts/make-rate-free-bundle.mjs` reads a ShowPlan-format directory and writes a bundle with no
-rate values. It refuses to read or write anywhere inside this git working tree.
+## 0. Prerequisites (once per checkout)
 
 ```bash
-# from a checkout of project-overlord
-node scripts/make-rate-free-bundle.mjs \
-  ~/private/showplan-seed \        # items.json, packages.json, package_items.json, day_curves.json, rates.json, VERSION
-  ~/scratch/overlord-catalogue     # output — outside the repo, never committed
+npm ci
+npm run build -w @overlord/boq
+npx prisma generate --schema apps/api-sp/prisma/schema.prisma
 ```
 
-It prints items in/out, packages, package_items, the dropped `RATE_PER_LITRE` codes, and the
-consumption values lifted onto the items. It **fails loudly** if a `CONSUMPTION_PER_HOUR` item has no
-rate row or if its CLIENT and VENDOR litres/hour disagree.
+## 1. Produce a rate-free bundle
 
-Confirm the output carries no rates — there must be no `rates.json`, and no `rate`/`price`/`paise`/
+The private seed is `packages/api/seed` inside a clone of `cav-tech-work/showplan`, kept **outside**
+this repository. `scripts/make-rate-free-bundle.mjs` reads it and writes a bundle with no rate
+values; it refuses to read or write anywhere inside this git working tree.
+
+```bash
+# source = the private ShowPlan seed directory (outside this repo)
+# out    = a scratch directory (outside this repo, never committed)
+node scripts/make-rate-free-bundle.mjs \
+  /path/to/showplan-clone/packages/api/seed \
+  /path/to/scratch/overlord-catalogue
+```
+
+It prints the item/package/package_item counts, the dropped reference-rate codes, and the fuel
+consumption values it lifted onto the item rows. It **fails loudly** if a fuel item has no rate row
+or if its CLIENT and VENDOR litres/hour disagree.
+
+Confirm the output carries no rates: there must be no `rates.json`, and no `rate`/`price`/`paise`/
 `amount` key inside the JSON.
 
-## 2. Apply migrations to the `showplan` schema
+## 2. Migrations
 
-The editor shares `project-overlord-db`, isolated in the `showplan` Postgres schema. In the Render
-dashboard open **project-overlord-db → Connections → External Database URL**, then append
-`sslmode=require` and the schema:
+Migrations run automatically when `overlord-editor` starts; run this manually only if the service has never booted.
 
-```bash
-# take the EXTERNAL connection string, then append the two parameters
-export DATABASE_URL='postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require&schema=showplan'
-npx prisma migrate deploy --schema apps/api-sp/prisma/schema.prisma
-```
+## 3. Import
 
-`?schema=showplan` is required for both the migration and the running server; the composition lives in
-`apps/api-sp/src/lib/db-url.ts` and is applied automatically by the container entrypoint when
-`DB_SCHEMA=showplan` is set.
-
-## 3. Import the bundle
+Open **project-overlord-db → Connections → External Database URL**. It may already contain a query
+string: append `schema=showplan` with **`&`** if it does, or with **`?`** if it does not (and add
+`sslmode=require` if it is absent). Always dry-run first — expect **zero errors**; warnings are data
+issues to review, not blockers.
 
 ```bash
-DATABASE_URL='postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require&schema=showplan' \
-  npm run import:catalogue -w @overlord/api-sp -- ~/scratch/overlord-catalogue
+export DATABASE_URL='<external URL>&schema=showplan'
+# If the URL had no query string, use ?schema=showplan instead.
+npm run import:catalogue -w @overlord/api-sp -- /path/to/scratch/overlord-catalogue --dry-run
 ```
 
-The importer validates first and aborts on any error-level finding. It never deletes items — item
-codes are foreign keys.
+Then run it for real (drop `--dry-run`):
+
+```bash
+npm run import:catalogue -w @overlord/api-sp -- /path/to/scratch/overlord-catalogue
+```
+
+Unset the connection string when you are done:
+
+```bash
+unset DATABASE_URL
+```
 
 ## 4. Confirm
 
