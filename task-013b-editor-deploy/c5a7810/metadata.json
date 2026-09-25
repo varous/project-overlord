@@ -1,0 +1,14 @@
+{
+  "sha": "c5a78107fbfedd6ff3d0da29b7288bcc1205b614",
+  "branch": "task/013b-editor-deploy",
+  "runUrl": "https://github.com/varous/project-overlord/actions/runs/36118421174",
+  "deployUrl": "https://0cfc1947.project-overlord-7xs.pages.dev",
+  "createdAt": "2026-09-25T09:50:08Z",
+  "onlineSmokeOutcome": "success",
+  "groundHeight": {
+    "heightM": 0,
+    "source": "ellipsoid 0 (sample failed)",
+    "lat": 22.5389524,
+    "lon": 88.4009058
+  }
+}
