@@ -79,8 +79,8 @@ jobs:
 
       - name: ShowPlan API integration test count
         run: |
-          npx vitest run --config apps/api-sp/vitest.config.ts --reporter=json --outputFile=api-sp-tests.json
-          node -e "const r=require('./api-sp-tests.json'); const total=r.numTotalTests||0; const passed=r.numPassedTests||0; console.log('ShowPlan API tests ran in CI: '+passed+'/'+total+' passed'); if (total===0) process.exit(1);"
+          npm run test -w @overlord/api-sp -- --reporter=json --outputFile=api-sp-tests.json
+          node -e "const r=require('./apps/api-sp/api-sp-tests.json'); const total=r.numTotalTests||0; const passed=r.numPassedTests||0; console.log('ShowPlan API tests ran in CI: '+passed+'/'+total+' passed'); if (total===0) process.exit(1);"
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5433/showplan_test
 
