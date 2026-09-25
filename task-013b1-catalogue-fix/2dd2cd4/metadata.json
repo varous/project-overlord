@@ -1,0 +1,14 @@
+{
+  "sha": "2dd2cd442514374a09fa829d8ae2cb7d6c5cc6de",
+  "branch": "task/013b1-catalogue-fix",
+  "runUrl": "https://github.com/varous/project-overlord/actions/runs/36121413105",
+  "deployUrl": "https://44dc32e5.project-overlord-7xs.pages.dev",
+  "createdAt": "2026-09-25T10:21:59Z",
+  "onlineSmokeOutcome": "success",
+  "groundHeight": {
+    "heightM": 0,
+    "source": "ellipsoid 0 (sample failed)",
+    "lat": 22.5389524,
+    "lon": 88.4009058
+  }
+}
